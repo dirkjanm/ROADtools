@@ -86,14 +86,24 @@ lnk_device_owner = Table('lnk_device_owner', Base.metadata,
     Column('User', Text, ForeignKey('Users.objectId'))
 )
 
-lnk_application_owner = Table('lnk_application_owner', Base.metadata,
+lnk_application_owner_user = Table('lnk_application_owner_user', Base.metadata,
     Column('Application', Text, ForeignKey('Applications.objectId')),
     Column('User', Text, ForeignKey('Users.objectId'))
 )
 
-lnk_serviceprincipal_owner = Table('lnk_serviceprincipal_owner', Base.metadata,
+lnk_application_owner_serviceprincipal = Table('lnk_application_owner_serviceprincipal', Base.metadata,
+    Column('Application', Text, ForeignKey('Applications.objectId')),
+    Column('User', Text, ForeignKey('Users.objectId'))
+)
+
+lnk_serviceprincipal_owner_user = Table('lnk_serviceprincipal_owner_user', Base.metadata,
     Column('ServicePrincipal', Text, ForeignKey('ServicePrincipals.objectId')),
     Column('User', Text, ForeignKey('Users.objectId'))
+)
+
+lnk_serviceprincipal_owner_serviceprincipal = Table('lnk_serviceprincipal_owner_serviceprincipal', Base.metadata,
+    Column('ServicePrincipal', Text, ForeignKey('ServicePrincipals.objectId')),
+    Column('childServicePrincipal', Text, ForeignKey('ServicePrincipals.objectId'))
 )
 
 lnk_role_member_user = Table('lnk_role_member_user', Base.metadata,
@@ -228,12 +238,12 @@ class User(Base, SerializeMixin):
         back_populates="memberUsers")
 
     ownedApplications = relationship("Application",
-        secondary=lnk_application_owner,
-        back_populates="owner")
+        secondary=lnk_application_owner_user,
+        back_populates="ownerUsers")
 
     ownedServicePrincipals = relationship("ServicePrincipal",
-        secondary=lnk_serviceprincipal_owner,
-        back_populates="owner")
+        secondary=lnk_serviceprincipal_owner_user,
+        back_populates="ownerUsers")
 
     memberOfRole = relationship("DirectoryRole",
         secondary=lnk_role_member_user,
@@ -287,13 +297,25 @@ class ServicePrincipal(Base, SerializeMixin):
     servicePrincipalType = Column(Text)
     useCustomTokenSigningKey = Column(Boolean)
     verifiedPublisher = Column(JSON)
-    owner = relationship("User",
-        secondary=lnk_serviceprincipal_owner,
+    ownerUsers = relationship("User",
+        secondary=lnk_serviceprincipal_owner_user,
+        back_populates="ownedServicePrincipals")
+
+    ownerServicePrincipals = relationship("ServicePrincipal",
+        secondary=lnk_serviceprincipal_owner_serviceprincipal,
+        primaryjoin=objectId==lnk_serviceprincipal_owner_serviceprincipal.c.ServicePrincipal,
+        secondaryjoin=objectId==lnk_serviceprincipal_owner_serviceprincipal.c.childServicePrincipal,
         back_populates="ownedServicePrincipals")
 
     memberOfRole = relationship("DirectoryRole",
         secondary=lnk_role_member_serviceprincipal,
         back_populates="memberServicePrincipals")
+
+    ownedServicePrincipals = relationship("ServicePrincipal",
+        secondary=lnk_serviceprincipal_owner_serviceprincipal,
+        primaryjoin=objectId==lnk_serviceprincipal_owner_serviceprincipal.c.childServicePrincipal,
+        secondaryjoin=objectId==lnk_serviceprincipal_owner_serviceprincipal.c.ServicePrincipal,
+        back_populates="ownerServicePrincipals")
 
 
 class Group(Base, SerializeMixin):
@@ -413,8 +435,12 @@ class Application(Base, SerializeMixin):
     tokenEncryptionKeyId = Column(Text)
     trustedCertificateSubjects = Column(JSON)
     verifiedPublisher = Column(JSON)
-    owner = relationship("User",
-        secondary=lnk_application_owner,
+    ownerUsers = relationship("User",
+        secondary=lnk_application_owner_user,
+        back_populates="ownedApplications")
+
+    ownerServicePrincipals = relationship("User",
+        secondary=lnk_application_owner_serviceprincipal,
         back_populates="ownedApplications")
 
 

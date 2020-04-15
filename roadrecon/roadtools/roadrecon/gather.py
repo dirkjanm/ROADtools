@@ -27,6 +27,8 @@ def mknext(url, prevurl):
         # Absolute URL
         return url + '&api-version=1.61-internal'
     parts = prevurl.split('/')
+    if 'directoryObjects' in url:
+        return '/'.join(parts[:4]) + '/' + url + '&api-version=1.61-internal'
     return '/'.join(parts[:-1]) + '/' + url + '&api-version=1.61-internal'
 
 async def dumphelper(url, method=requests.get):
@@ -136,7 +138,6 @@ class DataDumper(object):
         async for obj in dumphelper(url, method=method):
             objectid, objclass = obj['url'].split('/')[-2:]
             # If only one type exists, we don't need to use the mapping
-            # print(parent.objectId, obj)
             if mapping is not None:
                 try:
                     childtbl, linkname = mapping[objclass]
@@ -237,7 +238,7 @@ class DataDumper(object):
         self.session.commit()
 
 
-    async def dump_object_expansion(self, objecttype, dbtype, expandprop, linkname, childtbl, method=None):
+    async def dump_object_expansion(self, objecttype, dbtype, expandprop, linkname, childtbl, mapping=None, method=None):
         if method is None:
             method = self.ahsession.get
         url = 'https://graph.windows.net/%s/%s?api-version=%s&$expand=%s' % (self.tenantid, objecttype, self.api_version, expandprop)
@@ -249,6 +250,13 @@ class DataDumper(object):
                     print('Non-existing parent found: %s' % obj['objectId'])
                     continue
                 for epdata in obj[expandprop]:
+                    objclass = epdata['odata.type']
+                    if mapping is not None:
+                        try:
+                            childtbl, linkname = mapping[objclass]
+                        except KeyError:
+                            print('Unsupported member type: %s' % objclass)
+                            continue
                     child = self.session.query(childtbl).get(epdata['objectId'])
                     if not child:
                         print('Non-existing child found: %s' % epdata['objectId'])
@@ -333,6 +341,10 @@ async def run(args, dburl):
         'Microsoft.DirectoryServices.Contact': (Contact, 'memberContacts'),
         'Microsoft.DirectoryServices.Device': (Device, 'memberDevices'),
     }
+    owner_mapping = {
+        'Microsoft.DirectoryServices.User': (User, 'ownerUsers'),
+        'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'ownerServicePrincipals'),
+    }
     tasks = []
     dumper.session = dbsession
     async with aiohttp.ClientSession() as ahsession:
@@ -346,9 +358,9 @@ async def run(args, dburl):
         tasks.append(dumper.dump_links('directoryRoles', 'members', DirectoryRole, mapping=role_mapping))
         tasks.append(dumper.dump_linked_objects('servicePrincipals', 'appRoleAssignedTo', ServicePrincipal, AppRoleAssignment, ignore_duplicates=True))
         tasks.append(dumper.dump_linked_objects('servicePrincipals', 'appRoleAssignments', ServicePrincipal, AppRoleAssignment, ignore_duplicates=True))
-        tasks.append(dumper.dump_object_expansion('servicePrincipals', ServicePrincipal, 'owners', 'owner', User))
+        tasks.append(dumper.dump_object_expansion('servicePrincipals', ServicePrincipal, 'owners', 'owner', User, mapping=owner_mapping))
         tasks.append(dumper.dump_object_expansion('devices', Device, 'registeredOwners', 'owner', User))
-        tasks.append(dumper.dump_object_expansion('applications', Application, 'owners', 'owner', User))
+        tasks.append(dumper.dump_object_expansion('applications', Application, 'owners', 'owner', User, mapping=owner_mapping))
         tasks.append(dumper.dump_custom_role_members(RoleAssignment))
         if args.mfa:
             tasks.append(dumper.dump_mfa('users', User, method=ahsession.get))

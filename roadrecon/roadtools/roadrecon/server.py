@@ -55,17 +55,28 @@ class GroupsSchema(ma.Schema):
         model = Group
         fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'mail')
 
+class SimpleServicePrincipalsSchema(ma.Schema):
+    """
+    Simple ServicePrincipalSchema to prevent looping relationships with serviceprincipals
+    owning other serviceprincipals
+    """
+    class Meta:
+        model = ServicePrincipal
+        fields = ('objectId', 'objectType', 'displayName')
+
 class ServicePrincipalsSchema(ma.Schema):
     class Meta:
         model = ServicePrincipal
-        fields = ('objectId', 'objectType', 'displayName', 'appDisplayName', 'appId', 'appDisplayName', 'appOwnerTenantId', 'publisherName', 'replyUrls', 'appRoles', 'microsoftFirstParty', 'isDirSyncEnabled', 'oauth2Permissions', 'passwordCredentials', 'keyCredentials', 'owner', 'accountEnabled')
-    owner = fields.Nested(UsersSchema, many=True)
+        fields = ('objectId', 'objectType', 'displayName', 'appDisplayName', 'appId', 'appDisplayName', 'appOwnerTenantId', 'publisherName', 'replyUrls', 'appRoles', 'microsoftFirstParty', 'isDirSyncEnabled', 'oauth2Permissions', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals', 'accountEnabled')
+    ownerUsers = fields.Nested(UsersSchema, many=True)
+    ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 
 class ApplicationsSchema(ma.Schema):
     class Meta:
         model = Application
-        fields = ('objectId', 'objectType', 'displayName', 'appDisplayName', 'appId', 'appDisplayName', 'appOwnerTenantId', 'publisherName', 'replyUrls', 'appRoles', 'microsoftFirstParty', 'isDirSyncEnabled', 'oauth2Permissions', 'passwordCredentials', 'keyCredentials', 'owner', 'accountEnabled')
-    owner = fields.Nested(UsersSchema, many=True)
+        fields = ('objectId', 'objectType', 'displayName', 'appDisplayName', 'appId', 'appDisplayName', 'appOwnerTenantId', 'publisherName', 'replyUrls', 'appRoles', 'microsoftFirstParty', 'isDirSyncEnabled', 'oauth2Permissions', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals', 'accountEnabled')
+    ownerUsers = fields.Nested(UsersSchema, many=True)
+    ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 
 class DirectoryRolesSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -80,7 +91,7 @@ class UserSchema(RTModelSchema):
     memberOfRole = fields.Nested(DirectoryRoleSchema, many=True)
     ownedDevices = fields.Nested(DevicesSchema, many=True)
     ownedServicePrincipals = fields.Nested(ServicePrincipalsSchema, many=True)
-    # ownedApplications = fields.Nested(Application, many=True)
+    ownedApplications = fields.Nested(ApplicationsSchema, many=True)
 
 class DeviceSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -97,13 +108,16 @@ class GroupSchema(RTModelSchema):
 class ServicePrincipalSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = ServicePrincipal
-    owner = fields.Nested(UsersSchema, many=True)
+    ownerUsers = fields.Nested(UsersSchema, many=True)
+    ownerServicePrincipals = fields.Nested(ServicePrincipalsSchema, many=True)
     memberOfRole = fields.Nested(DirectoryRoleSchema, many=True)
+
 
 class ApplicationSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = Application
-    owner = fields.Nested(UsersSchema, many=True)
+    ownerUsers = fields.Nested(UsersSchema, many=True)
+    ownerServicePrincipals = fields.Nested(ServicePrincipalsSchema, many=True)
 
 class TenantDetailSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -186,12 +200,18 @@ def group_detail(id):
     if not group:
         abort(404)
     return group_schema.jsonify(group)
-
+import json
 @app.route("/api/serviceprincipals", methods=["GET"])
 def get_sps():
     all_sps = db.session.query(ServicePrincipal).all()
     result = serviceprincipals_schema.dump(all_sps)
-    return jsonify(result)
+    for obj in result:
+        try:
+            json.dumps(obj)
+        except TypeError:
+            import pprint
+            pprint.pprint(obj)
+    return serviceprincipals_schema.jsonify(all_sps)
 
 @app.route("/api/serviceprincipals/<id>", methods=["GET"])
 def sp_detail(id):

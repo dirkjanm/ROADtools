@@ -41,8 +41,10 @@ export interface ApplicationsItem {
   publisherName: string;
   oauth2Permissions: object[];
   publisherDomain: boolean;
+  publicClient: boolean;
   appMetadata: appMetadata;
-  owner: UsersItem[];
+  ownerUsers: UsersItem[];
+  ownerServicePrincipals: ServicePrincipalsItem[];
 }
 
 export interface UsersItem {
@@ -110,7 +112,8 @@ export interface ServicePrincipalsItem {
   oauth2Permissions: object[];
   passwordCredentials: object;
   keyCredentials: object;
-  owner: UsersItem[];
+  ownerUsers: UsersItem[];
+  ownerServicePrincipals: ServicePrincipalsItem[];
   memberOfRole: DirectoryRolesItem[];
 }
 

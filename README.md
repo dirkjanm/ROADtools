@@ -4,7 +4,7 @@
 ![Python 3 only](https://img.shields.io/badge/python-3.6+-blue.svg)
 ![License: MIT](https://img.shields.io/pypi/l/roadlib.svg)
 
-![ROADtools logo](roadrecon/frontend/src/assets/rt_transparent.svg)
+<img src="roadrecon/frontend/src/assets/rt_transparent.svg" width="300px" alt="ROADtools logo" />
 
 ROADtools is a framework to interact with Azure AD. It currently consists of a library (roadlib) and the ROADrecon Azure AD exploration tool.
 
@@ -15,7 +15,7 @@ ROADlib is a library that can be used to authenticate with Azure AD or to build 
 
 ## ROADrecon
 ![PyPI version](https://img.shields.io/pypi/v/roadrecon.svg)
-[![Build Status](https://dev.azure.com/dirkjanm/adconnectdump/_apis/build/status/fox-it.adconnectdump?branchName=master)](https://dev.azure.com/dirkjanm/adconnectdump/_build/latest?definitionId=16&branchName=master)
+[![Build Status](https://dev.azure.com/dirkjanm/ROADtools/_apis/build/status/dirkjanm.ROADtools?branchName=master)](https://dev.azure.com/dirkjanm/ROADtools/_build/latest?definitionId=19&branchName=master)
 
 ROADrecon is a tool for exploring information in Azure AD from both a Red Team and Blue Team perspective. In short, this is what it does:
 * Uses an automatically generated metadata model to create an SQLAlchemy backed database on disk.
