@@ -8,14 +8,24 @@
       <td mat-cell *matCellDef="let row"><a [routerLink]="['/applications/', row.objectId]">{{row.displayName}}</a></td>
     </ng-container>
 
-    <ng-container matColumnDef="publisherName">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Publisher</th>
-      <td mat-cell *matCellDef="let row">{{row.publisherName}}</td>
+    <ng-container matColumnDef="availableToOtherTenants">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Multitenant</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.availableToOtherTenants" aria-hidden="false" aria-label="Available to other tenants">check</mat-icon></td>
     </ng-container>
 
-    <ng-container matColumnDef="microsoftFirstParty">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Microsoft app</th>
-      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.microsoftFirstParty" aria-hidden="false" aria-label="Microsoft app">check</mat-icon></td>
+    <ng-container matColumnDef="homepage">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Homepage</th>
+      <td mat-cell *matCellDef="let row">{{row.homepage}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="publicClient">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>OAuth2 public client</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.publicClient" aria-hidden="false" aria-label="Public client">check</mat-icon></td>
+    </ng-container>
+
+    <ng-container matColumnDef="oauth2AllowImplicitFlow">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>OAuth2 implicit flow</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.oauth2AllowImplicitFlow" aria-hidden="false" aria-label="Implicit flow allowed">check</mat-icon></td>
     </ng-container>
 
     <ng-container matColumnDef="passwordCredentials">

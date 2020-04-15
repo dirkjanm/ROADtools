@@ -67,14 +67,14 @@ class SimpleServicePrincipalsSchema(ma.Schema):
 class ServicePrincipalsSchema(ma.Schema):
     class Meta:
         model = ServicePrincipal
-        fields = ('objectId', 'objectType', 'displayName', 'appDisplayName', 'appId', 'appDisplayName', 'appOwnerTenantId', 'publisherName', 'replyUrls', 'appRoles', 'microsoftFirstParty', 'isDirSyncEnabled', 'oauth2Permissions', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals', 'accountEnabled')
+        fields = ('objectId', 'objectType', 'displayName', 'appDisplayName', 'appId', 'appOwnerTenantId', 'publisherName', 'replyUrls', 'appRoles', 'microsoftFirstParty', 'isDirSyncEnabled', 'oauth2Permissions', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals', 'accountEnabled')
     ownerUsers = fields.Nested(UsersSchema, many=True)
     ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 
 class ApplicationsSchema(ma.Schema):
     class Meta:
         model = Application
-        fields = ('objectId', 'objectType', 'displayName', 'appDisplayName', 'appId', 'appDisplayName', 'appOwnerTenantId', 'publisherName', 'replyUrls', 'appRoles', 'microsoftFirstParty', 'isDirSyncEnabled', 'oauth2Permissions', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals', 'accountEnabled')
+        fields = ('objectId', 'objectType', 'displayName', 'appId', 'appDisplayName', 'oauth2AllowIdTokenImplicitFlow', 'availableToOtherTenants', 'publisherDomain', 'replyUrls', 'appRoles', 'publicClient', 'oauth2AllowImplicitFlow', 'oauth2Permissions', 'homepage', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals')
     ownerUsers = fields.Nested(UsersSchema, many=True)
     ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 

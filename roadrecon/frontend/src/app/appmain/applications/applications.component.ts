@@ -20,7 +20,7 @@ export class ApplicationsComponent implements AfterViewInit, OnInit {
   constructor(private service: DatabaseService) {  }
 
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['displayName', 'publisherName', 'microsoftFirstParty', 'passwordCredentials', 'keyCredentials', 'appRoles', 'oauth2Permissions', 'owner'];
+  displayedColumns = ['displayName', 'availableToOtherTenants', 'homepage', 'publicClient', 'oauth2AllowImplicitFlow', 'passwordCredentials', 'keyCredentials', 'appRoles', 'oauth2Permissions', 'ownerUsers'];
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();

@@ -38,6 +38,7 @@ export interface ApplicationsItem {
   oauth2AllowImplicitFlow: boolean;
   appRoles: object[];
   replyUrls: object[];
+  homepage: string;
   publisherName: string;
   oauth2Permissions: object[];
   publisherDomain: boolean;
