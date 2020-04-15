@@ -1,0 +1,7 @@
+<h1 mat-dialog-title>{{ device.displayName }}</h1>
+<mat-dialog-content>
+<mat-tab-group>
+  <mat-tab label="Raw"><p appJsonFormat [json]="device"></p></mat-tab>
+</mat-tab-group>
+</mat-dialog-content>
+

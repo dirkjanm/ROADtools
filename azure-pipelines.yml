@@ -1,0 +1,103 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- master
+
+jobs:
+- job: Tests
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  strategy:
+    matrix:
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+      Python38:
+        python.version: '3.8'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      python -m pip install --upgrade pip
+    displayName: 'Install pip'
+
+  - script: |
+      pip install .
+      find roadtools/ -name '*.py' -exec python -m py_compile {} \;
+    displayName: 'Install ROADlib'
+    workingDirectory: roadlib
+
+  - script: |
+      pip install .
+      find roadtools/ -name '*.py' -exec python -m py_compile {} \;
+      roadrecon -h
+      roadrecon-gui -h
+    displayName: 'Install ROADrecon'
+    workingDirectory: roadrecon
+
+- job: Build
+  dependsOn: Tests
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.8'
+    displayName: 'Use Python 3.8'
+  - task: Npm@1
+    inputs:
+      command: 'install'
+      workingDir: 'roadrecon/frontend/'
+
+  - task: Npm@1
+    inputs:
+      command: 'custom'
+      workingDir: 'roadrecon/frontend/'
+      customCommand: 'run build -- --prod'
+
+  - script: |
+      pip install --upgrade setuptools wheel
+    displayName: 'Update setuptools'
+
+  - script: |
+      pip install .
+      python setup.py sdist
+      python setup.py bdist_wheel
+    displayName: 'Create ROADlib package'
+    workingDirectory: roadlib
+
+  - script: |
+      pip install .
+      python setup.py sdist
+      python setup.py bdist_wheel
+    displayName: 'Create ROADrecon package'
+    workingDirectory: roadrecon
+
+  - task: CopyFiles@2
+    displayName: 'Copy ROADrecon Files to: $(build.artifactstagingdirectory)'
+    inputs:
+      SourceFolder: 'roadrecon/dist/'
+      Contents: '*'
+      TargetFolder: '$(build.artifactstagingdirectory)'
+    condition: succeededOrFailed()
+
+  - task: CopyFiles@2
+    displayName: 'Copy ROADlib Files to: $(build.artifactstagingdirectory)'
+    inputs:
+      SourceFolder: 'roadlib/dist/'
+      Contents: '*'
+      TargetFolder: '$(build.artifactstagingdirectory)'
+    condition: succeededOrFailed()
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: ROADtools

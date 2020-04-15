@@ -1,0 +1,52 @@
+<div class="mat-elevation-z8">
+  <mat-form-field>
+    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+  </mat-form-field>
+  <table mat-table class="full-width-table" matSort aria-label="Elements">
+    <ng-container matColumnDef="displayName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let row"><a [routerLink]="['/serviceprincipals/', row.objectId]">{{row.displayName}}</a></td>
+    </ng-container>
+
+    <ng-container matColumnDef="publisherName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Publisher</th>
+      <td mat-cell *matCellDef="let row">{{row.publisherName}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="microsoftFirstParty">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Microsoft app</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.microsoftFirstParty" aria-hidden="false" aria-label="Microsoft app">check</mat-icon></td>
+    </ng-container>
+
+    <ng-container matColumnDef="passwordCredentials">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Passwords</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.passwordCredentials.length > 0">{{row.passwordCredentials.length}}</span>
+        <mat-icon matTooltip="Possible backdoor: First party app with credentials" *ngIf="row.passwordCredentials.length > 0 && row.microsoftFirstParty">warning</mat-icon>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="keyCredentials">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Keys</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.keyCredentials.length > 0">{{row.keyCredentials.length}}</span></td>
+    </ng-container>
+
+    <ng-container matColumnDef="appRoles">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Roles defined</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.appRoles.length > 0">{{row.appRoles.length}}</span></td>
+    </ng-container>
+
+    <ng-container matColumnDef="oauth2Permissions">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>OAuth2 Permissions</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.oauth2Permissions.length > 0">{{row.oauth2Permissions.length}}</span></td>
+    </ng-container>
+
+    <ng-container matColumnDef="owner">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Custom owner</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.owner.length > 0" aria-hidden="false" aria-label="Yes">check</mat-icon></td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+  <mat-paginator [pageSizeOptions]="[50, 100, 500, 1000, 5000]"></mat-paginator>
+</div>
+<router-outlet></router-outlet>

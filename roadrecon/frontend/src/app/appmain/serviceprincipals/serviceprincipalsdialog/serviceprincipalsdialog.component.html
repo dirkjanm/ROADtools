@@ -1,0 +1,135 @@
+<h1 mat-dialog-title>{{ sp.displayName }}</h1>
+<mat-dialog-content>
+<mat-tab-group>
+  <mat-tab label="Overview">
+<mat-card>
+      <table class="userTable">
+        <tr><th>Display name</th><td>{{ sp.displayName }}</td></tr>
+        <tr><th>ObjectId</th><td>{{ sp.objectId }}</td></tr>
+        <tr><th>AppId</th><td>{{ sp.appId }}</td></tr>
+        <tr><th>Publisher</th><td>{{ sp.publisherName }}</td></tr>
+        <tr><th>Status</th><td>{{ sp.accountEnabled? 'Enabled':'Disabled' }}</td></tr>
+        <tr><th>Reply Urls</th><td>
+          <mat-list>
+            <mat-list-item *ngFor="let url of sp.replyUrls"> {{ url }} </mat-list-item>
+          </mat-list></td></tr>
+      </table>
+    </mat-card>
+    <mat-divider></mat-divider>
+    <mat-expansion-panel *ngIf="sp.owner.length > 0"  expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Owners ({{ sp.owner.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table mat-table [dataSource]="sp.owner">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row"><a [routerLink]="['/users/', row.objectId]">{{row.displayName}}</a></td>
+        </ng-container>
+
+        <ng-container matColumnDef="userPrincipalName">
+          <th mat-header-cell *matHeaderCellDef>userPrincipalName</th>
+          <td mat-cell *matCellDef="let row">{{row.userPrincipalName}}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumnsOwners"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumnsOwners;"></tr>
+      </table>
+    </mat-expansion-panel>
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Assigned roles ({{ sp.memberOfRole.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <table *ngIf="sp.memberOfRole.length > 0" mat-table [dataSource]="sp.memberOfRole">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>displayName</th>
+          <td mat-cell *matCellDef="let row">{{row.displayName}}</td>
+        </ng-container>
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{row.description}}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-expansion-panel>
+    </mat-tab>
+  <mat-tab label="Defined permissons" *ngIf="sp.appRoles.length > 0 || sp.oauth2Permissions.length > 0">
+    <h2 *ngIf="sp.appRoles.length > 0">Application roles (application permissions)</h2>
+    <table *ngIf="sp.appRoles.length > 0" mat-table [dataSource]="sp.appRoles">
+      <ng-container matColumnDef="displayName">
+        <th mat-header-cell *matHeaderCellDef>displayName</th>
+        <td mat-cell *matCellDef="let row">{{row.displayName}}</td>
+      </ng-container>
+      <ng-container matColumnDef="allowedMemberTypes">
+        <th mat-header-cell *matHeaderCellDef>Allowed types</th>
+        <td mat-cell *matCellDef="let row"><span *ngFor="let mtype of row.allowedMemberTypes">{{mtype}} </span></td>
+      </ng-container>
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>Description</th>
+        <td mat-cell *matCellDef="let row">{{row.description}}</td>
+      </ng-container>
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef>Value</th>
+        <td mat-cell *matCellDef="let row">{{row.value}}</td>
+      </ng-container>
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let row">{{row.id}}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumnsAppRoles"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumnsAppRoles;"></tr>
+    </table>
+    <h2 *ngIf="sp.oauth2Permissions.length > 0">OAuth2 permissions (delegated permissions)</h2>
+    <table *ngIf="sp.oauth2Permissions.length > 0" mat-table [dataSource]="sp.oauth2Permissions">
+      <ng-container matColumnDef="userConsentDisplayName">
+        <th mat-header-cell *matHeaderCellDef>User Consent Name</th>
+        <td mat-cell *matCellDef="let row">{{row.userConsentDisplayName}}</td>
+      </ng-container>
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef>Allowed types</th>
+        <td mat-cell *matCellDef="let row">{{row.type}}</td>
+      </ng-container>
+      <ng-container matColumnDef="userConsentDescription">
+        <th mat-header-cell *matHeaderCellDef>User Consent Description</th>
+        <td mat-cell *matCellDef="let row">{{row.userConsentDescription}}</td>
+      </ng-container>
+      <ng-container matColumnDef="adminConsentDisplayName">
+        <th mat-header-cell *matHeaderCellDef>Admin Consent Name</th>
+        <td mat-cell *matCellDef="let row">{{row.adminConsentDisplayName}}</td>
+      </ng-container>
+      <ng-container matColumnDef="adminConsentDescription">
+        <th mat-header-cell *matHeaderCellDef>Admin Consent Description</th>
+        <td mat-cell *matCellDef="let row">{{row.adminConsentDescription}}</td>
+      </ng-container>
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef>Value</th>
+        <td mat-cell *matCellDef="let row">{{row.value}}</td>
+      </ng-container>
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let row">{{row.id}}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumnsOAuth2"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumnsOAuth2;"></tr>
+    </table>
+  </mat-tab>
+  <mat-tab label="Metadata" *ngIf="metadata.length > 0">
+    <table class="userTable">
+        <tr *ngFor="let data of metadata">
+          <th>{{ data.key }}</th>
+          <td>
+            <p appJsonFormat [json]="data.value" *ngIf="data.isJSON"></p>
+            <pre *ngIf="!data.isJSON">{{ data.value }}</pre>
+          </td>
+        </tr>
+      </table>
+
+  </mat-tab>
+  <mat-tab label="Raw"><p appJsonFormat [json]="sp"></p> </mat-tab>
+</mat-tab-group>
+</mat-dialog-content>
+

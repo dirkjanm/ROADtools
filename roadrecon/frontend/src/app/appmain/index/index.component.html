@@ -1,0 +1,50 @@
+<mat-card *ngIf="tenantstats">
+  <mat-card-title>Database Stats</mat-card-title>
+  <mat-card-content>
+      <table class="userTable">
+        <tr><th>Users</th><td>{{ tenantstats.countUsers }}</td></tr>
+        <tr><th>Groups</th><td>{{ tenantstats.countGroups }}</td></tr>
+        <tr><th>Applications</th><td>{{ tenantstats.countApplications }}</td></tr>
+        <tr><th>ServicePrincipals</th><td>{{ tenantstats.countServicePrincipals }}</td></tr>
+        <tr><th>Devices</th><td>{{ tenantstats.countDevices }}</td></tr>
+      </table>
+  </mat-card-content>
+</mat-card>
+
+<mat-card *ngIf="tenantdetails">
+  <mat-card-title>Tenant information</mat-card-title>
+  <mat-card-content>
+      <table class="userTable">
+        <tr><th>Name</th><td>{{ tenantdetails.displayName }}</td></tr>
+        <tr><th>Tenant ID</th><td>{{ tenantdetails.objectId }}</td></tr>
+        <tr><th>Syncs from AD</th><td>{{ tenantdetails.dirSyncEnabled? 'Yes':'No' }}</td></tr>
+      </table>
+  </mat-card-content>
+  <mat-card-actions>
+<button mat-button (click)="showDetails()">View Raw</button>
+  </mat-card-actions>
+</mat-card>
+
+<mat-card *ngIf="tenantdetails">
+  <mat-card-title>Tenant Domains</mat-card-title>
+  <table mat-table [dataSource]="tenantdetails.verifiedDomains">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let row">{{row.name}}</td>
+    </ng-container>
+    <ng-container matColumnDef="type">
+      <th mat-header-cell *matHeaderCellDef>Type</th>
+      <td mat-cell *matCellDef="let row">{{row.type}}</td>
+    </ng-container>
+    <ng-container matColumnDef="properties">
+      <th mat-header-cell *matHeaderCellDef>Properties</th>
+      <td mat-cell *matCellDef="let row">{{ row.default? 'Default ':'' }}{{ row.initial? 'Initial':'' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="capabilities">
+      <th mat-header-cell *matHeaderCellDef>Capabilities</th>
+      <td mat-cell *matCellDef="let row">{{row.capabilities}}</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+</mat-card>

@@ -1,0 +1,45 @@
+<mat-toolbar color="primary">
+      <button
+        type="button"
+        aria-label="Toggle sidenav"
+        mat-icon-button
+        (click)="drawer.toggle()"
+        *ngIf="isHandset$ | async">
+        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+      </button>
+      <span [routerLink]="'/'">ROADrecon</span>
+      <span class="filler"></span>
+      <button
+        type="button"
+        aria-label="Settings"
+        mat-icon-button
+        [routerLink]="'/config'">
+        <mat-icon aria-label="Config link icon">settings</mat-icon>
+      </button>
+    </mat-toolbar>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #drawer class="sidenav"
+      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+      [mode]="(isHandset$ | async) ? 'over' : 'side'"
+      [opened]="(isHandset$ | async) === false">
+    <mat-nav-list>
+      <a mat-list-item [routerLink]="'/'">Home</a>
+      <mat-divider></mat-divider>
+      <a mat-list-item [routerLink]="'/users'">Users</a>
+      <a mat-list-item [routerLink]="'/groups'">Groups</a>
+      <a mat-list-item [routerLink]="'/devices'">Devices</a>
+      <mat-divider></mat-divider>
+      <a mat-list-item [routerLink]="'/directoryroles'">Directory roles</a>
+      <mat-divider></mat-divider>
+      <a mat-list-item [routerLink]="'/applications'">Applications</a>
+      <a mat-list-item [routerLink]="'/serviceprincipals'">Service Principals</a>
+      <a mat-list-item [routerLink]="'/approles'">Application roles</a>
+      <a mat-list-item [routerLink]="'/oauth2permissions'">OAuth2 Permissions</a>
+      <mat-divider></mat-divider>
+      <a mat-list-item *ngIf="mfa" [routerLink]="'/mfa'">MFA</a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

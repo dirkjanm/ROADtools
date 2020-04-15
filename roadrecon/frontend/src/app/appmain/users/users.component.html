@@ -1,0 +1,67 @@
+<div class="mat-elevation-z8">
+  <mat-form-field>
+    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+  </mat-form-field>
+  <table mat-table class="full-width-table" matSort aria-label="Elements">
+    <ng-container matColumnDef="displayName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let row"><a class="mat-accent" [routerLink]="['/users/', row.objectId]">{{row.displayName}}</a></td>
+    </ng-container>
+
+    <ng-container matColumnDef="userPrincipalName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>UserPrincipalName</th>
+      <td mat-cell *matCellDef="let row">{{row.userPrincipalName}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="accountEnabled">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Enabled</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.accountEnabled" aria-hidden="false" aria-label="Enabled">check</mat-icon></td>
+    </ng-container>
+
+    <ng-container matColumnDef="mail">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+      <td mat-cell *matCellDef="let row">{{row.mail}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="department">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Department</th>
+      <td mat-cell *matCellDef="let row">{{row.department}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="lastPasswordChangeDateTime">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Last password change</th>
+      <td mat-cell *matCellDef="let row">{{row.lastPasswordChangeDateTime}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="jobTitle">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Job title</th>
+      <td mat-cell *matCellDef="let row">{{row.jobTitle}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="dirSyncEnabled">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Account type</th>
+      <td mat-cell *matCellDef="let row">{{ row.dirSyncEnabled? 'AD':'Cloud' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="mobile">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Mobile</th>
+      <td mat-cell *matCellDef="let row">{{row.mobile}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="strongAuthenticationDetail">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>MFA</th>
+      <td mat-cell *matCellDef="let row">
+        <span *ngFor="let method of row.strongAuthenticationDetail.methods">
+          <mat-icon *ngIf="method.methodType == 'PhoneAppOTP'" aria-label="App with OTP" [class.active]="method.isDefault" matTooltip="App with OTP" >phonelink_lock</mat-icon>
+          <mat-icon *ngIf="method.methodType == 'PhoneAppNotification'" aria-label="Phone notification" [class.active]="method.isDefault" matTooltip="App with notification" >notifications_active</mat-icon>
+          <mat-icon *ngIf="method.methodType == 'OneWaySms'" aria-label="Text message (SMS)" [class.active]="method.isDefault" matTooltip="Text message (SMS)" >sms</mat-icon>
+          <mat-icon *ngIf="method.methodType == 'TwoWayVoiceMobile'" aria-label="Phone call" [class.active]="method.isDefault" matTooltip="Phone call" >phone_callback</mat-icon>
+        </span>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+  <mat-paginator [pageSizeOptions]="[50, 100, 500, 1000, 5000]"></mat-paginator>
+</div>
+<router-outlet></router-outlet>

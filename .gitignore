@@ -1,0 +1,10 @@
+build/
+dist/
+*.egg-info
+*.pyc
+*.db
+pocs/
+metadatastore/
+.roadtools_auth
+Pipfile
+__pycache__
