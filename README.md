@@ -28,10 +28,10 @@ ROADrecon uses `async` Python features and is only compatible with Python 3.6-3.
 ### Installation
 There are multiple ways to install ROADrecon:
 
-**Using a published version on PyPi**
+**Using a published version on PyPi**  
 Stable versions can be installed with `pip install roadrecon`. This will automatically add the `roadrecon` command to your PATH.
 
-**Using a version from GitHub**
+**Using a version from GitHub**  
 Every commit to master is automatically built into a release version with Azure Pipelines. This ensures that you can install the latest version of the GUI without having to install `npm` and all it's dependencies. Simply download the `roadlib` and `roadrecon` zip files from the Azure Pipelines artifacts, then unzip both and install them in the correct order (`roadlib` first):
 
 ```
@@ -41,7 +41,7 @@ pip install roadrecon/
 
 You can also install them in development mode with `pip install -e roadlib/`.
 
-**Developing the front-end**
+**Developing the front-end**  
 If you want to make changes to the Angular front-end, you will need to have `node` and `npm` installed. Then install the components from git:
 ```
 git clone https://github.com/dirkjanm/roadtools.git
