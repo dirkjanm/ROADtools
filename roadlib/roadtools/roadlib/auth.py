@@ -77,7 +77,7 @@ class Authentication():
         context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
         newtokendata = context.acquire_token_with_refresh_token(oldtokendata['refreshToken'], self.client_id, self.resource_uri)
         # Overwrite fields
-        for ikey, ivalue in newtokendata:
+        for ikey, ivalue in newtokendata.items():
             self.tokendata[ikey] = ivalue
         return self.tokendata
 

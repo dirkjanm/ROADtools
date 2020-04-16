@@ -152,7 +152,7 @@ relations = {
     'group_member_device': ('Group', 'Device', 'memberDevices', 'memberOf'),
     'device_owner': ('Device', 'User', 'owner', 'ownedDevices'),
     'application_owner_user': ('Application', 'User', 'ownerUsers', 'ownedApplications'),
-    'application_owner_serviceprincipal': ('Application', 'User', 'ownerServicePrincipals', 'ownedApplications'),
+    'application_owner_serviceprincipal': ('Application', 'ServicePrincipal', 'ownerServicePrincipals', 'ownedApplications'),
     'serviceprincipal_owner_user': ('ServicePrincipal', 'User', 'ownerUsers', 'ownedServicePrincipals'),
     'serviceprincipal_owner_serviceprincipal': ('ServicePrincipal', 'ServicePrincipal', 'ownerServicePrincipals', 'ownedServicePrincipals'),
     'role_member_user': ('DirectoryRole', 'User', 'memberUsers', 'memberOfRole'),
@@ -199,7 +199,7 @@ def gen_link_fkey(link_name, ref_table, rel_name, rev_rel_name, ref_column, sec_
 tables = [
     # Table, relation, back_relation
     (User, [], ['group_member_user', 'application_owner_user', 'serviceprincipal_owner_user', 'role_member_user', 'device_owner']),
-    (ServicePrincipal, ['serviceprincipal_owner_user', 'serviceprincipal_owner_serviceprincipal'], ['role_member_serviceprincipal', 'serviceprincipal_owner_serviceprincipal']),
+    (ServicePrincipal, ['serviceprincipal_owner_user', 'serviceprincipal_owner_serviceprincipal'], ['role_member_serviceprincipal', 'serviceprincipal_owner_serviceprincipal', 'application_owner_serviceprincipal']),
     (Group, ['group_member_group', 'group_member_user', 'group_member_contact', 'group_member_device'], ['group_member_group']),
     (Application, ['application_owner_user', 'application_owner_serviceprincipal'], []),
     (Device, ['device_owner'], ['group_member_device']),

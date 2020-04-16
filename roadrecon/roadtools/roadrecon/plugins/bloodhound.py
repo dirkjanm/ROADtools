@@ -42,7 +42,7 @@ https://github.com/dirkjanm/cloudhound
 
 BASE_LINK_QUERY = 'UNWIND {{props}} AS prop MERGE (n:{0} {{objectid: prop.source}}) MERGE (m:{1} {{objectid: prop.target}}) MERGE (n)-[r:{2}]->(m)';
 
-def add_member(tx, aid, atype, bid, btype, linktype):
+def add_edge(tx, aid, atype, bid, btype, linktype):
     q = BASE_LINK_QUERY.format(atype, btype, linktype)
     props = {'source':aid, 'target':bid}
     tx.run(q, props=props)
@@ -127,7 +127,9 @@ class BloodHoundPlugin():
         """
         Main plugin logic. Simply connects to both databases and transforms the data
         """
+        print('Connecting to neo4j')
         with self.driver.session() as neosession:
+            print('Running queries')
             neosession.run('CREATE CONSTRAINT ON (c:AzureUser) ASSERT c.objectid IS UNIQUE')
             neosession.run('CREATE CONSTRAINT ON (c:AzureGroup) ASSERT c.objectid IS UNIQUE')
             neosession.run('CREATE CONSTRAINT ON (c:AzureRole) ASSERT c.objectid IS UNIQUE')
@@ -149,17 +151,22 @@ class BloodHoundPlugin():
 
                 res = neosession.run(property_query, props=props)
 
-            for sp in self.session.query(ServicePrincipal):
+            for sprinc in self.session.query(ServicePrincipal):
                 property_query = 'UNWIND {props} AS prop MERGE (n:ServicePrincipal {objectid: prop.sourceid}) SET n += prop.map'
                 uprops = {
-                    'name': sp.displayName,
-                    'appid': sp.appId,
-                    'publisher': sp.publisherName,
-                    'displayname': sp.displayName,
-                    'enabled': sp.accountEnabled,
+                    'name': sprinc.displayName,
+                    'appid': sprinc.appId,
+                    'publisher': sprinc.publisherName,
+                    'displayname': sprinc.displayName,
+                    'enabled': sprinc.accountEnabled,
                 }
-                props = {'map': uprops, 'sourceid': sp.objectId}
+                props = {'map': uprops, 'sourceid': sprinc.objectId}
                 res = neosession.run(property_query, props=props)
+                for owneruser in sprinc.ownerUsers:
+                    add_edge(neosession, owneruser.objectId, 'AzureUser', sprinc.objectId, 'ServicePrincipal', 'Owns')
+                for ownersp in sprinc.ownerServicePrincipals:
+                    add_edge(neosession, ownersp.objectId, 'ServicePrincipal', sprinc.objectId, 'ServicePrincipal', 'Owns')
+
 
             for group in self.session.query(Group):
                 property_query = 'UNWIND {props} AS prop MERGE (n:AzureGroup {objectid: prop.sourceid}) SET n += prop.map'
@@ -176,9 +183,9 @@ class BloodHoundPlugin():
 
                 res = neosession.run(property_query, props=props)
                 for memberuser in group.memberUsers:
-                    add_member(neosession, memberuser.objectId, 'AzureUser', group.objectId, 'AzureGroup', 'MemberOf')
+                    add_edge(neosession, memberuser.objectId, 'AzureUser', group.objectId, 'AzureGroup', 'MemberOf')
                 for membergroup in group.memberGroups:
-                    add_member(neosession, membergroup.objectId, 'AzureGroup', group.objectId, 'AzureGroup', 'MemberOf')
+                    add_edge(neosession, membergroup.objectId, 'AzureGroup', group.objectId, 'AzureGroup', 'MemberOf')
 
 
             for role in self.session.query(DirectoryRole):
@@ -192,11 +199,12 @@ class BloodHoundPlugin():
                 props = {'map': uprops, 'sourceid': role.objectId}
                 res = neosession.run(property_query, props=props)
                 for memberuser in role.memberUsers:
-                    add_member(neosession, memberuser.objectId, 'AzureUser', role.objectId, 'AzureRole', 'MemberOf')
+                    add_edge(neosession, memberuser.objectId, 'AzureUser', role.objectId, 'AzureRole', 'MemberOf')
 
                 for memberuser in role.memberServicePrincipals:
-                    add_member(neosession, memberuser.objectId, 'ServicePrincipal', role.objectId, 'AzureRole', 'MemberOf')
+                    add_edge(neosession, memberuser.objectId, 'ServicePrincipal', role.objectId, 'AzureRole', 'MemberOf')
 
+        print('Done!')
         self.driver.close()
 
 def add_args(parser):

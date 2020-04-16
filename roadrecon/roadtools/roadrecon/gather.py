@@ -69,6 +69,7 @@ def checktoken():
         auth = Authentication()
         auth.client_id = token['_clientId']
         auth.tenant = token['tenantId']
+        auth.tokendata = token
         if 'refreshToken' in token:
             token = auth.authenticate_with_refresh(token)
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])

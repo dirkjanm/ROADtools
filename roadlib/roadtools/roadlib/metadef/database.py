@@ -93,7 +93,7 @@ lnk_application_owner_user = Table('lnk_application_owner_user', Base.metadata,
 
 lnk_application_owner_serviceprincipal = Table('lnk_application_owner_serviceprincipal', Base.metadata,
     Column('Application', Text, ForeignKey('Applications.objectId')),
-    Column('User', Text, ForeignKey('Users.objectId'))
+    Column('ServicePrincipal', Text, ForeignKey('ServicePrincipals.objectId'))
 )
 
 lnk_serviceprincipal_owner_user = Table('lnk_serviceprincipal_owner_user', Base.metadata,
@@ -317,6 +317,10 @@ class ServicePrincipal(Base, SerializeMixin):
         secondaryjoin=objectId==lnk_serviceprincipal_owner_serviceprincipal.c.ServicePrincipal,
         back_populates="ownerServicePrincipals")
 
+    ownedApplications = relationship("Application",
+        secondary=lnk_application_owner_serviceprincipal,
+        back_populates="ownerServicePrincipals")
+
 
 class Group(Base, SerializeMixin):
     __tablename__ = "Groups"
@@ -439,7 +443,7 @@ class Application(Base, SerializeMixin):
         secondary=lnk_application_owner_user,
         back_populates="ownedApplications")
 
-    ownerServicePrincipals = relationship("User",
+    ownerServicePrincipals = relationship("ServicePrincipal",
         secondary=lnk_application_owner_serviceprincipal,
         back_populates="ownedApplications")
 
