@@ -30,6 +30,7 @@ from roadtools.roadlib.metadef.database import ServicePrincipal, User, Group, Di
 import roadtools.roadlib.metadef.database as database
 try:
     from neo4j.v1 import GraphDatabase
+    from neo4j.exceptions import ClientError
     HAS_NEO_MODULE = True
 except ModuleNotFoundError:
     HAS_NEO_MODULE = False
@@ -40,7 +41,7 @@ Requires a custom version of the BloodHound interface to use, available at
 https://github.com/dirkjanm/cloudhound
 '''
 
-BASE_LINK_QUERY = 'UNWIND {{props}} AS prop MERGE (n:{0} {{objectid: prop.source}}) MERGE (m:{1} {{objectid: prop.target}}) MERGE (n)-[r:{2}]->(m)';
+BASE_LINK_QUERY = 'UNWIND $props AS prop MERGE (n:{0} {{objectid: prop.source}}) MERGE (m:{1} {{objectid: prop.target}}) MERGE (n)-[r:{2}]->(m)';
 
 def add_edge(tx, aid, atype, bid, btype, linktype):
     q = BASE_LINK_QUERY.format(atype, btype, linktype)
@@ -63,7 +64,7 @@ class BloodHoundPlugin():
         Initialize neo4j driver
         """
         uri = "bolt://%s:7687" % database
-        driver = GraphDatabase.driver(uri, auth=(user, password))
+        driver = GraphDatabase.driver(uri, auth=(user, password), encrypted=False)
         return driver
 
     @staticmethod
@@ -130,12 +131,17 @@ class BloodHoundPlugin():
         print('Connecting to neo4j')
         with self.driver.session() as neosession:
             print('Running queries')
-            neosession.run('CREATE CONSTRAINT ON (c:AzureUser) ASSERT c.objectid IS UNIQUE')
-            neosession.run('CREATE CONSTRAINT ON (c:AzureGroup) ASSERT c.objectid IS UNIQUE')
-            neosession.run('CREATE CONSTRAINT ON (c:AzureRole) ASSERT c.objectid IS UNIQUE')
-            neosession.run('CREATE CONSTRAINT ON (c:ServicePrincipal) ASSERT c.objectid IS UNIQUE')
+
+            try:
+                neosession.run('CREATE CONSTRAINT ON (c:AzureUser) ASSERT c.objectid IS UNIQUE')
+                neosession.run('CREATE CONSTRAINT ON (c:AzureGroup) ASSERT c.objectid IS UNIQUE')
+                neosession.run('CREATE CONSTRAINT ON (c:AzureRole) ASSERT c.objectid IS UNIQUE')
+                neosession.run('CREATE CONSTRAINT ON (c:ServicePrincipal) ASSERT c.objectid IS UNIQUE')
+            except ClientError as e:
+                pass  # on neo4j 4, an error is raised when the constraint exists already
+
             for user in self.session.query(User):
-                property_query = 'UNWIND {props} AS prop MERGE (n:AzureUser {objectid: prop.sourceid}) SET n += prop.map'
+                property_query = 'UNWIND $props AS prop MERGE (n:AzureUser {objectid: prop.sourceid}) SET n += prop.map'
                 uprops = {
                     'name': user.userPrincipalName,
                     'displayname': user.displayName,
@@ -147,12 +153,12 @@ class BloodHoundPlugin():
                 if user.onPremisesSecurityIdentifier:
                     # uprops['onPremisesSecurityIdentifier'] = user.onPremisesSecurityIdentifier
                     props['onpremid'] = user.onPremisesSecurityIdentifier
-                    property_query = 'UNWIND {props} AS prop MERGE (n:AzureUser {objectid: prop.sourceid}) MERGE (m:User {objectid:prop.onpremid}) MERGE (m)-[r:SyncsTo {isacl:false}]->(n) SET n += prop.map'
+                    property_query = 'UNWIND $props AS prop MERGE (n:AzureUser {objectid: prop.sourceid}) MERGE (m:User {objectid:prop.onpremid}) MERGE (m)-[r:SyncsTo {isacl:false}]->(n) SET n += prop.map'
 
                 res = neosession.run(property_query, props=props)
 
             for sprinc in self.session.query(ServicePrincipal):
-                property_query = 'UNWIND {props} AS prop MERGE (n:ServicePrincipal {objectid: prop.sourceid}) SET n += prop.map'
+                property_query = 'UNWIND $props AS prop MERGE (n:ServicePrincipal {objectid: prop.sourceid}) SET n += prop.map'
                 uprops = {
                     'name': sprinc.displayName,
                     'appid': sprinc.appId,
@@ -169,7 +175,7 @@ class BloodHoundPlugin():
 
 
             for group in self.session.query(Group):
-                property_query = 'UNWIND {props} AS prop MERGE (n:AzureGroup {objectid: prop.sourceid}) SET n += prop.map'
+                property_query = 'UNWIND $props AS prop MERGE (n:AzureGroup {objectid: prop.sourceid}) SET n += prop.map'
                 uprops = {
                     'name': group.displayName,
                     'displayname': group.displayName,
@@ -179,7 +185,7 @@ class BloodHoundPlugin():
                 if group.onPremisesSecurityIdentifier:
                     # uprops['onPremisesSecurityIdentifier'] = group.onPremisesSecurityIdentifier
                     props['onpremid'] = group.onPremisesSecurityIdentifier
-                    property_query = 'UNWIND {props} AS prop MERGE (n:AzureGroup {objectid: prop.sourceid}) MERGE (m:Group {objectid:prop.onpremid}) MERGE (m)-[r:SyncsTo {isacl:false}]->(n) SET n += prop.map'
+                    property_query = 'UNWIND $props AS prop MERGE (n:AzureGroup {objectid: prop.sourceid}) MERGE (m:Group {objectid:prop.onpremid}) MERGE (m)-[r:SyncsTo {isacl:false}]->(n) SET n += prop.map'
 
                 res = neosession.run(property_query, props=props)
                 for memberuser in group.memberUsers:
@@ -189,7 +195,7 @@ class BloodHoundPlugin():
 
 
             for role in self.session.query(DirectoryRole):
-                property_query = 'UNWIND {props} AS prop MERGE (n:AzureRole {objectid: prop.sourceid}) SET n += prop.map'
+                property_query = 'UNWIND $props AS prop MERGE (n:AzureRole {objectid: prop.sourceid}) SET n += prop.map'
                 uprops = {
                     'name': role.displayName,
                     'displayname': role.displayName,
