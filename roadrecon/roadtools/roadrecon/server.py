@@ -17,7 +17,7 @@ db = None
 ma = Marshmallow(app)
 
 # Allow CORS requests from Angular if it's running in develop mode
-CORS(app, origins=['http://127.0.0.1:4200', 'http://localhost:4200'])
+CORS(app, origins=['http://127.0.0.1:4200', 'http://localhost:4200', 'http://localhost:5000'])
 
 # Model definitions that include a custom JSON type, which doesn't get converted
 class RTModelConverter(ModelConverter):
