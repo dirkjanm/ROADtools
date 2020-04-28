@@ -27,7 +27,7 @@ class RTModelConverter(ModelConverter):
     )
 
 # Our custom model schema which uses the model converter from above
-class RTModelSchema(ma.ModelSchema):
+class RTModelSchema(ma.SQLAlchemySchema):
     class Meta:
         model_converter = RTModelConverter
 
