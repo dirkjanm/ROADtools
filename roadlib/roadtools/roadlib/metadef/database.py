@@ -225,7 +225,7 @@ class User(Base, SerializeMixin):
     streetAddress = Column(Text)
     surname = Column(Text)
     telephoneNumber = Column(Text)
-    thumbnailPhoto = Column(Binary)
+    thumbnailPhoto = Column(Text)
     usageLocation = Column(Text)
     userPrincipalName = Column(Text)
     userState = Column(Text)
@@ -408,7 +408,7 @@ class Application(Base, SerializeMixin):
     appRoles = Column(JSON)
     availableToOtherTenants = Column(Boolean)
     displayName = Column(Text)
-    encryptedMsiApplicationSecret = Column(Binary)
+    encryptedMsiApplicationSecret = Column(Text)
     errorUrl = Column(Text)
     groupMembershipClaims = Column(Text)
     homepage = Column(Text)
@@ -417,10 +417,10 @@ class Application(Base, SerializeMixin):
     isDeviceOnlyAuthSupported = Column(Boolean)
     keyCredentials = Column(JSON)
     knownClientApplications = Column(JSON)
-    logo = Column(Binary)
+    logo = Column(Text)
     logoUrl = Column(Text)
     logoutUrl = Column(Text)
-    mainLogo = Column(Binary)
+    mainLogo = Column(Text)
     oauth2AllowIdTokenImplicitFlow = Column(Boolean)
     oauth2AllowImplicitFlow = Column(Boolean)
     oauth2AllowUrlPathMatching = Column(Boolean)
@@ -556,7 +556,7 @@ class TenantDetail(Base, SerializeMixin):
     telephoneNumber = Column(Text)
     tenantType = Column(Text)
     verifiedDomains = Column(JSON)
-    windowsCredentialsEncryptionCertificate = Column(Binary)
+    windowsCredentialsEncryptionCertificate = Column(Text)
 
 
 class ApplicationRef(Base, SerializeMixin):
@@ -574,7 +574,7 @@ class ApplicationRef(Base, SerializeMixin):
     knownClientApplications = Column(JSON)
     logoutUrl = Column(Text)
     logoUrl = Column(Text)
-    mainLogo = Column(Binary)
+    mainLogo = Column(Text)
     oauth2Permissions = Column(JSON)
     publisherDomain = Column(Text)
     publisherName = Column(Text)
@@ -632,7 +632,7 @@ class Contact(Base, SerializeMixin):
     streetAddress = Column(Text)
     surname = Column(Text)
     telephoneNumber = Column(Text)
-    thumbnailPhoto = Column(Binary)
+    thumbnailPhoto = Column(Text)
     memberOf = relationship("Group",
         secondary=lnk_group_member_contact,
         back_populates="memberContacts")

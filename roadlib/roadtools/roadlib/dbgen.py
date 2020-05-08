@@ -123,6 +123,8 @@ def gen_db_class(classdef, rels, rev_rels):
         except AttributeError:
             # Complex type
             dbtype = 'JSON'
+        if dbtype == 'Binary':
+            dbtype = 'Text'
         if pname == 'objectId' or (classname == 'Domain' and pname == 'name') or (classname == 'RoleAssignment' and pname == 'id') or (classname == 'ApplicationRef' and pname == 'appId'):
             cols.append(pcoldef % (pname, dbtype))
         else:
