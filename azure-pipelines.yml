@@ -38,10 +38,26 @@ jobs:
   - script: |
       pip install .
       find roadtools/ -name '*.py' -exec python -m py_compile {} \;
-      roadrecon -h
-      roadrecon-gui -h
     displayName: 'Install ROADrecon'
     workingDirectory: roadrecon
+
+  - script: |
+      roadrecon -h
+      roadrecon-gui -h
+      roadrecon auth -u $rtuser -p $rtpass
+      roadrecon dump
+      roadrecon plugin policies
+      rm .roadtools_auth
+      rm caps.html
+    displayName: 'Run ROADrecon gathering tests'
+    env:
+      rtuser: $(rtuser)
+      rtpass: $(rtpass)
+
+  - script: |
+      pip install pytest pytest-flask
+      py.test tests/
+    displayName: 'Run ROADrecon API tests'
 
 - job: Build
   dependsOn: Tests

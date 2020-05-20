@@ -336,6 +336,15 @@ def get_stats():
     }
     return jsonify(stats)
 
+def create_app_test():
+    '''
+    Create app for unit tests
+    '''
+    global db
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.getcwd(), 'roadrecon.db')
+    db = SQLAlchemy(app)
+    return app
+
 def main(args=None):
     global db
     if not args:
