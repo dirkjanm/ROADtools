@@ -15,7 +15,7 @@ setup(name='roadrecon',
           'Programming Language :: Python :: 3.8',
       ],
       packages=['roadtools.roadrecon', 'roadtools.roadrecon.plugins'],
-      install_requires=['roadlib', 'flask', 'sqlalchemy', 'marshmallow', 'flask-sqlalchemy', 'flask-marshmallow', 'flask-cors', 'marshmallow-sqlalchemy', 'aiohttp'],
+      install_requires=['roadlib', 'flask', 'sqlalchemy', 'marshmallow', 'flask-sqlalchemy', 'flask-marshmallow', 'flask-cors', 'marshmallow-sqlalchemy>=0.22', 'aiohttp'],
       zip_safe=False,
       include_package_data=True,
       entry_points={
