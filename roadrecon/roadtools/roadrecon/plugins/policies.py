@@ -249,7 +249,6 @@ class AccessPoliciesPlugin():
 
     def _translate_locations(self, locs):
         policies = self.session.query(Policy).filter(Policy.policyType == 6).all()
-        print(locs)
         out = []
         # Not sure if there can be multiple
         for policy in policies:
