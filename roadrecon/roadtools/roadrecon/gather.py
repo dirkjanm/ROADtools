@@ -413,7 +413,11 @@ def main(args=None):
     headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
 
     seconds = time.perf_counter()
-    asyncio.run(run(args, dburl))
+    try:
+        asyncio.run(run(args, dburl))
+    except AttributeError:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(run(args, dburl))
     elapsed = time.perf_counter() - seconds
     print("ROADrecon gather executed in {0:0.2f} seconds and issued {1} HTTP requests.".format(elapsed, urlcounter))
 
