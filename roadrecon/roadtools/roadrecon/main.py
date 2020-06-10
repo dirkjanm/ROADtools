@@ -1,5 +1,6 @@
 import argparse
 import sys
+import os
 import importlib
 from roadtools.roadlib.auth import Authentication
 from roadtools.roadrecon.gather import getargs as getgatherargs
@@ -18,6 +19,24 @@ roadrecon gather <options>
 roadrecon gui
 roadrecon plugin -h
 '''
+
+def check_database_exists(path):
+    '''
+    Small sanity check to see if the specified database exists.
+    Otherwise SQLAlchemy creates it without data and throws errors later, which does
+    not help anyone
+    '''
+    found = False
+    if ':/' in path:
+        found = True
+    else:
+        if path[0] != '/':
+            found = os.path.exists(os.path.join(os.getcwd(), path))
+        else:
+            found = os.path.exists(path)
+    if not found:
+        raise Exception('The database file {0} was not found. Please make sure it exists'.format(path))
+
 def main():
     # Primary argument parser
     parser = argparse.ArgumentParser(add_help=True, description=RR_HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -88,6 +107,7 @@ def main():
         auth.save_tokens(args)
     elif args.command == 'gui':
         from roadtools.roadrecon.server import main as servermain
+        check_database_exists(args.database)
         servermain(args)
     elif args.command == 'gather' or args.command == 'dump':
         from roadtools.roadrecon.gather import main as gathermain
@@ -95,6 +115,7 @@ def main():
     elif args.command == 'plugin':
         # Dynamic import
         plugin_module = importlib.import_module('roadtools.roadrecon.plugins.{}'.format(args.plugin))
+        check_database_exists(args.database)
         plugin_module.main(args)
 if __name__ == '__main__':
     main()
