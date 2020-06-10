@@ -158,6 +158,9 @@ class AccessPoliciesPlugin():
             if 'All' in clist:
                 ot += 'All users'
                 break
+            if 'None' in clist:
+                ot += 'Nobody'
+                break
             if 'Guests' in clist:
                 ot += 'Guest users'
             try:
@@ -178,7 +181,7 @@ class AccessPoliciesPlugin():
                     raise Exception('Unsupported criterium type: {0}'.format(ctype))
             else:
                 if not 'Guests' in clist:
-                    raise Exception('Unmatched object(s)')
+                    raise Exception('Unmatched object(s): {0}'.format(','.join(clist)))
         return ot
 
     def _parse_appcrit(self, crit):
