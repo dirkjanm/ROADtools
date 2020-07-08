@@ -29,7 +29,7 @@ import argparse
 from roadtools.roadlib.metadef.database import ServicePrincipal, User, Group, DirectoryRole
 import roadtools.roadlib.metadef.database as database
 try:
-    from neo4j.v1 import GraphDatabase
+    from neo4j import GraphDatabase
     from neo4j.exceptions import ClientError
     HAS_NEO_MODULE = True
 except ModuleNotFoundError:
