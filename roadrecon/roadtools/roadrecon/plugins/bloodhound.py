@@ -44,7 +44,7 @@ except ModuleNotFoundError:
 DESCRIPTION = '''
 Export ROADrecon data into BloodHound's neo4j database.
 Requires a custom version of the BloodHound interface to use, available at
-https://github.com/dirkjanm/cloudhound
+https://github.com/dirkjanm/BloodHound-AzureAD
 '''
 
 BASE_LINK_QUERY = 'UNWIND $props AS prop MERGE (n:{0} {{objectid: prop.source}}) MERGE (m:{1} {{objectid: prop.target}}) MERGE (n)-[r:{2}]->(m)';
