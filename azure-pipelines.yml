@@ -37,6 +37,7 @@ jobs:
 
   - script: |
       pip install .
+      pip install neo4j-driver
       find roadtools/ -name '*.py' -exec python -m py_compile {} \;
     displayName: 'Install ROADrecon'
     workingDirectory: roadrecon
@@ -44,6 +45,7 @@ jobs:
   - script: |
       roadrecon -h
       roadrecon-gui -h
+      roadrecon plugin bloodhound -h
       roadrecon auth -u $rtuser -p $rtpass
       roadrecon dump
       roadrecon plugin policies

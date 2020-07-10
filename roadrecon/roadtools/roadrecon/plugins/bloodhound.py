@@ -26,6 +26,7 @@ import platform
 import os
 import json
 import argparse
+import sys
 from roadtools.roadlib.metadef.database import ServicePrincipal, User, Group, DirectoryRole
 import roadtools.roadlib.metadef.database as database
 try:
@@ -33,7 +34,12 @@ try:
     from neo4j.exceptions import ClientError
     HAS_NEO_MODULE = True
 except ModuleNotFoundError:
-    HAS_NEO_MODULE = False
+    try:
+        from neo4j.v1 import GraphDatabase
+        from neo4j.exceptions import ClientError
+        HAS_NEO_MODULE = True
+    except ModuleNotFoundError:
+        HAS_NEO_MODULE = False
 
 DESCRIPTION = '''
 Export ROADrecon data into BloodHound's neo4j database.
@@ -224,6 +230,7 @@ def add_args(parser):
 def main(args=None):
     if not HAS_NEO_MODULE:
         print('neo4j python module not found! Please install the module neo4j-driver first (pip install neo4j-driver)')
+        sys.exit(1)
         return
     if args is None:
         parser = argparse.ArgumentParser(add_help=True, description='ROADrecon policies to HTML plugin', formatter_class=argparse.RawDescriptionHelpFormatter)
