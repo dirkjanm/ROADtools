@@ -45,6 +45,7 @@ export class GroupsdialogInitComponent implements OnInit {
 })
 export class GroupsdialogComponent {
   public displayedColumns: string[] = ['displayName', 'description']
+  public displayedColumnsServicePrincipal: string[] = ['displayName']
 
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(

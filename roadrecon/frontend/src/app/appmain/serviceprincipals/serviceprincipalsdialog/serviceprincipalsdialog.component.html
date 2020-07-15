@@ -56,6 +56,25 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
     </mat-expansion-panel>
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Assigned groups ({{ sp.memberOf.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <table *ngIf="sp.memberOf.length > 0" mat-table [dataSource]="sp.memberOf">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>displayName</th>
+          <td mat-cell *matCellDef="let row"><a [routerLink]="['/groups/', row.objectId]">{{row.displayName}}</a></td>
+        </ng-container>
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{row.description}}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-expansion-panel>
     </mat-tab>
   <mat-tab label="Defined permissons" *ngIf="sp.appRoles.length > 0 || sp.oauth2Permissions.length > 0">
     <h2 *ngIf="sp.appRoles.length > 0">Application roles (application permissions)</h2>

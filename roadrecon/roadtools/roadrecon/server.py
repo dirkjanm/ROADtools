@@ -104,6 +104,7 @@ class GroupSchema(RTModelSchema):
         model = Group
     memberOf = fields.Nested(GroupsSchema, many=True)
     memberUsers = fields.Nested(UsersSchema, many=True)
+    memberServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 
 class ServicePrincipalSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -111,6 +112,7 @@ class ServicePrincipalSchema(RTModelSchema):
     ownerUsers = fields.Nested(UsersSchema, many=True)
     ownerServicePrincipals = fields.Nested(ServicePrincipalsSchema, many=True)
     memberOfRole = fields.Nested(DirectoryRoleSchema, many=True)
+    memberOf = fields.Nested(GroupSchema, many=True)
 
 
 class ApplicationSchema(RTModelSchema):

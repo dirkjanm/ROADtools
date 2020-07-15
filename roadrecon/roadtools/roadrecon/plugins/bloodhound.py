@@ -198,6 +198,8 @@ class BloodHoundPlugin():
                     add_edge(neosession, memberuser.objectId, 'AzureUser', group.objectId, 'AzureGroup', 'MemberOf')
                 for membergroup in group.memberGroups:
                     add_edge(neosession, membergroup.objectId, 'AzureGroup', group.objectId, 'AzureGroup', 'MemberOf')
+                for membersp in group.memberServicePrincipals:
+                    add_edge(neosession, membersp.objectId, 'AzureGroup', group.objectId, 'ServicePrincipal', 'MemberOf')
 
 
             for role in self.session.query(DirectoryRole):
