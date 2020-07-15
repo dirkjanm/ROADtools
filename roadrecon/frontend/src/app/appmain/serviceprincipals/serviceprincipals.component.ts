@@ -20,7 +20,7 @@ export class ServicePrincipalsComponent implements AfterViewInit, OnInit {
   constructor(private service: DatabaseService) {  }
 
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['displayName', 'publisherName', 'microsoftFirstParty', 'passwordCredentials', 'keyCredentials', 'appRoles', 'oauth2Permissions', 'owner'];
+  displayedColumns = ['displayName', 'servicePrincipalType', 'publisherName', 'microsoftFirstParty', 'passwordCredentials', 'keyCredentials', 'appRoles', 'oauth2Permissions', 'owner'];
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();

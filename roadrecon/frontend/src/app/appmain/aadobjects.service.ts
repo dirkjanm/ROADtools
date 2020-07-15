@@ -114,6 +114,7 @@ export interface ServicePrincipalsItem {
   oauth2Permissions: object[];
   passwordCredentials: object;
   keyCredentials: object;
+  servicePrincipalType: string;
   ownerUsers: UsersItem[];
   ownerServicePrincipals: ServicePrincipalsItem[];
   memberOfRole: DirectoryRolesItem[];
