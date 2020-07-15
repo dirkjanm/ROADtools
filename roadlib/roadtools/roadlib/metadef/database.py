@@ -81,6 +81,11 @@ lnk_group_member_device = Table('lnk_group_member_device', Base.metadata,
     Column('Device', Text, ForeignKey('Devices.objectId'))
 )
 
+lnk_group_member_serviceprincipal = Table('lnk_group_member_serviceprincipal', Base.metadata,
+    Column('Group', Text, ForeignKey('Groups.objectId')),
+    Column('ServicePrincipal', Text, ForeignKey('ServicePrincipals.objectId'))
+)
+
 lnk_device_owner = Table('lnk_device_owner', Base.metadata,
     Column('Device', Text, ForeignKey('Devices.objectId')),
     Column('User', Text, ForeignKey('Users.objectId'))
@@ -321,6 +326,10 @@ class ServicePrincipal(Base, SerializeMixin):
         secondary=lnk_application_owner_serviceprincipal,
         back_populates="ownerServicePrincipals")
 
+    memberOf = relationship("Group",
+        secondary=lnk_group_member_serviceprincipal,
+        back_populates="memberServicePrincipals")
+
 
 class Group(Base, SerializeMixin):
     __tablename__ = "Groups"
@@ -382,6 +391,10 @@ class Group(Base, SerializeMixin):
 
     memberDevices = relationship("Device",
         secondary=lnk_group_member_device,
+        back_populates="memberOf")
+
+    memberServicePrincipals = relationship("ServicePrincipal",
+        secondary=lnk_group_member_serviceprincipal,
         back_populates="memberOf")
 
     memberOf = relationship("Group",

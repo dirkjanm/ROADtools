@@ -341,6 +341,7 @@ async def run(args, dburl):
         'Microsoft.DirectoryServices.Group': (Group, 'memberGroups'),
         'Microsoft.DirectoryServices.Contact': (Contact, 'memberContacts'),
         'Microsoft.DirectoryServices.Device': (Device, 'memberDevices'),
+        'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'memberServicePrincipals'),
     }
     owner_mapping = {
         'Microsoft.DirectoryServices.User': (User, 'ownerUsers'),
