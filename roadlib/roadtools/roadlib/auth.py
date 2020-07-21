@@ -4,6 +4,9 @@ import json
 import argparse
 import base64
 import datetime
+import uuid
+from urllib.parse import urlparse, parse_qs
+import requests
 import adal
 
 class Authentication():
@@ -16,7 +19,7 @@ class Authentication():
         self.tenant = tenant
         self.client_id = client_id
         self.resource_uri = 'https://graph.windows.net/'
-        self.tokendata = None
+        self.tokendata = {}
         self.refresh_token = None
         self.access_token = None
         self.proxies = None
@@ -67,6 +70,16 @@ class Authentication():
         self.tokendata = context.acquire_token_with_client_credentials(self.resource_uri, self.client_id, self.password)
         return self.tokendata
 
+    def authenticate_with_code(self, code, redirurl, client_secret=None):
+        """
+        Authenticate with a code plus optional secret in case of a non-public app (authorization grant)
+        """
+        authority_uri = self.get_authority_url()
+
+        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
+        self.tokendata = context.acquire_token_with_authorization_code(code, redirurl, self.resource_uri, self.client_id, client_secret)
+        return self.tokendata
+
     def authenticate_with_refresh(self, oldtokendata):
         """
         Authenticate with a refresh token, refreshes the refresh token
@@ -80,6 +93,39 @@ class Authentication():
         for ikey, ivalue in newtokendata.items():
             self.tokendata[ikey] = ivalue
         return self.tokendata
+
+    def authenticate_with_prt_cookie(self, cookie):
+        ses = requests.session()
+        params = {
+            'resource': self.resource_uri,
+            'client_id': self.client_id,
+            'response_type': 'code',
+            'haschrome': '1',
+            'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
+            'client-request-id': str(uuid.uuid4()),
+            'x-client-SKU': 'PCL.Desktop',
+            'x-client-Ver': '3.19.7.16602',
+            'x-client-CPU': 'x64',
+            'x-client-OS': 'Microsoft Windows NT 10.0.19569.0',
+            'site_id': 501358,
+            'sso_nonce': str(uuid.uuid4()),
+            'mscrid': str(uuid.uuid4())
+        }
+        headers = {
+            'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E)',
+            'UA-CPU': 'AMD64',
+        }
+        cookies = {
+            'x-ms-RefreshTokenCredential': cookie
+        }
+        res = ses.get('https://login.microsoftonline.com/Common/oauth2/authorize', params=params, headers=headers, cookies=cookies, allow_redirects=False)
+        if res.status_code == 302 and params['redirect_uri'] in res.headers['Location']:
+            ups = urlparse(res.headers['Location'])
+            qdata = parse_qs(ups.query)
+            return self.authenticate_with_code(qdata['code'][0], params['redirect_uri'])
+        print('No authentication code was returned, make sure the PRT cookie is valid')
+        print('It is also possible that the sign-in was blocked by Conditional Access policies')
+        return False
 
     @staticmethod
     def get_sub_argparse(auth_parser, for_rr=False):
@@ -119,6 +165,9 @@ class Authentication():
         auth_parser.add_argument('--refresh-token',
                                  action='store',
                                  help='Refresh token (JWT)')
+        auth_parser.add_argument('--prt-cookie',
+                                 action='store',
+                                 help='Primary refresh token cookie from ROADtoken (JWT)')
         auth_parser.add_argument('-f',
                                  '--tokenfile',
                                  action='store',
@@ -164,8 +213,11 @@ class Authentication():
             return self.authenticate_as_app()
         if args.device_code:
             return self.authenticate_device_code()
+        if args.prt_cookie:
+            return self.authenticate_with_prt_cookie(args.prt_cookie)
         # If we are here, no auth to try
         print('Not enough information was supplied to authenticate')
+        return False
 
     def save_tokens(self, args):
         if args.tokens_stdout:
@@ -185,7 +237,8 @@ def main():
         sys.exit(1)
     args = parser.parse_args()
     auth.parse_args(args)
-    auth.get_tokens(args)
+    if not auth.get_tokens(args):
+        return
     auth.save_tokens(args)
 
 if __name__ == '__main__':

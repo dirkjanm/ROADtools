@@ -103,7 +103,11 @@ def main():
     args = parser.parse_args()
     if args.command == 'auth':
         auth.parse_args(args)
-        auth.get_tokens(args)
+        res = auth.get_tokens(args)
+        # Could probably be shortened but older versions of roadlib may
+        # return None and I just want to make sure that doesn't break here
+        if res is False:
+            return
         auth.save_tokens(args)
     elif args.command == 'gui':
         from roadtools.roadrecon.server import main as servermain
