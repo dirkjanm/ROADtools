@@ -302,7 +302,7 @@ async def run(args, dburl):
     elif args.tenant:
         tenantid = args.tenant
     else:
-        tenantid = 'myorganisation'
+        tenantid = 'myorganization'
     expiretime = time.mktime(time.strptime(token['expiresOn'].split('.')[0], '%Y-%m-%d %H:%M:%S'))
     headers = {
         'Authorization': '%s %s' % (token['tokenType'], token['accessToken'])
