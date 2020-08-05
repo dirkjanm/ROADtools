@@ -5,9 +5,12 @@ import argparse
 import base64
 import datetime
 import uuid
+import binascii
+import time
 from urllib.parse import urlparse, parse_qs
 import requests
 import adal
+import jwt
 
 class Authentication():
     """
@@ -94,7 +97,69 @@ class Authentication():
             self.tokendata[ikey] = ivalue
         return self.tokendata
 
-    def authenticate_with_prt_cookie(self, cookie):
+    def authenticate_with_prt(self, prt, context, derived_key):
+        """
+        Authenticate with a PRT and given context/derived key
+        """
+        secret = derived_key.replace(' ','')
+        sdata = binascii.unhexlify(secret)
+        headers = {
+            'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8').rstrip('=')
+        }
+        if not '_' in prt:
+            prt = base64.b64decode(prt).decode('utf-8')
+        payload = {
+            "refresh_token": prt,
+            "is_primary": "true",
+            "iat": '{}'.format(int(time.time()))
+        }
+        cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
+        return self.authenticate_with_prt_cookie(cookie)
+
+    def authenticate_with_prt_cookie(self, cookie, context=None, derived_key=None, verify_only=False):
+        """
+        Authenticate with a PRT cookie, optionally re-signing the cookie if a key is given
+        """
+        # If a derived key was specified, we use that
+        if derived_key:
+            secret = derived_key.replace(' ', '')
+            sdata = binascii.unhexlify(secret)
+            headers = jwt.get_unverified_header(cookie)
+            if context is None or verify_only:
+                # Verify JWT
+                try:
+                    jdata = jwt.decode(cookie, sdata, algorithms=['HS256'])
+                except jwt.exceptions.InvalidSignatureError:
+                    print('Signature invalid with given derived key')
+                    return False
+                if verify_only:
+                    print('PRT verified with given derived key!')
+                    return False
+            else:
+                # Don't verify JWT, just load it
+                jdata = jwt.decode(cookie, sdata, options={"verify_signature":False}, algorithms=['HS256'])
+
+            # Change the issued at timestamp
+            jdata['iat'] = '{}'.format(int(time.time()))
+            # Remove sso nonce if present
+            if 'request_nonce' in jdata:
+                del jdata['request_nonce']
+
+            if context:
+                # Resign with custom context
+                # convert from ascii to base64
+                newheaders = {
+                    'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8').rstrip('=')
+                }
+                cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders).decode('utf-8')
+                print('Re-signed PRT cookie using custom context')
+            else:
+                newheaders = {
+                    'ctx': headers['ctx']
+                }
+                cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders).decode('utf-8')
+                print('Re-signed PRT cookie using derived key')
+
         ses = requests.session()
         params = {
             'resource': self.resource_uri,
@@ -167,7 +232,19 @@ class Authentication():
                                  help='Refresh token (JWT)')
         auth_parser.add_argument('--prt-cookie',
                                  action='store',
-                                 help='Primary refresh token cookie from ROADtoken (JWT)')
+                                 help='Primary Refresh Token cookie from ROADtoken (JWT)')
+        auth_parser.add_argument('--prt',
+                                 action='store',
+                                 help='Primary Refresh Token cookie from mimikatz CloudAP')
+        auth_parser.add_argument('--derived-key',
+                                 action='store',
+                                 help='Derived key used to re-sign the PRT cookie (as hex key)')
+        auth_parser.add_argument('--prt-context',
+                                 action='store',
+                                 help='Primary Refresh Token context for the derived key (as hex key)')
+        auth_parser.add_argument('--prt-verify',
+                                 action='store_true',
+                                 help='Verify the Primary Refresh Token and exit')
         auth_parser.add_argument('-f',
                                  '--tokenfile',
                                  action='store',
@@ -214,7 +291,10 @@ class Authentication():
         if args.device_code:
             return self.authenticate_device_code()
         if args.prt_cookie:
-            return self.authenticate_with_prt_cookie(args.prt_cookie)
+            return self.authenticate_with_prt_cookie(args.prt_cookie, args.prt_context, args.derived_key, args.prt_verify)
+        if args.prt and args.prt_context and args.derived_key:
+            return self.authenticate_with_prt(args.prt, args.prt_context, args.derived_key)
+
         # If we are here, no auth to try
         print('Not enough information was supplied to authenticate')
         return False
