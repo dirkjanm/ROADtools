@@ -28,6 +28,7 @@ class Authentication():
         self.proxies = None
         self.verify = True
         self.outfile = None
+        self.debug = False
 
     def get_authority_url(self):
         """
@@ -116,10 +117,76 @@ class Authentication():
         cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
         return self.authenticate_with_prt_cookie(cookie)
 
+    def get_prt_cookie_nonce(self):
+        ses = requests.session()
+        params = {
+            'resource': self.resource_uri,
+            'client_id': self.client_id,
+            'response_type': 'code',
+            'haschrome': '1',
+            'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
+            'client-request-id': str(uuid.uuid4()),
+            'x-client-SKU': 'PCL.Desktop',
+            'x-client-Ver': '3.19.7.16602',
+            'x-client-CPU': 'x64',
+            'x-client-OS': 'Microsoft Windows NT 10.0.19569.0',
+            'site_id': 501358,
+            'mscrid': str(uuid.uuid4())
+        }
+        headers = {
+            'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E)',
+            'UA-CPU': 'AMD64',
+        }
+        res = ses.get('https://login.microsoftonline.com/Common/oauth2/authorize', params=params, headers=headers, allow_redirects=False)
+        if self.debug:
+            with open('roadtools.debug.html','w') as outfile:
+                outfile.write(str(res.headers))
+                outfile.write('------\n\n\n-----')
+                outfile.write(res.content.decode('utf-8'))
+        if res.status_code == 302 and res.headers['Location']:
+            ups = urlparse(res.headers['Location'])
+            qdata = parse_qs(ups.query)
+            if not 'sso_nonce' in qdata:
+                print('No nonce found in redirect!')
+                return
+            return qdata['sso_nonce'][0]
+        else:
+            # Try to find SSO nonce in json config
+            startpos = res.content.find(b'$Config=')
+            stoppos = res.content.find(b'//]]></script>')
+            if startpos == -1 or stoppos == -1:
+                print('No redirect or nonce config was returned!')
+                return
+            else:
+                jsonbytes = res.content[startpos+8:stoppos-2]
+                try:
+                    jdata = json.loads(jsonbytes)
+                except json.decoder.JSONDecodeError:
+                    print('Failed to parse config JSON')
+                try:
+                    nonce = jdata['bsso']['nonce']
+                except KeyError:
+                    print('No nonce found in browser config')
+                    return
+                return nonce
+
+
     def authenticate_with_prt_cookie(self, cookie, context=None, derived_key=None, verify_only=False):
         """
         Authenticate with a PRT cookie, optionally re-signing the cookie if a key is given
         """
+        # Load cookie
+        jdata = jwt.decode(cookie, options={"verify_signature":False}, algorithms=['HS256'])
+        # Does it have a nonce?
+        if not 'request_nonce' in jdata:
+            nonce = self.get_prt_cookie_nonce()
+            if not nonce:
+                return False
+            print('Requested nonce from server to use with ROADtoken: %s' % nonce)
+            return False
+        else:
+            nonce = jdata['request_nonce']
+
         # If a derived key was specified, we use that
         if derived_key:
             secret = derived_key.replace(' ', '')
@@ -173,7 +240,7 @@ class Authentication():
             'x-client-CPU': 'x64',
             'x-client-OS': 'Microsoft Windows NT 10.0.19569.0',
             'site_id': 501358,
-            'sso_nonce': str(uuid.uuid4()),
+            'sso_nonce': nonce,
             'mscrid': str(uuid.uuid4())
         }
         headers = {
@@ -188,6 +255,11 @@ class Authentication():
             ups = urlparse(res.headers['Location'])
             qdata = parse_qs(ups.query)
             return self.authenticate_with_code(qdata['code'][0], params['redirect_uri'])
+        if self.debug:
+            with open('roadtools.debug.html','w') as outfile:
+                outfile.write(str(res.headers))
+                outfile.write('------\n\n\n-----')
+                outfile.write(res.content.decode('utf-8'))
         print('No authentication code was returned, make sure the PRT cookie is valid')
         print('It is also possible that the sign-in was blocked by Conditional Access policies')
         return False
@@ -233,6 +305,9 @@ class Authentication():
         auth_parser.add_argument('--prt-cookie',
                                  action='store',
                                  help='Primary Refresh Token cookie from ROADtoken (JWT)')
+        auth_parser.add_argument('--prt-init',
+                                 action='store_true',
+                                 help='Initialize Primary Refresh Token authentication flow (get nonce)')
         auth_parser.add_argument('--prt',
                                  action='store',
                                  help='Primary Refresh Token cookie from mimikatz CloudAP')
@@ -253,6 +328,9 @@ class Authentication():
         auth_parser.add_argument('--tokens-stdout',
                                  action='store_true',
                                  help='Do not store tokens on disk, pipe to stdout instead')
+        auth_parser.add_argument('--debug',
+                                 action='store_true',
+                                 help='Enable debug logging to disk')
         return auth_parser
 
     def parse_args(self, args):
@@ -263,6 +341,7 @@ class Authentication():
         self.access_token = args.access_token
         self.refresh_token = args.refresh_token
         self.outfile = args.tokenfile
+        self.debug = args.debug
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
@@ -290,6 +369,11 @@ class Authentication():
             return self.authenticate_as_app()
         if args.device_code:
             return self.authenticate_device_code()
+        if args.prt_init:
+            nonce = self.get_prt_cookie_nonce()
+            if nonce:
+                print('Requested nonce from server to use with ROADtoken: %s' % nonce)
+            return False
         if args.prt_cookie:
             return self.authenticate_with_prt_cookie(args.prt_cookie, args.prt_context, args.derived_key, args.prt_verify)
         if args.prt and args.prt_context and args.derived_key:
