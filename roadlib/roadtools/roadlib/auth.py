@@ -108,7 +108,7 @@ class Authentication():
             'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8').rstrip('=')
         }
         if not '_' in prt:
-            prt = base64.b64decode(prt).decode('utf-8')
+            prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
         nonce = self.get_prt_cookie_nonce()
         if not nonce:
             return False
