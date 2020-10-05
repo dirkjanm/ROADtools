@@ -109,10 +109,13 @@ class Authentication():
         }
         if not '_' in prt:
             prt = base64.b64decode(prt).decode('utf-8')
+        nonce = self.get_prt_cookie_nonce()
+        if not nonce:
+            return False
         payload = {
             "refresh_token": prt,
             "is_primary": "true",
-            "iat": '{}'.format(int(time.time()))
+            "request_nonce": nonce
         }
         cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
         return self.authenticate_with_prt_cookie(cookie)
@@ -205,13 +208,9 @@ class Authentication():
             else:
                 # Don't verify JWT, just load it
                 jdata = jwt.decode(cookie, sdata, options={"verify_signature":False}, algorithms=['HS256'])
-
-            # Change the issued at timestamp
-            jdata['iat'] = '{}'.format(int(time.time()))
-            # Remove sso nonce if present
-            if 'request_nonce' in jdata:
-                del jdata['request_nonce']
-
+            # Since a derived key was specified, we get a new nonce
+            nonce = self.get_prt_cookie_nonce()
+            jdata['request_nonce'] = nonce
             if context:
                 # Resign with custom context
                 # convert from ascii to base64
