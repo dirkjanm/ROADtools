@@ -53,5 +53,5 @@ npm install
 
 You can run the Angular frontend with `npm start` or `ng serve` using the Angular CLI from the `roadrecon/frontend/` directory. To build the JavaScript files into ROADrecon's `dist_gui` directory, run `npm build`.
 
-### Developing
-See [this README](roadrecon/README.md) for more info.
+### Using ROADrecon
+See [this Wiki page](https://github.com/dirkjanm/ROADtools/wiki/Getting-started-with-ROADrecon) on how to get started.
