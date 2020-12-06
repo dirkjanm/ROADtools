@@ -41,6 +41,15 @@ pip install roadrecon/
 
 You can also install them in development mode with `pip install -e roadlib/`.
 
+Or using setuptools:
+
+```
+cd roadlib
+python setup.py build & python setup.py install
+cd ../roadrecon
+python setup.py build & python setup.py install
+```
+
 **Developing the front-end**  
 If you want to make changes to the Angular front-end, you will need to have `node` and `npm` installed. Then install the components from git:
 ```
