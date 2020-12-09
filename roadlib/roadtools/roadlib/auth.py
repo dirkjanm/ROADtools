@@ -289,6 +289,11 @@ class Authentication():
                                  action='store',
                                  help=helptext,
                                  default='1b730954-1685-4b74-9bfd-dac224a7b894')
+        auth_parser.add_argument('-r',
+                                 '--resource',
+                                 action='store',
+                                 help='Resource to authenticate to (Default: https://graph.windows.net)',
+                                 default='https://graph.windows.net')
         auth_parser.add_argument('--as-app',
                                  action='store_true',
                                  help='Authenticate as App (requires password and client ID set)')
@@ -341,6 +346,7 @@ class Authentication():
         self.refresh_token = args.refresh_token
         self.outfile = args.tokenfile
         self.debug = args.debug
+        self.resource_uri = args.resource
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
