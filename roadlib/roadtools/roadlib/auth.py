@@ -8,6 +8,10 @@ import uuid
 import binascii
 import time
 from urllib.parse import urlparse, parse_qs
+import os
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.kbkdf import CounterLocation, KBKDFHMAC, Mode
+from cryptography.hazmat.backends import default_backend
 import requests
 import adal
 import jwt
@@ -98,14 +102,17 @@ class Authentication():
             self.tokendata[ikey] = ivalue
         return self.tokendata
 
-    def authenticate_with_prt(self, prt, context, derived_key):
+    def authenticate_with_prt(self, prt, context, derived_key=None, sessionkey=None):
         """
         Authenticate with a PRT and given context/derived key
         """
+        # If raw key specified, use that
+        if not derived_key and sessionkey:
+            context, derived_key = self.calculate_derived_key(sessionkey, context)
         secret = derived_key.replace(' ','')
         sdata = binascii.unhexlify(secret)
         headers = {
-            'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8').rstrip('=')
+            'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8') #.rstrip('=')
         }
         if not '_' in prt:
             prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
@@ -120,7 +127,40 @@ class Authentication():
         cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
         return self.authenticate_with_prt_cookie(cookie)
 
+    def calculate_derived_key(self, sessionkey, context=None):
+        """
+        Calculate the derived key given a session key and optional context using KBKDFHMAC
+        """
+        label = b"AzureAD-SecureConversation"
+        if not context:
+            context = os.urandom(32)
+        else:
+            context = binascii.unhexlify(context)
+        backend = default_backend()
+        kdf = KBKDFHMAC(
+            algorithm=hashes.SHA256(),
+            mode=Mode.CounterMode,
+            length=32,
+            rlen=4,
+            llen=4,
+            location=CounterLocation.BeforeFixed,
+            label=label,
+            context=context,
+            fixed=None,
+            backend=backend
+        )
+        if len(sessionkey) == 44:
+            keybytes = base64.b64decode(sessionkey)
+        else:
+            keybytes = binascii.unhexlify(sessionkey)
+        derived_key = kdf.derive(keybytes)
+        # This is not ideal but further code expects it as hex string
+        return binascii.hexlify(context).decode('utf-8'), binascii.hexlify(derived_key).decode('utf-8')
+
     def get_prt_cookie_nonce(self):
+        """
+        Request a nonce to sign in with
+        """
         ses = requests.session()
         params = {
             'resource': self.resource_uri,
@@ -174,7 +214,7 @@ class Authentication():
                 return nonce
 
 
-    def authenticate_with_prt_cookie(self, cookie, context=None, derived_key=None, verify_only=False):
+    def authenticate_with_prt_cookie(self, cookie, context=None, derived_key=None, verify_only=False, sessionkey=None):
         """
         Authenticate with a PRT cookie, optionally re-signing the cookie if a key is given
         """
@@ -186,9 +226,14 @@ class Authentication():
             if not nonce:
                 return False
             print('Requested nonce from server to use with ROADtoken: %s' % nonce)
-            return False
+            if not derived_key and not sessionkey:
+                return False
         else:
             nonce = jdata['request_nonce']
+
+        # If raw key specified, use that
+        if not derived_key and sessionkey:
+            context, derived_key = self.calculate_derived_key(sessionkey, context)
 
         # If a derived key was specified, we use that
         if derived_key:
@@ -215,7 +260,7 @@ class Authentication():
                 # Resign with custom context
                 # convert from ascii to base64
                 newheaders = {
-                    'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8').rstrip('=')
+                    'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8') #.rstrip('=')
                 }
                 cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders).decode('utf-8')
                 print('Re-signed PRT cookie using custom context')
@@ -250,7 +295,7 @@ class Authentication():
             'x-ms-RefreshTokenCredential': cookie
         }
         res = ses.get('https://login.microsoftonline.com/Common/oauth2/authorize', params=params, headers=headers, cookies=cookies, allow_redirects=False)
-        if res.status_code == 302 and params['redirect_uri'] in res.headers['Location']:
+        if res.status_code == 302 and params['redirect_uri'].lower() in res.headers['Location'].lower():
             ups = urlparse(res.headers['Location'])
             qdata = parse_qs(ups.query)
             return self.authenticate_with_code(qdata['code'][0], params['redirect_uri'])
@@ -321,6 +366,9 @@ class Authentication():
         auth_parser.add_argument('--prt-context',
                                  action='store',
                                  help='Primary Refresh Token context for the derived key (as hex key)')
+        auth_parser.add_argument('--prt-sessionkey',
+                                 action='store',
+                                 help='Primary Refresh Token session key (as hex key)')
         auth_parser.add_argument('--prt-verify',
                                  action='store_true',
                                  help='Verify the Primary Refresh Token and exit')
@@ -380,10 +428,11 @@ class Authentication():
                 print('Requested nonce from server to use with ROADtoken: %s' % nonce)
             return False
         if args.prt_cookie:
-            return self.authenticate_with_prt_cookie(args.prt_cookie, args.prt_context, args.derived_key, args.prt_verify)
+            return self.authenticate_with_prt_cookie(args.prt_cookie, args.prt_context, args.derived_key, args.prt_verify, args.prt_sessionkey)
         if args.prt and args.prt_context and args.derived_key:
-            return self.authenticate_with_prt(args.prt, args.prt_context, args.derived_key)
-
+            return self.authenticate_with_prt(args.prt, args.prt_context, derived_key=args.derived_key)
+        if args.prt and args.prt_sessionkey:
+            return self.authenticate_with_prt(args.prt, args.prt_context, sessionkey=args.prt_sessionkey)
         # If we are here, no auth to try
         print('Not enough information was supplied to authenticate')
         return False
