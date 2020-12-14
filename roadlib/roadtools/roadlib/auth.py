@@ -133,7 +133,7 @@ class Authentication():
         """
         label = b"AzureAD-SecureConversation"
         if not context:
-            context = os.urandom(32)
+            context = os.urandom(24)
         else:
             context = binascii.unhexlify(context)
         backend = default_backend()
