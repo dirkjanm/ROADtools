@@ -296,7 +296,10 @@ class AccessPoliciesPlugin():
         if 'Block' in acontrols:
             ot = '<strong>Deny logon</strong>'
             return ot
-        ot = '<strong>Requirements</strong>: '
+        if len(controls) > 1:
+            ot = '<strong>Requirements (all)</strong>: '
+        else:
+            ot = '<strong>Requirements (any)</strong>: '
         ot += ', '.join(acontrols)
         return ot
 
