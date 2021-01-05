@@ -190,6 +190,9 @@ class AccessPoliciesPlugin():
             if 'All' in clist:
                 ot += 'All applications'
                 break
+            if 'None' in clist:
+                ot += 'None'
+                break
             if 'Office365' in clist:
                 ot += 'All Office 365 applications'
             objects = self._get_application(clist)
@@ -368,6 +371,7 @@ class AccessPoliciesPlugin():
             table += '</tbody>'
             html += table
         self.write_html(self.file, html)
+        print('Results written to {0}'.format(self.file))
 
 def add_args(parser):
     parser.add_argument('-f',
