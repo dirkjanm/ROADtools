@@ -322,6 +322,12 @@ class AccessPoliciesPlugin():
                 ot += ', '.join([escape(crit) for crit in icrit['ClientTypes']])
         return ot
 
+    def _parse_sessioncontrols(self, cond):
+        if not 'SessionControls' in cond:
+            return ''
+        ucond = cond['SessionControls']
+        return ', '.join(ucond)
+
     def main(self, should_print=False):
         pp = pprint.PrettyPrinter(indent=4)
         ol = []
@@ -348,6 +354,7 @@ class AccessPoliciesPlugin():
             out['platforms'] = self._parse_platform(conditions)
             out['locations'] = self._parse_locations(conditions)
             out['clients'] = self._parse_clients(conditions)
+            out['sessioncontrols'] = self._parse_sessioncontrols(detail)
 
             try:
                 controls = detail['Controls']
@@ -367,7 +374,10 @@ class AccessPoliciesPlugin():
                 table += '<tr><td>Using clients</td><td>{0}</td></tr>'.format(out['clients'])
             if out['locations'] != '':
                 table += '<tr><td>At locations</td><td>{0}</td></tr>'.format(out['locations'])
-            table += '<tr><td>Controls</td><td>{0}</td></tr>'.format(out['controls'])
+            if out['controls'] != '':
+                table += '<tr><td>Controls</td><td>{0}</td></tr>'.format(out['controls'])
+            if out['sessioncontrols'] != '':
+                table += '<tr><td>Session controls</td><td>{0}</td></tr>'.format(out['sessioncontrols'])
             table += '</tbody>'
             html += table
         self.write_html(self.file, html)
