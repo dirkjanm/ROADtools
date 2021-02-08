@@ -75,6 +75,7 @@ def main():
     plugins_list = {
         'policies': 'Parse conditional access policies',
         'bloodhound': 'Export Azure AD data to a custom BloodHound version',
+        'export': 'Export data to a file (CSV or Excel format)'
         # 'grep': 'Export grep-compatible lists'
     }
 
