@@ -51,6 +51,7 @@ jobs:
       roadrecon auth -u $rtuser -p $rtpass
       roadrecon dump
       roadrecon plugin policies
+      roadrecon plugin xlsexport
       rm .roadtools_auth
       rm caps.html
     displayName: 'Run ROADrecon gathering tests'
