@@ -63,7 +63,7 @@ class ExportToFilePlugin():
         self.session = session
         self.file = file
         self.verbose = verbose
-    
+
     def _print_msg(self, msg):
         if self.verbose:
             print(msg)
@@ -99,7 +99,7 @@ class ExportToFilePlugin():
                 if isinstance(result, (list,)) and len(result) == 0:
                     result = ""
                 if isinstance(result, (list,)):
-                    if isinstance(result[0], (Group,User)):
+                    if isinstance(result[0], (Group,User,ServicePrincipal)):
                         object_name = []
                         for obj in result:
                             object_name.append(obj.displayName)
@@ -126,17 +126,17 @@ class ExportToFilePlugin():
         self._print_msg('Export %s info' % sheet_name)
 
         sheet = self._create_sheet(book, sheet_name)
-        self._create_excel_headers(sheet, users_schema.Meta().fields) 
+        self._create_excel_headers(sheet, users_schema.Meta().fields)
         self._apply_style_sheet(sheet, column_width)
         all_users = self.session.query(User).all()
         self._fill_sheet(sheet, all_users, users_schema.Meta().fields)
-    
+
     def get_devices(self, book, column_width=40):
         sheet_name = "Devices"
         self._print_msg('Export %s info' % sheet_name)
 
         sheet = self._create_sheet(book, sheet_name)
-        self._create_excel_headers(sheet, devices_schema.Meta().fields) 
+        self._create_excel_headers(sheet, devices_schema.Meta().fields)
         self._apply_style_sheet(sheet, column_width)
         all_devices = self.session.query(Device).all()
         self._fill_sheet(sheet, all_devices, devices_schema.Meta().fields)
@@ -146,7 +146,7 @@ class ExportToFilePlugin():
         self._print_msg('Export %s info' % sheet_name)
 
         sheet = self._create_sheet(book, sheet_name)
-        self._create_excel_headers(sheet, groups_schema.Meta().fields) 
+        self._create_excel_headers(sheet, groups_schema.Meta().fields)
         self._apply_style_sheet(sheet, column_width)
         all_groups = self.session.query(Group).all()
         self._fill_sheet(sheet, all_groups, groups_schema.Meta().fields)
@@ -156,9 +156,9 @@ class ExportToFilePlugin():
         self._print_msg('Export %s info' % sheet_name)
 
         members_of = dict()
-        hearders = ['objectId', 'displayName', 'memberOf'] 
+        hearders = ['objectId', 'displayName', 'memberOf']
         sheet = self._create_sheet(book, "MemberOf")
-        self._create_excel_headers(sheet, hearders) 
+        self._create_excel_headers(sheet, hearders)
         self._apply_style_sheet(sheet, column_width)
         all_users = self.session.query(User).all()
         self._fill_sheet(sheet, all_users, hearders)
@@ -172,7 +172,7 @@ class ExportToFilePlugin():
             'description', 'isSystem', 'roleDisabled', 'member', 'memberType'
         )
         sheet = self._create_sheet(book, sheet_name)
-        self._create_excel_headers(sheet, fields) 
+        self._create_excel_headers(sheet, fields)
         self._apply_style_sheet(sheet, column_width)
         all_directory_roles = self.session.query(DirectoryRole).all()
         directory_roles_by_member = []
@@ -207,7 +207,7 @@ class ExportToFilePlugin():
             'ownerServicePrincipals'
         )
         sheet = self._create_sheet(book, sheet_name)
-        self._create_excel_headers(sheet, fields) 
+        self._create_excel_headers(sheet, fields)
         self._apply_style_sheet(sheet, column_width)
         all_applications = self.session.query(Application).all()
         self._fill_sheet(sheet, all_applications, fields)
@@ -224,7 +224,7 @@ class ExportToFilePlugin():
             'accountEnabled', 'servicePrincipalType'
         )
         sheet = self._create_sheet(book, sheet_name)
-        self._create_excel_headers(sheet, fields) 
+        self._create_excel_headers(sheet, fields)
         self._apply_style_sheet(sheet, column_width)
         all_service_principal = self.session.query(ServicePrincipal).all()
         self._fill_sheet(sheet, all_service_principal, fields)
@@ -235,7 +235,7 @@ class ExportToFilePlugin():
 
         sheet = self._create_sheet(book, sheet_name)
         fields = ('objid', 'ptype', 'pname', 'app', 'value', 'desc', 'spid')
-        self._create_excel_headers(sheet, fields) 
+        self._create_excel_headers(sheet, fields)
         self._apply_style_sheet(sheet, column_width)
         approles = []
         for ar in self.session.query(AppRoleAssignment).all():
@@ -280,7 +280,7 @@ class ExportToFilePlugin():
             'type', 'userid', 'userdisplayname', 'targetapplication', 'targetspobjectid',
             'sourceapplication', 'sourcespobjectid', 'expiry', 'scope'
         )
-        self._create_excel_headers(sheet, fields) 
+        self._create_excel_headers(sheet, fields)
         self._apply_style_sheet(sheet, column_width)
         for permgrant in self.session.query(OAuth2PermissionGrant).all():
             grant = {}
@@ -303,9 +303,9 @@ class ExportToFilePlugin():
             grant['expiry'] = permgrant.expiryTime
             grant['scope'] = permgrant.scope
             oauth2permissions.append(grant)
-            
+
         self._fill_sheet(sheet, oauth2permissions, fields)
-    
+
     def get_mfa(self, book, column_width=40):
         sheet_name = "MFA"
         self._print_msg('Export %s info' % sheet_name)
@@ -317,7 +317,7 @@ class ExportToFilePlugin():
             'methods', 'oathTokenMetadata', 'requirements', 'phoneAppDetails',
             'proofupTime', 'verificationDetail', 'requirements'
         )
-        self._create_excel_headers(sheet, fields) 
+        self._create_excel_headers(sheet, fields)
         self._apply_style_sheet(sheet, column_width)
         all_mfa = self.session.query(User).all()
         mfa = []
@@ -408,7 +408,7 @@ def main(args=None):
     if not file_extension:
         file_extension = '.xlsx'
     if file_extension not in SUPPORTED_EXTENSIONS:
-        print("%s is not a supported extention. Only %s are supported" % (file_extension, ', '.join(supported_extensions)))
+        print("%s is not a supported extention. Only %s are supported" % (file_extension, ', '.join(SUPPORTED_EXTENSIONS)))
         return
 
     plugin = ExportToFilePlugin(session, filename + file_extension, verbose=args.verbose)
