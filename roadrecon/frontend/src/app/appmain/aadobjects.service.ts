@@ -34,6 +34,7 @@ export interface DirectoryRolesItem {
 export interface ApplicationsItem {
   objectId: string;
   displayName: string;
+  appId: string;
   availableToOtherTenants: boolean;
   oauth2AllowIdTokenImplicitFlow: boolean;
   oauth2AllowImplicitFlow: boolean;
@@ -210,6 +211,10 @@ export class DatabaseService {
       return this.http.get<ServicePrincipalsItem>(environment.apibase + 'serviceprincipals/'+ id);
   }
 
+  public getServicePrincipalByAppId(id):  Observable<ServicePrincipalsItem> {
+      return this.http.get<ServicePrincipalsItem>(environment.apibase + 'serviceprincipals-by-appid/'+ id);
+  }
+
   public getApplications():  Observable<ApplicationsItem[]> {
       return this.http.get<ApplicationsItem[]>(environment.apibase + 'applications');
   }
@@ -352,3 +357,27 @@ export class ServicePrincipalsResolveService implements Resolve<ServicePrincipal
     );
   }
 }
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ServicePrincipalsByAppIdResolveService implements Resolve<ServicePrincipalsItem> {
+  constructor(private dbservice: DatabaseService, private router: Router) {}
+
+  resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<ServicePrincipalsItem> | Observable<never> {
+    let id = route.paramMap.get('id');
+
+    return this.dbservice.getServicePrincipalByAppId(id).pipe(
+      mergeMap(serviceprincipal => {
+        if (serviceprincipal) {
+          this.router.navigate(['/serviceprincipals', serviceprincipal.objectId]);
+          return EMPTY;
+        } else { // id not found
+          this.router.navigate(['/serviceprincipals']);
+          return EMPTY;
+        }
+      })
+    );
+  }
+}
+

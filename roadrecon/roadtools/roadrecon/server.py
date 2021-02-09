@@ -207,17 +207,18 @@ import json
 def get_sps():
     all_sps = db.session.query(ServicePrincipal).all()
     result = serviceprincipals_schema.dump(all_sps)
-    for obj in result:
-        try:
-            json.dumps(obj)
-        except TypeError:
-            import pprint
-            pprint.pprint(obj)
     return serviceprincipals_schema.jsonify(all_sps)
 
 @app.route("/api/serviceprincipals/<id>", methods=["GET"])
 def sp_detail(id):
     sp = db.session.query(ServicePrincipal).get(id)
+    if not sp:
+        abort(404)
+    return serviceprincipal_schema.jsonify(sp)
+
+@app.route("/api/serviceprincipals-by-appid/<id>", methods=["GET"])
+def sp_detail_by_appid(id):
+    sp = db.session.query(ServicePrincipal).filter(ServicePrincipal.appId == id).first()
     if not sp:
         abort(404)
     return serviceprincipal_schema.jsonify(sp)

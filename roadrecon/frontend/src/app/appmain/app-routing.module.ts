@@ -13,7 +13,7 @@ import { DevicesdialogInitComponent } from './devices/devicesdialog/devicesdialo
 import { GroupsdialogInitComponent } from './groups/groupsdialog/groupsdialog.component';
 import { ApplicationsdialogInitComponent } from './applications/applicationsdialog/applicationsdialog.component';
 import { ServicePrincipalsdialogInitComponent } from './serviceprincipals/serviceprincipalsdialog/serviceprincipalsdialog.component';
-import { UsersResolveService, GroupsResolveService, ServicePrincipalsResolveService, DevicesResolveService, ApplicationsResolveService } from './aadobjects.service'
+import { UsersResolveService, GroupsResolveService, ServicePrincipalsResolveService, DevicesResolveService, ApplicationsResolveService, ServicePrincipalsByAppIdResolveService } from './aadobjects.service'
 import { ConfigComponent } from './config/config.component';
 import { MfaComponent } from './mfa/mfa.component';
 import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permissions.component';
@@ -70,6 +70,12 @@ const routes: Routes = [
             }
           }
         ]
+      },
+      { path: 'serviceprincipals-by-appid/:id',
+        component: ServicePrincipalsdialogInitComponent,
+        resolve: {
+          sp: ServicePrincipalsByAppIdResolveService
+        }
       },
       { path: 'applications',
         component: ApplicationsComponent,

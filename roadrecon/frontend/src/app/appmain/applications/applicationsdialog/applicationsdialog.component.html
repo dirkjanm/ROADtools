@@ -6,7 +6,9 @@
       <table class="userTable">
         <tr><th>Display name</th><td>{{ application.displayName }}</td></tr>
         <tr><th>ObjectId</th><td>{{ application.objectId }}</td></tr>
+        <tr><th>Application ID</th><td>{{ application.appId }}</td></tr>
         <tr><th>Publisher</th><td>{{ application.publisherName }}</td></tr>
+        <tr><th>Service Principal</th><td><a [routerLink]="['/serviceprincipals-by-appid/', application.appId]">{{ application.displayName }}</a></td></tr>
         <tr><th>Reply Urls</th><td>
           <mat-list>
             <mat-list-item *ngFor="let url of application.replyUrls"> {{ url }} </mat-list-item>
@@ -21,7 +23,7 @@
         </mat-panel-title>
       </mat-expansion-panel-header>
 
-      <table mat-table [dataSource]="application.ownerUsers">
+      <table mat-table [dataSource]="application.ownerUsers" class="full-width-table">
         <ng-container matColumnDef="displayName">
           <th mat-header-cell *matHeaderCellDef>Name</th>
           <td mat-cell *matCellDef="let row"><a [routerLink]="['/users/', row.objectId]">{{row.displayName}}</a></td>
