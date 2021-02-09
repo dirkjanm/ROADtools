@@ -143,7 +143,7 @@ class DataDumper(object):
                 try:
                     childtbl, linkname = mapping[objclass]
                 except KeyError:
-                    print('Unsupported member type: %s' % objclass)
+                    print('Unsupported member type: %s for parent %s' % (objclass, parent.__table__))
                     continue
             child = self.session.query(childtbl).get(objectid)
             if not child:
@@ -284,13 +284,11 @@ class DataDumper(object):
     async def dump_custom_role_members(self, dbtype):
         parents = self.session.query(RoleDefinition).all()
         cache = []
+        jobs = []
         for parent in parents:
             url = 'https://graph.windows.net/%s/roleAssignments?api-version=%s&$filter=roleDefinitionId eq \'%s\'' % (self.tenantid, self.api_version, parent.objectId)
-            async for obj in dumphelper(url, method=self.ahsession.get):
-                cache.append(obj)
-                if len(cache) > 1000:
-                    commit(self.session, dbtype, cache)
-                    cache = []
+            jobs.append(self.dump_lo_to_db(url, self.ahsession.get, dbtype, cache))
+        await asyncio.gather(*jobs)
         if len(cache) > 0:
             commit(self.session, dbtype, cache)
         self.session.commit()
