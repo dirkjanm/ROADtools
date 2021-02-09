@@ -168,6 +168,7 @@ export interface DevicesItem {
   dirSyncEnabled: boolean;
   displayName: string;
   domainName: string;
+  owner: UsersItem[];
 }
 
 @Injectable({

@@ -43,7 +43,7 @@ export class DevicesdialogInitComponent implements OnInit {
 })
 export class DevicesdialogComponent {
   public displayedColumns: string[] = ['displayName', 'description']
-  public displayedColumnsServicePrincipals: string[] = ['displayName', 'publisherName', 'microsoftFirstParty', 'passwordCredentials', 'keyCredentials', 'appRoles', 'oauth2Permissions', 'owner'];
+  public displayedColumnsOwners: string[] = ['displayName', 'userPrincipalName']
   public displayedColumnsDevices: string[] = ['displayName', 'deviceManufacturer', 'accountEnabled', 'deviceModel', 'deviceOSType', 'deviceOSVersion', 'deviceTrustType', 'isCompliant', 'isManaged', 'isRooted'];
 
   @ViewChild(MatSort, {static: true}) sort: MatSort;
