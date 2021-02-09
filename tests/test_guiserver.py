@@ -38,3 +38,20 @@ def test_db_has_devices_owners(client):
             assert 'displayName' in owner
 
     assert owners > 0
+
+def test_sp_links_work(client):
+    """Test if the ServicePrincipal links work"""
+
+    rv = client.get('/api/serviceprincipals')
+    assert len(rv.json) > 5
+    outlinks = 0
+    for sp in rv.json:
+        ddata = client.get('/api/serviceprincipals/' + sp['objectId'])
+        ddata_json = ddata.json
+        outlinks += len(ddata_json['oauth2PermissionGrants'])
+        for owner in ddata_json['oauth2PermissionGrants']:
+            assert 'resourceId' in owner
+        outlinks += len(ddata_json['appRolesAssigned'])
+        for owner in ddata_json['appRolesAssigned']:
+            assert 'principalId' in owner
+    assert outlinks > 0
