@@ -61,7 +61,7 @@ class AppRoleAssignmentsSchema(ma.SQLAlchemyAutoSchema):
 class GroupsSchema(ma.Schema):
     class Meta:
         model = Group
-        fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'mail')
+        fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'objectType', 'mail')
 
 class SimpleServicePrincipalsSchema(ma.Schema):
     """
@@ -91,6 +91,7 @@ class DirectoryRolesSchema(RTModelSchema):
         model = DirectoryRole
     memberUsers = fields.Nested(UsersSchema, many=True)
     memberServicePrincipals = fields.Nested(ServicePrincipalsSchema, many=True)
+    memberGroups = fields.Nested(GroupsSchema, many=True)
 
 class UserSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):

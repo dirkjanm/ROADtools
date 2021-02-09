@@ -2,7 +2,7 @@ import { AfterViewInit, Component, OnInit, ViewChild, Input } from '@angular/cor
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
-import { DirectoryRolesItem, UsersItem, ServicePrincipalsItem } from '../aadobjects.service'
+import { DirectoryRolesItem, UsersItem, ServicePrincipalsItem, GroupsItem } from '../aadobjects.service'
 import { LocalStorageService } from 'ngx-webstorage';
 
 // import
@@ -14,9 +14,9 @@ import { LocalStorageService } from 'ngx-webstorage';
 export class RoletableComponent implements AfterViewInit, OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<ServicePrincipalsItem | UsersItem>;
+  @ViewChild(MatTable) table: MatTable<ServicePrincipalsItem | UsersItem | GroupsItem>;
   @Input() role: DirectoryRolesItem;
-  dataSource: MatTableDataSource<ServicePrincipalsItem | UsersItem>;
+  dataSource: MatTableDataSource<ServicePrincipalsItem | UsersItem | GroupsItem>;
 
   constructor(private localSt:LocalStorageService) {  }
 
@@ -25,9 +25,10 @@ export class RoletableComponent implements AfterViewInit, OnInit {
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();
-    let roleMembers = Array<ServicePrincipalsItem | UsersItem>();
+    let roleMembers = Array<ServicePrincipalsItem | UsersItem | GroupsItem>();
     roleMembers = roleMembers.concat(this.role.memberUsers);
     roleMembers = roleMembers.concat(this.role.memberServicePrincipals);
+    roleMembers = roleMembers.concat(this.role.memberGroups);
     this.dataSource.data = roleMembers;
     this.localSt.observe('mfa')
       .subscribe((value) => {

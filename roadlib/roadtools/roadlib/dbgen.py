@@ -172,6 +172,7 @@ relations = {
     'serviceprincipal_owner_serviceprincipal': ('ServicePrincipal', 'ServicePrincipal', 'ownerServicePrincipals', 'ownedServicePrincipals'),
     'role_member_user': ('DirectoryRole', 'User', 'memberUsers', 'memberOfRole'),
     'role_member_serviceprincipal': ('DirectoryRole', 'ServicePrincipal', 'memberServicePrincipals', 'memberOfRole'),
+    'role_member_group': ('DirectoryRole', 'Group', 'memberGroups', 'memberOfRole'),
 }
 
 link_tbl_tpl = '''
@@ -218,11 +219,11 @@ tables = [
     (OAuth2PermissionGrant, [], []),
     (User, [], ['group_member_user', 'application_owner_user', 'serviceprincipal_owner_user', 'role_member_user', 'device_owner']),
     (ServicePrincipal, ['serviceprincipal_owner_user', 'serviceprincipal_owner_serviceprincipal'], ['role_member_serviceprincipal', 'serviceprincipal_owner_serviceprincipal', 'application_owner_serviceprincipal', 'group_member_serviceprincipal']),
-    (Group, ['group_member_group', 'group_member_user', 'group_member_contact', 'group_member_device', 'group_member_serviceprincipal'], ['group_member_group']),
+    (Group, ['group_member_group', 'group_member_user', 'group_member_contact', 'group_member_device', 'group_member_serviceprincipal'], ['group_member_group', 'role_member_group']),
     (Application, ['application_owner_user', 'application_owner_serviceprincipal'], []),
     (Device, ['device_owner'], ['group_member_device']),
     # (Domain, [], []),
-    (DirectoryRole, ['role_member_user', 'role_member_serviceprincipal'], []),
+    (DirectoryRole, ['role_member_user', 'role_member_serviceprincipal', 'role_member_group'], []),
     (TenantDetail, [], []),
     (ApplicationRef, [], []),
     (ExtensionProperty, [], []),

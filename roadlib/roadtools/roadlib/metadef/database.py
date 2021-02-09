@@ -121,6 +121,11 @@ lnk_role_member_serviceprincipal = Table('lnk_role_member_serviceprincipal', Bas
     Column('ServicePrincipal', Text, ForeignKey('ServicePrincipals.objectId'))
 )
 
+lnk_role_member_group = Table('lnk_role_member_group', Base.metadata,
+    Column('DirectoryRole', Text, ForeignKey('DirectoryRoles.objectId')),
+    Column('Group', Text, ForeignKey('Groups.objectId'))
+)
+
 class AppRoleAssignment(Base, SerializeMixin):
     __tablename__ = "AppRoleAssignments"
     objectType = Column(Text)
@@ -436,6 +441,10 @@ class Group(Base, SerializeMixin):
         secondaryjoin=objectId==lnk_group_member_group.c.Group,
         back_populates="memberGroups")
 
+    memberOfRole = relationship("DirectoryRole",
+        secondary=lnk_role_member_group,
+        back_populates="memberGroups")
+
 
 class Application(Base, SerializeMixin):
     __tablename__ = "Applications"
@@ -565,6 +574,10 @@ class DirectoryRole(Base, SerializeMixin):
 
     memberServicePrincipals = relationship("ServicePrincipal",
         secondary=lnk_role_member_serviceprincipal,
+        back_populates="memberOfRole")
+
+    memberGroups = relationship("Group",
+        secondary=lnk_role_member_group,
         back_populates="memberOfRole")
 
 

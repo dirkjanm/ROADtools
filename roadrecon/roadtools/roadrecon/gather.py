@@ -354,6 +354,7 @@ async def run(args, dburl):
         role_mapping = {
             'Microsoft.DirectoryServices.User': (User, 'memberUsers'),
             'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'memberServicePrincipals'),
+            'Microsoft.DirectoryServices.Group': (Group, 'memberGroups'),
         }
         tasks.append(dumper.dump_links('directoryRoles', 'members', DirectoryRole, mapping=role_mapping))
         tasks.append(dumper.dump_linked_objects('servicePrincipals', 'appRoleAssignedTo', ServicePrincipal, AppRoleAssignment, ignore_duplicates=True))

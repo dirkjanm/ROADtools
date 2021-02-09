@@ -15,11 +15,13 @@ export interface GroupsItem {
   createdDateTime: string;
   dirSyncEnabled: string;
   objectId: string;
+  objectType: string;
   mail: string;
   membershipRule: string;
   memberOf: GroupsItem[];
   memberUsers: UsersItem[];
   memberServicePrincipals: ServicePrincipalsItem[];
+  memberOfRole: DirectoryRolesItem[];
 }
 
 export interface DirectoryRolesItem {
@@ -29,6 +31,7 @@ export interface DirectoryRolesItem {
   roleTemplateId: string;
   memberUsers: UsersItem[];
   memberServicePrincipals: ServicePrincipalsItem[];
+  memberGroups: GroupsItem[];
 }
 
 export interface ApplicationsItem {

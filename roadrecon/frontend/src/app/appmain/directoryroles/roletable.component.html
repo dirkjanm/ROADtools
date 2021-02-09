@@ -39,7 +39,7 @@
 
     <ng-container matColumnDef="accountEnabled">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.accountEnabled? '':'Disabled' }}</mat-cell>
+      <mat-cell *matCellDef="let row">{{ row.objectType == 'Group' || row.accountEnabled? '':'Disabled' }}</mat-cell>
     </ng-container>
     <ng-container matColumnDef="strongAuthenticationDetail">
       <mat-header-cell *matHeaderCellDef mat-sort-header>MFA</mat-header-cell>
