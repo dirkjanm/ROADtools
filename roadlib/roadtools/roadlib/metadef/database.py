@@ -4,7 +4,7 @@ import datetime
 import sqlalchemy.types
 from sqlalchemy import Column, Text, Boolean, BigInteger as Integer, Binary, create_engine, Table, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker, foreign
 from sqlalchemy.types import TypeDecorator, TEXT
 Base = declarative_base()
 
@@ -120,6 +120,32 @@ lnk_role_member_serviceprincipal = Table('lnk_role_member_serviceprincipal', Bas
     Column('DirectoryRole', Text, ForeignKey('DirectoryRoles.objectId')),
     Column('ServicePrincipal', Text, ForeignKey('ServicePrincipals.objectId'))
 )
+
+class AppRoleAssignment(Base, SerializeMixin):
+    __tablename__ = "AppRoleAssignments"
+    objectType = Column(Text)
+    objectId = Column(Text, primary_key=True)
+    deletionTimestamp = Column(DateTime)
+    creationTimestamp = Column(DateTime)
+    id = Column(Text)
+    principalDisplayName = Column(Text)
+    principalId = Column(Text)
+    principalType = Column(Text)
+    resourceDisplayName = Column(Text)
+    resourceId = Column(Text)
+
+
+class OAuth2PermissionGrant(Base, SerializeMixin):
+    __tablename__ = "OAuth2PermissionGrants"
+    clientId = Column(Text)
+    consentType = Column(Text)
+    expiryTime = Column(DateTime)
+    objectId = Column(Text, primary_key=True)
+    principalId = Column(Text)
+    resourceId = Column(Text)
+    scope = Column(Text)
+    startTime = Column(DateTime)
+
 
 class User(Base, SerializeMixin):
     __tablename__ = "Users"
@@ -329,6 +355,13 @@ class ServicePrincipal(Base, SerializeMixin):
     memberOf = relationship("Group",
         secondary=lnk_group_member_serviceprincipal,
         back_populates="memberServicePrincipals")
+
+
+    oauth2PermissionGrants = relationship("OAuth2PermissionGrant",
+        primaryjoin=objectId == foreign(OAuth2PermissionGrant.clientId))
+
+    appRolesAssigned = relationship("AppRoleAssignment",
+        primaryjoin=objectId == foreign(AppRoleAssignment.principalId))
 
 
 class Group(Base, SerializeMixin):
@@ -651,18 +684,6 @@ class Contact(Base, SerializeMixin):
         back_populates="memberContacts")
 
 
-class OAuth2PermissionGrant(Base, SerializeMixin):
-    __tablename__ = "OAuth2PermissionGrants"
-    clientId = Column(Text)
-    consentType = Column(Text)
-    expiryTime = Column(DateTime)
-    objectId = Column(Text, primary_key=True)
-    principalId = Column(Text)
-    resourceId = Column(Text)
-    scope = Column(Text)
-    startTime = Column(DateTime)
-
-
 class Policy(Base, SerializeMixin):
     __tablename__ = "Policys"
     objectType = Column(Text)
@@ -697,20 +718,6 @@ class RoleAssignment(Base, SerializeMixin):
     principalId = Column(Text)
     resourceScopes = Column(JSON)
     roleDefinitionId = Column(Text)
-
-
-class AppRoleAssignment(Base, SerializeMixin):
-    __tablename__ = "AppRoleAssignments"
-    objectType = Column(Text)
-    objectId = Column(Text, primary_key=True)
-    deletionTimestamp = Column(DateTime)
-    creationTimestamp = Column(DateTime)
-    id = Column(Text)
-    principalDisplayName = Column(Text)
-    principalId = Column(Text)
-    principalType = Column(Text)
-    resourceDisplayName = Column(Text)
-    resourceId = Column(Text)
 
 
 def parse_db_argument(dbarg):

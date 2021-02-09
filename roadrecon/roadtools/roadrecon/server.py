@@ -50,6 +50,14 @@ class DirectoryRoleSchema(ma.Schema):
         model = DirectoryRole
         fields = ('displayName', 'description')
 
+class OAuth2PermissionGrantsSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = OAuth2PermissionGrant
+
+class AppRoleAssignmentsSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = AppRoleAssignment
+
 class GroupsSchema(ma.Schema):
     class Meta:
         model = Group
@@ -113,7 +121,8 @@ class ServicePrincipalSchema(RTModelSchema):
     ownerServicePrincipals = fields.Nested(ServicePrincipalsSchema, many=True)
     memberOfRole = fields.Nested(DirectoryRoleSchema, many=True)
     memberOf = fields.Nested(GroupSchema, many=True)
-
+    oauth2PermissionGrants = fields.Nested(OAuth2PermissionGrantsSchema, many=True)
+    appRolesAssigned = fields.Nested(AppRoleAssignmentsSchema, many=True)
 
 class ApplicationSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -202,7 +211,7 @@ def group_detail(id):
     if not group:
         abort(404)
     return group_schema.jsonify(group)
-import json
+
 @app.route("/api/serviceprincipals", methods=["GET"])
 def get_sps():
     all_sps = db.session.query(ServicePrincipal).all()

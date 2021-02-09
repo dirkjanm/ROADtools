@@ -6,7 +6,7 @@ import datetime
 import sqlalchemy.types
 from sqlalchemy import Column, Text, Boolean, BigInteger as Integer, Binary, create_engine, Table, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker, foreign
 from sqlalchemy.types import TypeDecorator, TEXT
 Base = declarative_base()
 
@@ -103,6 +103,15 @@ def get_session(engine):
     return Session()
 '''
 
+# Custom joins for service principals since these are kinda weird
+custom_splinks = '''
+    oauth2PermissionGrants = relationship("OAuth2PermissionGrant",
+        primaryjoin=objectId == foreign(OAuth2PermissionGrant.clientId))
+
+    appRolesAssigned = relationship("AppRoleAssignment",
+        primaryjoin=objectId == foreign(AppRoleAssignment.principalId))
+'''
+
 coldef = '    %s = Column(%s)'
 pcoldef = '    %s = Column(%s, primary_key=True)'
 
@@ -143,6 +152,9 @@ def gen_db_class(classdef, rels, rev_rels):
             outrels.append(gen_link_fkey(rel, reldata[0], reldata[3], reldata[2], 'child'+reldata[0], reldata[0]))
         else:
             outrels.append(gen_link(rel, reldata[0], reldata[3], reldata[2]))
+
+    if classname == 'ServicePrincipal':
+        outrels.append(custom_splinks)
     return dbdef % (classname, classname, '\n'.join(cols), '\n'.join(outrels))
 
 # Relationships defined here
@@ -201,6 +213,9 @@ def gen_link_fkey(link_name, ref_table, rel_name, rev_rel_name, ref_column, sec_
 # Tables to generate and relationships with other tables are defined here
 tables = [
     # Table, relation, back_relation
+    # These come first since they are referenced from service principals
+    (AppRoleAssignment, [], []),
+    (OAuth2PermissionGrant, [], []),
     (User, [], ['group_member_user', 'application_owner_user', 'serviceprincipal_owner_user', 'role_member_user', 'device_owner']),
     (ServicePrincipal, ['serviceprincipal_owner_user', 'serviceprincipal_owner_serviceprincipal'], ['role_member_serviceprincipal', 'serviceprincipal_owner_serviceprincipal', 'application_owner_serviceprincipal', 'group_member_serviceprincipal']),
     (Group, ['group_member_group', 'group_member_user', 'group_member_contact', 'group_member_device', 'group_member_serviceprincipal'], ['group_member_group']),
@@ -212,11 +227,9 @@ tables = [
     (ApplicationRef, [], []),
     (ExtensionProperty, [], []),
     (Contact, [], ['group_member_contact']),
-    (OAuth2PermissionGrant, [], []),
     (Policy, [], []),
     (RoleDefinition, [], []),
-    (RoleAssignment, [], []),
-    (AppRoleAssignment, [], [])
+    (RoleAssignment, [], [])
 ]
 with open('metadef/database.py', 'w') as outf:
     outf.write(header)
