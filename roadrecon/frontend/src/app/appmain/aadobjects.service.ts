@@ -78,6 +78,7 @@ export interface MfaItem {
   objectId: string;
   displayName: string;
   mfamethods: number;
+  perusermfa: boolean;
   has_app: boolean;
   has_phonenr: boolean;
   has_fido: boolean;

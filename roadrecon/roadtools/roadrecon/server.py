@@ -230,6 +230,12 @@ def get_applications():
 
 @app.route("/api/mfa", methods=["GET"])
 def get_mfa():
+    # First get all users with per-user MFA
+    per_user = db.session.query(AppRoleAssignment).filter(AppRoleAssignment.resourceDisplayName == "MicrosoftAzureActiveAuthn" and AppRoleAssignment.principalType == "User").all()
+    enabledusers = []
+    for approle in per_user:
+        enabledusers.append(approle.principalId)
+
     all_mfa = db.session.query(User).all()
     out = []
     for user in all_mfa:
@@ -243,6 +249,7 @@ def get_mfa():
             'displayName': user.displayName,
             'mfamethods': mfa_methods,
             'accountEnabled': user.accountEnabled,
+            'perusermfa': user.objectId in enabledusers,
             'has_app': has_app,
             'has_phonenr': has_phonenr,
             'has_fido': has_fido,

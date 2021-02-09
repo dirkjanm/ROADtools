@@ -20,7 +20,7 @@ export class MfaComponent implements AfterViewInit, OnInit {
   constructor(private service: DatabaseService) {  }
 
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['displayName', 'accountEnabled', 'mfamethods', 'has_fido', 'has_app', 'has_phonenr', 'strongAuthenticationDetail'];
+  displayedColumns = ['displayName', 'accountEnabled', 'perusermfa', 'mfamethods', 'has_fido', 'has_app', 'has_phonenr', 'strongAuthenticationDetail'];
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();
