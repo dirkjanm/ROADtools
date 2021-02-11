@@ -10,6 +10,7 @@ import requests
 import aiohttp
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func
 from roadtools.roadlib.metadef.database import User, ServicePrincipal, Application, Group, Device, DirectoryRole, RoleAssignment,  ExtensionProperty, Contact, OAuth2PermissionGrant, Policy, RoleDefinition, AppRoleAssignment, TenantDetail
 #from roadlib.metadef.database import Domain
 from roadtools.roadlib.auth import Authentication
@@ -21,6 +22,8 @@ expiretime = None
 headers = {}
 dburl = ''
 urlcounter = 0
+
+MAX_GROUPS = 1000
 
 def mknext(url, prevurl):
     if url.startswith('https://'):
@@ -113,6 +116,13 @@ def commit(engine, dbtype, cache, ignore=False):
         cache
     )
 
+async def queue_processor(queue):
+    while True:
+        task = await queue.get()
+        # task is already a coroutine, so we wait for it to finish
+        await task
+        queue.task_done()
+
 class DataDumper(object):
     def __init__(self, tenantid, api_version, ahsession=None, engine=None, session=None):
         self.api_version = api_version
@@ -173,6 +183,17 @@ class DataDumper(object):
         await asyncio.gather(*jobs)
         self.session.commit()
 
+    async def dump_links_with_queue(self, queue, objecttype, linktype, parenttbl, mapping=None, linkname=None, childtbl=None, method=None):
+        if method is None:
+            method = self.ahsession.get
+        parents = self.session.query(parenttbl).all()
+        jobs = []
+        for parent in parents:
+            url = 'https://graph.windows.net/%s/%s/%s/$links/%s?api-version=%s' % (self.tenantid, objecttype, parent.objectId, linktype, self.api_version)
+            # Chunk it to avoid huge memory usage
+            await queue.put(self.dump_l_to_db(url, method, mapping, linkname, childtbl, parent))
+        await queue.join()
+        self.session.commit()
 
     async def dump_mfa_to_db(self, url, method, parent):
         obj = await dumpsingle(url, method=method)
@@ -345,22 +366,30 @@ async def run(args, dburl):
         'Microsoft.DirectoryServices.User': (User, 'ownerUsers'),
         'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'ownerServicePrincipals'),
     }
+    role_mapping = {
+        'Microsoft.DirectoryServices.User': (User, 'memberUsers'),
+        'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'memberServicePrincipals'),
+        'Microsoft.DirectoryServices.Group': (Group, 'memberGroups'),
+    }
     tasks = []
     dumper.session = dbsession
+    num_groups = dbsession.query(func.count(Group.objectId)).scalar()
+    if num_groups > MAX_GROUPS:
+        print('Gathered {0} groups, switching to 3-phase approach for efficiency'.format(num_groups))
     async with aiohttp.ClientSession() as ahsession:
-        print('Starting data gathering phase 2 of 2 (collecting properties and relationships)')
+        if num_groups > MAX_GROUPS:
+            print('Starting data gathering phase 2 of 3 (collecting properties and relationships)')
+        else:
+            print('Starting data gathering phase 2 of 2 (collecting properties and relationships)')
         dumper.ahsession = ahsession
-        tasks.append(dumper.dump_links('groups', 'members', Group, mapping=group_mapping))
-        role_mapping = {
-            'Microsoft.DirectoryServices.User': (User, 'memberUsers'),
-            'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'memberServicePrincipals'),
-            'Microsoft.DirectoryServices.Group': (Group, 'memberGroups'),
-        }
+        # If we have a lot of groups, dump them separately
+        if num_groups <= MAX_GROUPS:
+            tasks.append(dumper.dump_links('groups', 'members', Group, mapping=group_mapping))
+            tasks.append(dumper.dump_object_expansion('devices', Device, 'registeredOwners', 'owner', User))
         tasks.append(dumper.dump_links('directoryRoles', 'members', DirectoryRole, mapping=role_mapping))
         tasks.append(dumper.dump_linked_objects('servicePrincipals', 'appRoleAssignedTo', ServicePrincipal, AppRoleAssignment, ignore_duplicates=True))
         tasks.append(dumper.dump_linked_objects('servicePrincipals', 'appRoleAssignments', ServicePrincipal, AppRoleAssignment, ignore_duplicates=True))
         tasks.append(dumper.dump_object_expansion('servicePrincipals', ServicePrincipal, 'owners', 'owner', User, mapping=owner_mapping))
-        tasks.append(dumper.dump_object_expansion('devices', Device, 'registeredOwners', 'owner', User))
         tasks.append(dumper.dump_object_expansion('applications', Application, 'owners', 'owner', User, mapping=owner_mapping))
         tasks.append(dumper.dump_custom_role_members(RoleAssignment))
         if args.mfa:
@@ -368,6 +397,26 @@ async def run(args, dburl):
         tasks.append(dumper.dump_each(ServicePrincipal, 'applicationRefs', ApplicationRef))
 
         await asyncio.gather(*tasks)
+
+    tasks = []
+    if num_groups > MAX_GROUPS:
+        print('Starting data gathering phase 3 of 3 (collecting group memberships and device owners)')
+        async with aiohttp.ClientSession() as ahsession:
+            dumper.ahsession = ahsession
+            queue = asyncio.Queue(maxsize=100)
+            # Start the workers
+            workers = []
+            for i in range(100):
+                workers.append(asyncio.ensure_future(queue_processor(queue)))
+
+            tasks.append(dumper.dump_links_with_queue(queue, 'devices', 'registeredOwners', Device, linkname="owner", childtbl=User))
+            tasks.append(dumper.dump_links_with_queue(queue, 'groups', 'members', Group, mapping=group_mapping))
+
+            await asyncio.gather(*tasks)
+            await queue.join()
+            for worker_task in workers:
+                worker_task.cancel()
+
     dbsession.close()
 
 def getargs(gather_parser):
