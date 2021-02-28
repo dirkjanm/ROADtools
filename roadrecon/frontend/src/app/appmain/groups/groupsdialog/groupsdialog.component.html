@@ -9,6 +9,7 @@
         <tr><th>ObjectId</th><td>{{ group.objectId }}</td></tr>
         <tr *ngIf="group.membershipRule != null"><th>Dynamic Membership</th><td>{{ group.membershipRule }}</td></tr>
         <tr *ngIf="group.mail != null"><th>Email</th><td>{{ group.mail }}</td></tr>
+        <tr *ngIf="group.isPublic != null"><th>Public?</th><td>{{ group.isPublic }}</td></tr>
         <tr *ngIf="group.createdDateTime != null"><th>Created</th><td>{{ group.createdDateTime }}</td></tr>
         <tr><th>Group type</th><td>{{ group.dirSyncEnabled? 'Synced with AD':'Cloud-only' }}</td></tr>
       </table>
