@@ -17,6 +17,7 @@ export interface GroupsItem {
   objectId: string;
   objectType: string;
   mail: string;
+  isPublic: boolean;
   membershipRule: string;
   memberOf: GroupsItem[];
   memberUsers: UsersItem[];
