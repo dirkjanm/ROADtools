@@ -2,7 +2,7 @@ import os
 import json
 import datetime
 import sqlalchemy.types
-from sqlalchemy import Column, Text, Boolean, BigInteger as Integer, Binary, create_engine, Table, ForeignKey
+from sqlalchemy import Column, Text, Boolean, BigInteger as Integer, create_engine, Table, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker, foreign
 from sqlalchemy.types import TypeDecorator, TEXT

@@ -9,7 +9,7 @@ class Edm(object):
         DBTYPE = sqlalchemy.types.Boolean
 
     class Stream(object):
-        DBTYPE = sqlalchemy.types.Binary
+        DBTYPE = sqlalchemy.types.LargeBinary
 
     class Int32(object):
         DBTYPE = sqlalchemy.types.Integer
@@ -24,7 +24,7 @@ class Edm(object):
         DBTYPE = sqlalchemy.types.DateTime
 
     class Binary(object):
-        DBTYPE = sqlalchemy.types.Binary
+        DBTYPE = sqlalchemy.types.LargeBinary
 
 class Collection(object):
     DBTYPE = sqlalchemy.types.JSON
