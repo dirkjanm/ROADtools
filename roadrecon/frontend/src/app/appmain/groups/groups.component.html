@@ -28,6 +28,11 @@
       <td mat-cell *matCellDef="let row">{{row.mail}}</td>
     </ng-container>
 
+    <ng-container matColumnDef="isPublic">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Public?</th>
+      <td mat-cell *matCellDef="let row">{{row.isPublic}}</td>
+    </ng-container>
+
     <ng-container matColumnDef="jobTitle">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Job title</th>
       <td mat-cell *matCellDef="let row">{{row.jobTitle}}</td>

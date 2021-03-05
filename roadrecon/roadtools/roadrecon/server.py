@@ -61,7 +61,7 @@ class AppRoleAssignmentsSchema(ma.SQLAlchemyAutoSchema):
 class GroupsSchema(ma.Schema):
     class Meta:
         model = Group
-        fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'objectType', 'mail')
+        fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'objectType', 'mail', 'isPublic')
 
 class SimpleServicePrincipalsSchema(ma.Schema):
     """
