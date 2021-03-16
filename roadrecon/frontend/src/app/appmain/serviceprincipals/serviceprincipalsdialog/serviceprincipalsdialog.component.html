@@ -76,7 +76,7 @@
       </table>
     </mat-expansion-panel>
     </mat-tab>
-  <mat-tab label="Defined permissons" *ngIf="sp.appRoles.length > 0 || sp.oauth2Permissions.length > 0">
+  <mat-tab label="Application defined permissons" *ngIf="sp.appRoles.length > 0 || sp.oauth2Permissions.length > 0">
     <h2 *ngIf="sp.appRoles.length > 0">Application roles (application permissions)</h2>
     <table *ngIf="sp.appRoles.length > 0" mat-table [dataSource]="sp.appRoles">
       <ng-container matColumnDef="displayName">
@@ -136,6 +136,7 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumnsOAuth2;"></tr>
     </table>
   </mat-tab>
+
   <mat-tab label="Metadata" *ngIf="metadata.length > 0">
     <table class="userTable">
         <tr *ngFor="let data of metadata">

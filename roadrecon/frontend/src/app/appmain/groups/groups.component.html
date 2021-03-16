@@ -30,7 +30,7 @@
 
     <ng-container matColumnDef="isPublic">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Public?</th>
-      <td mat-cell *matCellDef="let row">{{row.isPublic}}</td>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isPublic" aria-hidden="false" aria-label="Public group">check</mat-icon></td>
     </ng-container>
 
     <ng-container matColumnDef="jobTitle">
