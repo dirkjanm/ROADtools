@@ -181,7 +181,8 @@ class AccessPoliciesPlugin():
                     raise Exception('Unsupported criterium type: {0}'.format(ctype))
             else:
                 if not 'Guests' in clist:
-                    raise Exception('Unmatched object(s): {0}'.format(','.join(clist)))
+                    ot += 'Unknown object(s) {0}'.format(', '.join(clist))
+                    print('Warning: Not all object IDs could be resolved for this policy')
         return ot
 
     def _parse_appcrit(self, crit):
