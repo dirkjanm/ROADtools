@@ -156,6 +156,7 @@ export interface AppRolesItem {
 export interface DevicesItem {
   objectId: string;
   accountEnabled: boolean;
+  bitLockerKey: object[];
   deviceCategory: string;
   deviceId: string;
   deviceKey: object;

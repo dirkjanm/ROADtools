@@ -32,6 +32,20 @@
       </table>
     </mat-expansion-panel>
     </mat-tab>
+  <mat-tab label="Bitlocker Keys" *ngIf="blkeys.length > 0">
+    <table mat-table [dataSource]="blkeys">
+      <ng-container matColumnDef="keyIdentifier">
+        <th mat-header-cell *matHeaderCellDef>Identifier</th>
+        <td mat-cell *matCellDef="let row">{{row.keyIdentifier}}</td>
+      </ng-container>
+      <ng-container matColumnDef="keyMaterial">
+        <th mat-header-cell *matHeaderCellDef>Recovery key</th>
+        <td mat-cell *matCellDef="let row">{{row.keyMaterial}}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumnsBLKeys"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumnsBLKeys;"></tr>
+    </table>
+  </mat-tab>
   <mat-tab label="Raw"><p appJsonFormat [json]="device"></p></mat-tab>
 </mat-tab-group>
 </mat-dialog-content>

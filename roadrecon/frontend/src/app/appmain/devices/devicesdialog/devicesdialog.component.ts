@@ -44,12 +44,22 @@ export class DevicesdialogInitComponent implements OnInit {
 export class DevicesdialogComponent {
   public displayedColumns: string[] = ['displayName', 'description']
   public displayedColumnsOwners: string[] = ['displayName', 'userPrincipalName']
+  public displayedColumnsBLKeys: string[] = ['keyIdentifier', 'keyMaterial']
   public displayedColumnsDevices: string[] = ['displayName', 'deviceManufacturer', 'accountEnabled', 'deviceModel', 'deviceOSType', 'deviceOSVersion', 'deviceTrustType', 'isCompliant', 'isManaged', 'isRooted'];
-
+  public blkeys: object[] = [];
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(
     public dialogRef: MatDialogRef<DevicesdialogComponent>,
     @Inject(MAT_DIALOG_DATA) public device: DevicesItem
-  ) { }
+  ) {
+    if (device.bitLockerKey && device.bitLockerKey.length > 0){
+      for( let blkey of device.bitLockerKey){
+        let out = blkey;
+        out['keyMaterial'] = atob(blkey['keyMaterial'])
+
+        this.blkeys.push(out);
+      }
+    }
+   }
 
 }
