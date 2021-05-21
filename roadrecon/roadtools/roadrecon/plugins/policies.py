@@ -261,9 +261,13 @@ class AccessPoliciesPlugin():
         for policy in policies:
             for pdetail in policy.policyDetail:
                 detaildata = json.loads(pdetail)
-
-                if detaildata['KnownNetworkPolicies']['NetworkId'] in locs:
+                if 'KnownNetworkPolicies' in detaildata and detaildata['KnownNetworkPolicies']['NetworkId'] in locs:
                     out.append(detaildata['KnownNetworkPolicies']['NetworkName'])
+        # New format
+        for loc in locs:
+            policies = self.session.query(Policy).filter(Policy.policyType == 6 and Policy.policyIdentifier == loc)
+            for policy in policies:
+                out.append(policy.displayName)
         return out
 
     def _parse_who(self, cond):
