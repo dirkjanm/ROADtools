@@ -8,6 +8,7 @@ from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole,
 import os
 import argparse
 from sqlalchemy import func
+import mimetypes
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -15,6 +16,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # This will get initialized later on
 db = None
 ma = Marshmallow(app)
+
+mimetypes.add_type('application/javascript', '.js')
 
 # Allow CORS requests from Angular if it's running in develop mode
 CORS(app, origins=['http://127.0.0.1:4200', 'http://localhost:4200', 'http://localhost:5000'])
