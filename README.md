@@ -32,7 +32,7 @@ There are multiple ways to install ROADrecon:
 Stable versions can be installed with `pip install roadrecon`. This will automatically add the `roadrecon` command to your PATH.
 
 **Using a version from GitHub**  
-Every commit to master is automatically built into a release version with Azure Pipelines. This ensures that you can install the latest version of the GUI without having to install `npm` and all it's dependencies. Simply download the `roadlib` and `roadrecon` zip files from the [Azure Pipelines artifacts](https://dev.azure.com/dirkjanm/ROADtools/_build/latest?definitionId=19&branchName=master), then unzip both and install them in the correct order (`roadlib` first):
+Every commit to master is automatically built into a release version with Azure Pipelines. This ensures that you can install the latest version of the GUI without having to install `npm` and all it's dependencies. You can download the `roadlib` and `roadrecon` build files from the [Azure Pipelines artifacts](https://dev.azure.com/dirkjanm/ROADtools/_build/latest?definitionId=19&branchName=master). They are stored in `ROADtools.zip`. You can either install the `.whl` or `.tar.gz` files directly using pip or unzip both and install the folders in the correct order (`roadlib` first):
 
 ```
 pip install roadlib/
