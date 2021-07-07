@@ -1,10 +1,10 @@
-@import '~@angular/material/theming';
+@use '~@angular/material' as mat;
 // Plus imports for other components in your app.
 
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
-@include mat-core();
+@include mat.core();
 
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
@@ -25,20 +25,20 @@ $rt-primary: (
   A400: #ff1744,
   A700: #d50000,
   contrast: (
-    50: $dark-primary-text,
-    100: $dark-primary-text,
-    200: $dark-primary-text,
-    300: $dark-primary-text,
-    400: $dark-primary-text,
-    500: $dark-primary-text,
-    600: $dark-primary-text,
-    700: $dark-primary-text,
-    800: $light-primary-text,
-    900: $light-primary-text,
-    A100: $dark-primary-text,
-    A200: $light-primary-text,
-    A400: $light-primary-text,
-    A700: $light-primary-text,
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: rgba(black, 0.87),
+    600: rgba(black, 0.87),
+    700: rgba(black, 0.87),
+    800: white,
+    900: white,
+    A100: rgba(black, 0.87),
+    A200: white,
+    A400: white,
+    A700: white,
   )
 );
 
@@ -58,42 +58,42 @@ $rt-secondary: (
   A400: #ff1744,
   A700: #d50000,
   contrast: (
-    50: $dark-secondary-text,
-    100: $dark-secondary-text,
-    200: $dark-secondary-text,
-    300: $dark-secondary-text,
-    400: $dark-secondary-text,
-    500: $dark-secondary-text,
-    600: $dark-secondary-text,
-    700: $light-secondary-text,
-    800: $light-secondary-text,
-    900: $light-secondary-text,
-    A100: $light-secondary-text,
-    A200: $dark-secondary-text,
-    A400: $dark-secondary-text,
-    A700: $dark-secondary-text,
+    50: rgba(black, 0.54),
+    100: rgba(black, 0.54),
+    200: rgba(black, 0.54),
+    300: rgba(black, 0.54),
+    400: rgba(black, 0.54),
+    500: rgba(black, 0.54),
+    600: rgba(black, 0.54),
+    700: rgba(white, 0.7),
+    800: rgba(white, 0.7),
+    900: rgba(white, 0.7),
+    A100: rgba(white, 0.7),
+    A200: rgba(black, 0.54),
+    A400: rgba(black, 0.54),
+    A700: rgba(black, 0.54),
   )
 );
 
-$roadtools-primary: mat-palette($rt-primary, 800, 900, 400);
-$roadtools-accent:  mat-palette($rt-secondary, 600, 800, 200);
+$roadtools-primary: mat.define-palette($rt-primary, 800, 900, 400);
+$roadtools-accent:  mat.define-palette($rt-secondary, 600, 800, 200);
 
 // The warn palette is optional (defaults to red).
-$roadtools-warn:    mat-palette($mat-red);
+$roadtools-warn:    mat.define-palette(mat.$red-palette);
 
 // Create the theme object (a Sass map containing all of the palettes).
-$roadtools-theme: mat-light-theme($roadtools-primary, $roadtools-accent, $roadtools-warn);
+$roadtools-theme: mat.define-light-theme($roadtools-primary, $roadtools-accent, $roadtools-warn);
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include angular-material-theme($roadtools-theme);
+@include mat.all-component-themes($roadtools-theme);
 mat-table, .mat-table {
   a:not(.mat-button) {
-      color: mat-color($roadtools-primary, 900);
+      color: mat.get-color-from-palette($roadtools-primary, 900);
       text-decoration: none;
       &:hover {
-        color: mat-color($roadtools-primary, 400);
+        color: mat.get-color-from-palette($roadtools-primary, 400);
       }
 
   }
