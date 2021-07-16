@@ -75,7 +75,8 @@ def main():
     plugins_list = {
         'policies': 'Parse conditional access policies',
         'bloodhound': 'Export Azure AD data to a custom BloodHound version',
-        'xlsexport': 'Export data to an Excel file'
+        'xlsexport': 'Export data to an Excel file',
+        'findusergroups': 'Find users belonging to groups matching a search term'
         # 'grep': 'Export grep-compatible lists'
     }
 
