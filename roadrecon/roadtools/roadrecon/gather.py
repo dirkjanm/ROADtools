@@ -8,6 +8,7 @@ import sys
 import traceback
 import requests
 import aiohttp
+import random
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func, bindparam
@@ -607,7 +608,11 @@ def main(args=None):
         dburl = args.database
 
     headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
-
+    with open("ua.txt", 'r') as f:
+        user_agents = f.readlines()
+        
+    headers['User-Agent'] = random.choice(user_agents)
+    
     seconds = time.perf_counter()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(args))
