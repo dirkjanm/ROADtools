@@ -611,7 +611,7 @@ def main(args=None):
     with open("ua.txt", 'r') as f:
         user_agents = f.readlines()
         
-    headers['User-Agent'] = random.choice(user_agents)
+    headers['User-Agent'] = random.choice(user_agents).strip()
     
     seconds = time.perf_counter()
     loop = asyncio.get_event_loop()
