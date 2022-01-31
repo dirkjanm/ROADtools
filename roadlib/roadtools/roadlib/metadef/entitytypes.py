@@ -52,6 +52,7 @@ class AdministrativeUnit(DirectoryObject):
         'displayName': Edm.String,
         'description': Edm.String,
         'membershipRule': Edm.String,
+        'membershipRuleProcessingState': Edm.String,
         'membershipType': Edm.String,
         'visibility': Edm.String,
     }
@@ -73,6 +74,8 @@ class Application(DirectoryObject):
         'appMetadata': AppMetadata,
         'appRoles': Collection,
         'availableToOtherTenants': Edm.Boolean,
+        'certification': Certification,
+        'disabledByMicrosoftStatus': Edm.String,
         'displayName': Edm.String,
         'encryptedMsiApplicationSecret': Edm.Binary,
         'errorUrl': Edm.String,
@@ -137,6 +140,7 @@ class ApplicationRef(object):
         'requiredResourceAccess': Collection,
         'samlMetadataUrl': Edm.String,
         'supportsConvergence': Edm.Boolean,
+        'verifiedPublisher': VerifiedPublisher,
     }
     rels = [
 
@@ -161,6 +165,12 @@ class AppRoleAssignment(DirectoryObject):
 class AuthorizationPolicy(object):
     props = {
         'id': Edm.String,
+        'allowInvitesFrom': Edm.String,
+        'allowedToSignUpEmailBasedSubscriptions': Edm.Boolean,
+        'allowedToUseSSPR': Edm.Boolean,
+        'allowEmailVerifiedUsersToJoinOrganization': Edm.Boolean,
+        'blockMsolPowerShell': Edm.Boolean,
+        'defaultUserRolePermissions': DefaultUserRolePermissions,
         'displayName': Edm.String,
         'description': Edm.String,
         'enabledPreviewFeatures': Collection,
@@ -169,6 +179,47 @@ class AuthorizationPolicy(object):
     }
     rels = [
 
+    ]
+
+
+class CertificateBasedDeviceAuthConfiguration(DirectoryObject):
+    props = {
+        'displayName': Edm.String,
+        'tlsClientAuthParameter': Edm.String,
+        'certificateAuthorities': Collection,
+    }
+    rels = [
+
+    ]
+
+
+class CustomSecurityAttributeDefinition(object):
+    props = {
+        'advancedOptions': Collection,
+        'attributeSet': Edm.String,
+        'description': Edm.String,
+        'id': Edm.String,
+        'isCollection': Edm.Boolean,
+        'isSearchable': Edm.Boolean,
+        'name': Edm.String,
+        'status': Edm.String,
+        'type': Edm.String,
+        'usePreDefinedValuesOnly': Edm.Boolean,
+    }
+    rels = [
+        'allowedValues',
+    ]
+
+
+class ConditionalAccessPolicy(DirectoryObject):
+    props = {
+        'definition': Collection,
+        'displayName': Edm.String,
+        'isOrganizationDefault': Edm.Boolean,
+        'policyIdentifier': Edm.String,
+    }
+    rels = [
+        'appliesTo',
     ]
 
 
@@ -207,7 +258,7 @@ class Contact(DirectoryObject):
         'thumbnailPhoto': Edm.Stream,
     }
     rels = [
-
+        'cloudPublicDelegates',
     ]
 
 
@@ -253,6 +304,8 @@ class Device(DirectoryObject):
         'enrollmentProfileName': Edm.String,
         'enrollmentType': Edm.String,
         'exchangeActiveSyncId': Collection,
+        'externalSourceName': Edm.String,
+        'hostnames': Collection,
         'isCompliant': Edm.Boolean,
         'isManaged': Edm.Boolean,
         'isRooted': Edm.Boolean,
@@ -264,9 +317,11 @@ class Device(DirectoryObject):
         'organizationalUnit': Edm.String,
         'profileType': Edm.String,
         'reserved1': Edm.String,
+        'sourceType': Edm.String,
         'systemLabels': Collection,
     }
     rels = [
+        'createdFrom',
         'registeredOwners',
         'registeredUsers',
         'resourceAccount',
@@ -282,6 +337,20 @@ class DeviceConfiguration(DirectoryObject):
     }
     rels = [
 
+    ]
+
+
+class DeviceTemplate(DirectoryObject):
+    props = {
+        'certificateBasedDeviceAuthConfigurationId': Edm.Guid,
+        'certificateBasedDeviceAuthConfigurationTenantId': Edm.Guid,
+        'deviceAuthority': Edm.String,
+        'manufacturer': Edm.String,
+        'model': Edm.String,
+        'operatingSystem': Edm.String,
+    }
+    rels = [
+        'deviceInstances',
     ]
 
 
@@ -408,6 +477,7 @@ class Group(DirectoryObject):
         'externalGroupState': Edm.String,
         'creationOptions': Collection,
         'groupTypes': Collection,
+        'infoCatalogs': Collection,
         'isAssignableToRole': Edm.Boolean,
         'isMembershipRuleLocked': Edm.Boolean,
         'isPublic': Edm.Boolean,
@@ -426,6 +496,8 @@ class Group(DirectoryObject):
         'provisioningErrors': Collection,
         'proxyAddresses': Collection,
         'renewedDateTime': Edm.DateTime,
+        'resourceBehaviorOptions': Collection,
+        'resourceProvisioningOptions': Collection,
         'securityEnabled': Edm.Boolean,
         'sharepointResources': Collection,
         'targetAddress': Edm.String,
@@ -436,9 +508,12 @@ class Group(DirectoryObject):
     rels = [
         'allowAccessTo',
         'appRoleAssignments',
+        'cloudPublicDelegates',
         'eligibleMemberOf',
         'hasAccessTo',
+        'managedBy',
         'pendingMembers',
+        'scopedAdministratorOf',
         'securedExternalData',
         'settings',
         'endpoints',
@@ -482,6 +557,18 @@ class LoginTenantBranding(object):
     ]
 
 
+class NamedLocationsPolicy(DirectoryObject):
+    props = {
+        'definition': Collection,
+        'displayName': Edm.String,
+        'isOrganizationDefault': Edm.Boolean,
+        'policyIdentifier': Edm.String,
+    }
+    rels = [
+        'appliesTo',
+    ]
+
+
 class OAuth2PermissionGrant(object):
     props = {
         'clientId': Edm.String,
@@ -503,11 +590,10 @@ class PermissionGrantPolicy(object):
         'id': Edm.String,
         'displayName': Edm.String,
         'description': Edm.String,
-        'includes': Collection,
-        'excludes': Collection,
     }
     rels = [
-
+        'includes',
+        'excludes',
     ]
 
 
@@ -534,6 +620,7 @@ class RoleAssignment(object):
     }
     rels = [
         'principal',
+        'directoryScope',
         'roleDefinition',
     ]
 
@@ -629,6 +716,7 @@ class ServicePrincipal(DirectoryObject):
         'appRoleAssignmentRequired': Edm.Boolean,
         'appRoles': Collection,
         'authenticationPolicy': ServicePrincipalAuthenticationPolicy,
+        'disabledByMicrosoftStatus': Edm.String,
         'displayName': Edm.String,
         'errorUrl': Edm.String,
         'homepage': Edm.String,
@@ -663,6 +751,7 @@ class ServicePrincipal(DirectoryObject):
         'oauth2PermissionGrants',
         'securedExternalData',
         'serviceEndpoints',
+        'scopedAdministratorOf',
     ]
 
 
@@ -684,6 +773,9 @@ class SubscribedSku(object):
         'consumedUnits': Edm.Int32,
         'objectId': Edm.String,
         'prepaidUnits': LicenseUnitsDetail,
+        'overageUnits': LicenseUnitsDetail,
+        'trialUnits': LicenseUnitsDetail,
+        'selfServiceSignupUnits': LicenseUnitsDetail,
         'servicePlans': Collection,
         'skuId': Edm.Guid,
         'skuPartNumber': Edm.String,
@@ -735,6 +827,7 @@ class TenantDetail(DirectoryObject):
         'technicalNotificationMails': Collection,
         'telephoneNumber': Edm.String,
         'tenantType': Edm.String,
+        'createdDateTime': Edm.DateTime,
         'verifiedDomains': Collection,
         'windowsCredentialsEncryptionCertificate': Edm.Binary,
     }
@@ -787,6 +880,9 @@ class User(DirectoryObject):
         'dirSyncEnabled': Edm.Boolean,
         'displayName': Edm.String,
         'employeeId': Edm.String,
+        'employeeHireDate': Edm.DateTime,
+        'employeeOrgData': EmployeeOrgData,
+        'employeeType': Edm.String,
         'extensionAttribute1': Edm.String,
         'extensionAttribute2': Edm.String,
         'extensionAttribute3': Edm.String,
@@ -806,6 +902,7 @@ class User(DirectoryObject):
         'givenName': Edm.String,
         'hasOnPremisesShadow': Edm.Boolean,
         'immutableId': Edm.String,
+        'infoCatalogs': Collection,
         'invitedAsMail': Edm.String,
         'invitedOn': Edm.DateTime,
         'inviteReplyUrl': Collection,
@@ -897,5 +994,33 @@ class User(DirectoryObject):
         'securedDpapiEncryptionKeys',
         'serviceInfo',
         'scopedAdministratorOf',
+    ]
+
+
+class PermissionGrantConditionSet(object):
+    props = {
+        'id': Edm.String,
+        'permissionClassification': Edm.String,
+        'permissionType': Edm.String,
+        'resourceApplication': Edm.String,
+        'permissions': Collection,
+        'clientApplicationIds': Collection,
+        'clientApplicationTenantIds': Collection,
+        'clientApplicationPublisherIds': Collection,
+        'clientApplicationsFromVerifiedPublisherOnly': Edm.Boolean,
+        'certifiedClientApplicationsOnly': Edm.Boolean,
+    }
+    rels = [
+
+    ]
+
+
+class AllowedValue(object):
+    props = {
+        'id': Edm.String,
+        'isActive': Edm.Boolean,
+    }
+    rels = [
+
     ]
 

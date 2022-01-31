@@ -188,6 +188,9 @@ class User(Base, SerializeMixin):
     dirSyncEnabled = Column(Boolean)
     displayName = Column(Text)
     employeeId = Column(Text)
+    employeeHireDate = Column(DateTime)
+    employeeOrgData = Column(JSON)
+    employeeType = Column(Text)
     extensionAttribute1 = Column(Text)
     extensionAttribute2 = Column(Text)
     extensionAttribute3 = Column(Text)
@@ -207,6 +210,7 @@ class User(Base, SerializeMixin):
     givenName = Column(Text)
     hasOnPremisesShadow = Column(Boolean)
     immutableId = Column(Text)
+    infoCatalogs = Column(JSON)
     invitedAsMail = Column(Text)
     invitedOn = Column(DateTime)
     inviteReplyUrl = Column(JSON)
@@ -309,6 +313,7 @@ class ServicePrincipal(Base, SerializeMixin):
     appRoleAssignmentRequired = Column(Boolean)
     appRoles = Column(JSON)
     authenticationPolicy = Column(JSON)
+    disabledByMicrosoftStatus = Column(Text)
     displayName = Column(Text)
     errorUrl = Column(Text)
     homepage = Column(Text)
@@ -389,6 +394,7 @@ class Group(Base, SerializeMixin):
     externalGroupState = Column(Text)
     creationOptions = Column(JSON)
     groupTypes = Column(JSON)
+    infoCatalogs = Column(JSON)
     isAssignableToRole = Column(Boolean)
     isMembershipRuleLocked = Column(Boolean)
     isPublic = Column(Boolean)
@@ -407,6 +413,8 @@ class Group(Base, SerializeMixin):
     provisioningErrors = Column(JSON)
     proxyAddresses = Column(JSON)
     renewedDateTime = Column(DateTime)
+    resourceBehaviorOptions = Column(JSON)
+    resourceProvisioningOptions = Column(JSON)
     securityEnabled = Column(Boolean)
     sharepointResources = Column(JSON)
     targetAddress = Column(Text)
@@ -462,6 +470,8 @@ class Application(Base, SerializeMixin):
     appMetadata = Column(JSON)
     appRoles = Column(JSON)
     availableToOtherTenants = Column(Boolean)
+    certification = Column(JSON)
+    disabledByMicrosoftStatus = Column(Text)
     displayName = Column(Text)
     encryptedMsiApplicationSecret = Column(Text)
     errorUrl = Column(Text)
@@ -536,6 +546,8 @@ class Device(Base, SerializeMixin):
     enrollmentProfileName = Column(Text)
     enrollmentType = Column(Text)
     exchangeActiveSyncId = Column(JSON)
+    externalSourceName = Column(Text)
+    hostnames = Column(JSON)
     isCompliant = Column(Boolean)
     isManaged = Column(Boolean)
     isRooted = Column(Boolean)
@@ -547,6 +559,7 @@ class Device(Base, SerializeMixin):
     organizationalUnit = Column(Text)
     profileType = Column(Text)
     reserved1 = Column(Text)
+    sourceType = Column(Text)
     systemLabels = Column(JSON)
     owner = relationship("User",
         secondary=lnk_device_owner,
@@ -614,6 +627,7 @@ class TenantDetail(Base, SerializeMixin):
     technicalNotificationMails = Column(JSON)
     telephoneNumber = Column(Text)
     tenantType = Column(Text)
+    createdDateTime = Column(DateTime)
     verifiedDomains = Column(JSON)
     windowsCredentialsEncryptionCertificate = Column(Text)
 
@@ -642,6 +656,7 @@ class ApplicationRef(Base, SerializeMixin):
     requiredResourceAccess = Column(JSON)
     samlMetadataUrl = Column(Text)
     supportsConvergence = Column(Boolean)
+    verifiedPublisher = Column(JSON)
 
 
 class ExtensionProperty(Base, SerializeMixin):
@@ -731,6 +746,30 @@ class RoleAssignment(Base, SerializeMixin):
     principalId = Column(Text)
     resourceScopes = Column(JSON)
     roleDefinitionId = Column(Text)
+
+
+class AuthorizationPolicy(Base, SerializeMixin):
+    __tablename__ = "AuthorizationPolicys"
+    id = Column(Text, primary_key=True)
+    allowInvitesFrom = Column(Text)
+    allowedToSignUpEmailBasedSubscriptions = Column(Boolean)
+    allowedToUseSSPR = Column(Boolean)
+    allowEmailVerifiedUsersToJoinOrganization = Column(Boolean)
+    blockMsolPowerShell = Column(Boolean)
+    defaultUserRolePermissions = Column(JSON)
+    displayName = Column(Text)
+    description = Column(Text)
+    enabledPreviewFeatures = Column(JSON)
+    guestUserRoleId = Column(Text)
+    permissionGrantPolicyIdsAssignedToDefaultUserRole = Column(JSON)
+
+
+class DirectorySetting(Base, SerializeMixin):
+    __tablename__ = "DirectorySettings"
+    id = Column(Text, primary_key=True)
+    displayName = Column(Text)
+    templateId = Column(Text)
+    values = Column(JSON)
 
 
 def parse_db_argument(dbarg):

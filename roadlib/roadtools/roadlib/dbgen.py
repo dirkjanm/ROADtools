@@ -134,7 +134,9 @@ def gen_db_class(classdef, rels, rev_rels):
             dbtype = 'JSON'
         if dbtype == 'Binary':
             dbtype = 'Text'
-        if pname == 'objectId' or (classname == 'Domain' and pname == 'name') or (classname == 'RoleAssignment' and pname == 'id') or (classname == 'ApplicationRef' and pname == 'appId'):
+        if dbtype == 'LargeBinary':
+            dbtype = 'Text'
+        if pname == 'objectId' or (classname == 'Domain' and pname == 'name') or (classname == 'RoleAssignment' and pname == 'id') or (classname == 'ApplicationRef' and pname == 'appId') or (classname == 'AuthorizationPolicy' and pname == 'id') or (classname == 'DirectorySetting' and pname == 'id') :
             cols.append(pcoldef % (pname, dbtype))
         else:
             cols.append(coldef % (pname, dbtype))
@@ -230,7 +232,9 @@ tables = [
     (Contact, [], ['group_member_contact']),
     (Policy, [], []),
     (RoleDefinition, [], []),
-    (RoleAssignment, [], [])
+    (RoleAssignment, [], []),
+    (AuthorizationPolicy, [], []),
+    (DirectorySetting, [], [])
 ]
 with open('metadef/database.py', 'w') as outf:
     outf.write(header)

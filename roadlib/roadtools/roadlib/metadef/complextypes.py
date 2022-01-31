@@ -6,6 +6,7 @@ class AccessPass(object):
         'startTime': Edm.DateTime,
         'endTime': Edm.DateTime,
         'passId': Edm.Guid,
+        'accessPassUsage': Edm.String,
         'accessPassCode': Edm.String,
     }
 
@@ -84,6 +85,22 @@ class BitLockerKey(object):
     }
 
 
+class CustomSecurityAttributeValue(object):
+    props = {
+        'fake_3DA706FF54E945C09DF178B67EE299C2': Edm.String,
+    }
+
+
+class Certification(object):
+    props = {
+        'isPublisherAttested': Edm.Boolean,
+        'isCertifiedByMicrosoft': Edm.Boolean,
+        'lastCertificationDateTime': Edm.DateTime,
+        'certificationExpirationDateTime': Edm.DateTime,
+        'certificationDetailsUrl': Edm.String,
+    }
+
+
 class CertificateAuthorityInformation(object):
     props = {
         'authorityType': Edm.String,
@@ -118,6 +135,14 @@ class CredentialList(object):
     }
 
 
+class DefaultUserRolePermissions(object):
+    props = {
+        'allowedToCreateApps': Edm.Boolean,
+        'allowedToCreateSecurityGroups': Edm.Boolean,
+        'allowedToReadOtherUsers': Edm.Boolean,
+    }
+
+
 class DeviceKey(object):
     props = {
         'creationTime': Edm.DateTime,
@@ -125,6 +150,13 @@ class DeviceKey(object):
         'keyIdentifier': Edm.Guid,
         'keyMaterial': Edm.Binary,
         'usage': Edm.String,
+    }
+
+
+class EmployeeOrgData(object):
+    props = {
+        'costCenter': Edm.String,
+        'division': Edm.String,
     }
 
 
@@ -207,18 +239,11 @@ class PrivacyProfile(object):
     }
 
 
-class PermissionConditionSet(object):
+class DirectorySyncStatus(object):
     props = {
-        'resourceApplication': Edm.String,
-        'includeAllPermissions': Edm.Boolean,
-        'includeSpecificPermissions': Collection,
-    }
-
-
-class ClientAppConditionSet(object):
-    props = {
-        'includeAllClientApplications': Edm.Boolean,
-        'includeSpecificClientApplications': Collection,
+        'attributeSetName': Edm.String,
+        'state': Edm.String,
+        'version': Edm.Int32,
     }
 
 
@@ -419,11 +444,18 @@ class StrongAuthenticationRequirement(object):
 class StrongAuthenticationPhoneAppDetail(object):
     props = {
         'authenticationType': Edm.String,
+        'authenticatorFlavor': Edm.String,
+        'deviceId': Edm.Guid,
         'deviceToken': Edm.String,
         'deviceName': Edm.String,
         'deviceTag': Edm.String,
+        'hashFunction': Edm.String,
+        'id': Edm.Guid,
+        'lastAuthenticatedTimestamp': Edm.DateTime,
         'oathSecretKey': Edm.String,
         'oathTokenTimeDrift': Edm.Int32,
+        'tenantDeviceId': Edm.String,
+        'timeInterval': Edm.Int32,
         'phoneAppVersion': Edm.String,
         'notificationType': Edm.String,
     }
@@ -433,7 +465,28 @@ class StrongAuthenticationUserDetail(object):
     props = {
         'alternativePhoneNumber': Edm.String,
         'email': Edm.String,
+        'voiceOnlyPhoneNumber': Edm.String,
         'phoneNumber': Edm.String,
+    }
+
+
+class CompanyStrongAuthenticationDetails(object):
+    props = {
+        'availableMFAMethods': Collection,
+        'phoneFactorId': Edm.String,
+        'blockApplicationPassword': Edm.Boolean,
+        'rememberDevicesEnabled': Edm.Boolean,
+        'rememberDevicesDurationDays': Edm.Int32,
+        'rememberDevicesUpdateTimestamp': Edm.DateTime,
+        'pinEnabled': Edm.Boolean,
+        'pinMinimumLength': Edm.Int32,
+    }
+
+
+class RelyingPartyStrongAuthenticationPolicy(object):
+    props = {
+        'relyingParties': Collection,
+        'enabled': Edm.Boolean,
     }
 
 
@@ -569,19 +622,21 @@ class DomainFederationSettings(object):
     }
 
 
-class PermissionGrantConditionSet(object):
-    props = {
-        'permissionClassification': Edm.String,
-        'permissionType': Edm.String,
-        'permissions': PermissionConditionSet,
-        'clientApplications': ClientAppConditionSet,
-    }
-
-
 class RequiredResourceAccess(object):
     props = {
         'resourceAppId': Edm.String,
         'resourceAccess': Collection,
+    }
+
+
+class OathTokenMetadata(object):
+    props = {
+        'id': Edm.Guid,
+        'enabled': Edm.Boolean,
+        'tokenType': Edm.String,
+        'manufacturer': Edm.String,
+        'manufacturerProperties': Collection,
+        'serialNumber': Edm.String,
     }
 
 
@@ -590,10 +645,17 @@ class StrongAuthenticationDetail(object):
         'encryptedPinHash': EncryptedSecretHash,
         'encryptedPinHashHistory': Edm.Binary,
         'methods': Collection,
+        'oathTokenMetadata': Collection,
         'requirements': Collection,
         'phoneAppDetails': Collection,
         'proofupTime': Edm.Int64,
         'verificationDetail': StrongAuthenticationUserDetail,
+    }
+
+
+class StrongAuthenticationPolicy(object):
+    props = {
+        'relyingPartyStrongAuthenticationPolicy': Collection,
     }
 
 
