@@ -67,8 +67,8 @@ def add_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         '-f', '--output-file',
         action='store',
-        help='File to save timeline outputs. Output format determined by file extension. Supported extensions include: [csv, pickle, json]',
-        default='timeline-output.json',
+        help='File to save timeline outputs. Output format determined by file extension. Supported extensions include: [csv, pickle, jsonl]',
+        default='timeline-output.jsonl',
     )
 
 
@@ -87,9 +87,9 @@ def populate_timeline_entry(
             return template_text.format(**row.to_dict())
         except Exception as exc:
             logger.error(f"There was a problem parsing the message: {str(exc)}")
-            return f"Error parsing template {row._table_name}.{row._source_timestamp}: " + row.to_json()
+            return f"Error parsing template {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}" 
     else:
-        return f"No template found for {row._table_name}.{row._source_timestamp}: " + row.to_json()
+        return f"No template found for {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}"
 
 
 
@@ -144,7 +144,7 @@ def main(args: Optional[argparse.Namespace] = None):
 
     templates_fp = Path(args.template_file)
     if not templates_fp.exists():
-        print(f"Template file {templates_fp} not found, defaulting to built-in templates")
+        print(f"Timeline entry template file {templates_fp} not found, defaulting to built-in templates")
         templates_fp = Path(__file__).with_suffix(".yaml")
 
     print(f"Loading timeline entry templates from {templates_fp}")
@@ -170,7 +170,7 @@ def main(args: Optional[argparse.Namespace] = None):
         .sort_index() # Sort by timestamp
     )
 
-    if args.output_file.endswith('.json'):
+    if args.output_file.endswith('.jsonl'):
         timeline.to_json(args.output_file, orient='records', lines=True, default_handler=str)
     elif args.output_file.endswith('.pickle'):
         timeline.to_pickle(args.output_file)
@@ -179,7 +179,7 @@ def main(args: Optional[argparse.Namespace] = None):
     else:
         raise ValueError(f"Unable to determine output format \
             for `--output-file` argument {args.output_file}. \
-            Filename must end with one of: [json, pickle, csv]"
+            Filename must end with one of: [jsonl, pickle, csv]"
         )
 
 
