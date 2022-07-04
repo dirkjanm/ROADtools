@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import argparse
-import logging
 import yaml
 import sqlalchemy
 
@@ -39,11 +38,7 @@ DESCRIPTION = "Timeline analysis of Azure AD objects"
 
 def create_args_parser():
     parser = argparse.ArgumentParser(
-        # TODO: Remove?
-        #add_help=True,
         description=DESCRIPTION,
-        # TODO: Remove?
-        #formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         '-d', '--database',
@@ -131,16 +126,24 @@ def copy_dataframe_by_col(df: pd.DataFrame, col: str) -> pd.DataFrame:
 
 
 def main(args: Optional[argparse.Namespace] = None):
+
     if args is None:
         parser = create_args_parser()
         args = parser.parse_args()
 
+    # Connect to the database
     db_url = database.parse_db_argument(args.database)
     engine = database.init(dburl=db_url)
+
+    # Do some reflection to grab the tables
+    # and their respective column types
     db_metadata = sqlalchemy.MetaData(bind=engine, schema='main')
     db_metadata.reflect()
     session = database.get_session(engine)
 
+    # Find the templates file which is used
+    # to populate timeline entries from the
+    # source rows.
     templates_fp = Path(args.template_file)
     if not templates_fp.exists():
         print(f"Timeline entry template file {templates_fp} not found, defaulting to built-in templates")
@@ -151,6 +154,10 @@ def main(args: Optional[argparse.Namespace] = None):
         templates_fp.read_text(encoding="utf-8", errors="replace")
     )
 
+    # For each table, convert its rows into
+    # a pandas DataFrame, then create n copies
+    # of the DataFrame for each datetime column
+    # in the DataFrame with additional metadata.
     dataframes = []
     for table in db_metadata.sorted_tables:
         df = to_dataframe(session, table)
@@ -158,6 +165,10 @@ def main(args: Optional[argparse.Namespace] = None):
             dataframes.append(
                 copy_dataframe_by_col(df, col))
 
+    # Transform the rows of the DataFrame into
+    # a human-readable string that will be used
+    # as the entry in the timeline `_message` field. 
+    # Then sort the timeline.
     timeline = (
         pd.concat(dataframes, ignore_index=True)
         .assign(_message=lambda x: x.apply(populate_timeline_entry, args=(timeline_entry_templates,), axis=1))
@@ -169,6 +180,9 @@ def main(args: Optional[argparse.Namespace] = None):
         .sort_index() # Sort by timestamp
     )
 
+    # Infer the output format based on the
+    # file extension of the `--output-file`
+    # argument.
     if args.output_file.endswith('.jsonl'):
         timeline.to_json(args.output_file, orient='records', lines=True, default_handler=str)
     elif args.output_file.endswith('.pickle'):
