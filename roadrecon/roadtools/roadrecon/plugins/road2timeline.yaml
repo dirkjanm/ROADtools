@@ -17,5 +17,5 @@ Users:
   lastDirSyncTime: 'Directory sync for user {userPrincipalName} (On-Prem SID: {onPremisesSecurityIdentifier}, Cloud SID: {cloudSecurityIdentifier}, Immutable ID: {immutableId})'
   lastPasswordChangeDateTime: 'Cloud password was changed for user {userPrincipalName} (Cloud SID: {cloudSecurityIdentifier})'
   onPremisesPasswordChangeTimestamp: 'On-Prem password was changed for user {userPrincipalName} (On-Prem SID: {onPremisesSecurityIdentifier}, Cloud SID: {cloudSecurityIdentifier}, Immutable ID: {immutableId})'
-  refreshTokensValidFromDateTime: 'Refresh tokens renewed for user {userPrincipalName} (On-Prem SID: {onPremisesSecurityIdentifier}, Cloud SID: {cloudSecurityIdentifier}, Immutable ID: {immutableId})'
+  refreshTokensValidFromDateTime: 'Refresh tokens revoked for user {userPrincipalName} (On-Prem SID: {onPremisesSecurityIdentifier}, Cloud SID: {cloudSecurityIdentifier}, Immutable ID: {immutableId})'
   userStateChangedOn: 'State changed to {userState} for {userType} user {displayName} (UPN: {userPrincipalName})'
