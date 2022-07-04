@@ -36,7 +36,6 @@ from typing import Dict, Optional
 
 DESCRIPTION = "Timeline analysis of Azure AD objects"
 
-logger = logging.getLogger(__name__)
 
 def create_args_parser():
     parser = argparse.ArgumentParser(
@@ -86,7 +85,7 @@ def populate_timeline_entry(
         try:
             return template_text.format(**row.to_dict())
         except Exception as exc:
-            logger.error(f"There was a problem parsing the message: {str(exc)}")
+            print(f"There was a problem parsing the message: {str(exc)}")
             return f"Error parsing template {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}" 
     else:
         return f"No template found for {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}"
