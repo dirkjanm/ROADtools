@@ -15,6 +15,7 @@ setup(name='roadrecon',
           'Programming Language :: Python :: 3.8',
       ],
       packages=['roadtools.roadrecon', 'roadtools.roadrecon.plugins'],
+      package_data={'roadtools.roadrecon.plugins': ['*.yaml']},
       install_requires=[
           'roadlib',
           'flask',

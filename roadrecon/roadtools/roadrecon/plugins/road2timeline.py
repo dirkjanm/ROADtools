@@ -61,7 +61,7 @@ def add_args(parser: argparse.ArgumentParser):
         '-t', '--template-file',
         action='store',
         help='File containing string templates to translate Azure AD objects into a timeline \
-            entry. Defaults to `road2timeline.yaml`',
+            entry. Defaults to `road2timeline.yaml` in the current working directory.',
         default='road2timeline.yaml'
     )
     parser.add_argument(
