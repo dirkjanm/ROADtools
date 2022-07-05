@@ -23,55 +23,86 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import argparse
-import yaml
 import sqlalchemy
 
-import pandas as pd
-import numpy as np
 import roadtools.roadlib.metadef.database as database
 
 from pathlib import Path
 from typing import Dict, Optional
 
+# Currently, there is no good way to specify
+# plugin-specific imports. Therefore, we need
+# to manually check that the necessary modules
+# are present in the environment. This will
+# likely be solved using namespace packages
+# in the future, since that is the natural
+# solution for lazy-loading modules with their
+# own dependencies in a predictable namespace.
+
+try:
+    import yaml
+    import pandas as pd
+    import numpy as np
+except (ModuleNotFoundError, ImportError) as exc:
+    print(f"Problem importing required module for ROAD2timeline plugin: {str(exc)}")
+    raise exc
+
+
 DESCRIPTION = "Timeline analysis of Azure AD objects"
 
 
-def create_args_parser():
+def create_args_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=DESCRIPTION,
     )
     parser.add_argument(
-        '-d', '--database',
-        action='store',
-        help='Database file. Can be the local database name for SQLite, or an SQLAlchemy '
-             'compatible URL such as postgresql+psycopg2://dirkjan@/roadtools',
-        default='roadrecon.db'
+        "-d",
+        "--database",
+        action="store",
+        help="Database file. Can be the local database name for SQLite, or an SQLAlchemy "
+        "compatible URL such as postgresql+psycopg2://dirkjan@/roadtools",
+        default="roadrecon.db",
     )
     return parser
 
 
 def add_args(parser: argparse.ArgumentParser):
+    """Plugin-specific arguments"""
     parser.add_argument(
-        '-t', '--template-file',
-        action='store',
-        help='File containing string templates to translate Azure AD objects into a timeline \
-            entry. Defaults to `road2timeline.yaml` in the current working directory.',
-        default='road2timeline.yaml'
+        "-t",
+        "--template-file",
+        action="store",
+        help="File containing string templates to translate Azure AD objects into a timeline \
+            entry. Defaults to `road2timeline.yaml` in the current working directory.",
+        default="road2timeline.yaml",
     )
     parser.add_argument(
-        '-f', '--output-file',
-        action='store',
-        help='File to save timeline outputs. Output format determined by file extension. Supported extensions include: [csv, pickle, jsonl]',
-        default='timeline-output.jsonl',
+        "-f",
+        "--output-file",
+        action="store",
+        help="File to save timeline outputs. Output format determined by file extension. Supported extensions include: [csv, pickle, jsonl]",
+        default="timeline-output.jsonl",
     )
 
 
 def populate_timeline_entry(
-    row: pd.Series, 
-    timeline_entry_templates: Dict[str, Dict[str, str]]
-    ) -> str:
+    row: pd.Series, timeline_entry_templates: Dict[str, Dict[str, str]]
+) -> str:
     """Attempts to populate a timeline entry template with
     the relevant fields from a row in the database.
+
+    Parameters
+    ----------
+    row : pd.Series
+        A row from a DataFrame, passed by `.apply(..., axis=1)`
+    timeline_entry_templates : Dict[str, Dict[str, str]]
+        Dictionary of template strings organized by table and
+        timestamp column name.
+
+    Returns
+    -------
+    str
+        Templated timeline event message
     """
 
     table_templates = timeline_entry_templates.get(row._table_name, {})
@@ -81,31 +112,49 @@ def populate_timeline_entry(
             return template_text.format(**row.to_dict())
         except Exception as exc:
             print(f"There was a problem parsing the message: {str(exc)}")
-            return f"Error parsing template {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}" 
+            return f"Error parsing template {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}"
     else:
         return f"No template found for {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}"
 
 
-
 def to_dataframe(
-    session: sqlalchemy.orm.session.Session, 
-    table: sqlalchemy.ext.declarative.api.DeclarativeMeta
-    ) -> pd.DataFrame:
+    session: sqlalchemy.orm.session.Session,
+    table: sqlalchemy.ext.declarative.api.DeclarativeMeta,
+) -> pd.DataFrame:
     """Reads sqlite table and converts to pd.DataFrame.
     This also converts the string values in datetime columns
     into their equivalent Python `datetime` representation.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.session.Session
+        SQLAlchemy session with the ROADtools database
+    table : sqlalchemy.ext.declarative.api.DeclarativeMeta
+        An object representing the SQL table in the ROADtools
+        database
+
+    Returns
+    -------
+    pd.DataFrame
+        All data from the table converted to Python data
+        types
     """
 
     rows = session.query(table).all()
     if not rows:
         return pd.DataFrame()
 
-    df = pd.json_normalize([{
-        **row._asdict(), 
-        '_object_id': getattr(row, "objectId", None) or getattr(row, "id", None) or "Identifier Not Found",
-        }
-        for row in rows
-    ]).assign(_table_name=table.name)
+    df = pd.json_normalize(
+        [
+            {
+                **row._asdict(),
+                "_object_id": getattr(row, "objectId", None)
+                or getattr(row, "id", None)
+                or "Identifier Not Found",
+            }
+            for row in rows
+        ]
+    ).assign(_table_name=table.name)
 
     for column in table.columns:
         # Attempts to coerce sqlite datetime columns
@@ -113,19 +162,35 @@ def to_dataframe(
         if type(column.type) == sqlalchemy.sql.sqltypes.DATETIME:
             if column.name in df.columns:
                 df[column.name] = df[column.name].apply(pd.to_datetime, errors="coerce")
-            
+
     return df
 
 
 def copy_dataframe_by_col(df: pd.DataFrame, col: str) -> pd.DataFrame:
-    """Returns a pd.DataFrame with new columns for a given datetime field"""
+    """Returns a copy of a `pd.DataFrame` with additional columns
+    for a given datetime field.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Source DataFrame
+    col : str
+        Timestamp column of interest
+
+    Returns
+    -------
+    pd.DataFrame
+        Copy of the source DataFrame, but with additional
+        columns detailing the column of interest and dropping
+        all rows where that timestamp column is not null
+    """
     df = df.copy()
-    df['_timestamp'] = df[col]
-    df['_source_timestamp'] = col
+    df["_timestamp"] = df[col]
+    df["_source_timestamp"] = col
     return df[df[col].notnull()]
 
 
-def main(args: Optional[argparse.Namespace] = None):
+def main(args: Optional[argparse.Namespace] = None) -> Path:
 
     if args is None:
         parser = create_args_parser()
@@ -137,7 +202,7 @@ def main(args: Optional[argparse.Namespace] = None):
 
     # Do some reflection to grab the tables
     # and their respective column types
-    db_metadata = sqlalchemy.MetaData(bind=engine, schema='main')
+    db_metadata = sqlalchemy.MetaData(bind=engine, schema="main")
     db_metadata.reflect()
     session = database.get_session(engine)
 
@@ -146,7 +211,9 @@ def main(args: Optional[argparse.Namespace] = None):
     # source rows.
     templates_fp = Path(args.template_file)
     if not templates_fp.exists():
-        print(f"Timeline entry template file {templates_fp} not found, defaulting to built-in templates")
+        print(
+            f"Timeline entry template file {templates_fp} not found, defaulting to built-in templates"
+        )
         templates_fp = Path(__file__).with_suffix(".yaml")
 
     print(f"Loading timeline entry templates from {templates_fp}")
@@ -162,39 +229,60 @@ def main(args: Optional[argparse.Namespace] = None):
     for table in db_metadata.sorted_tables:
         df = to_dataframe(session, table)
         for col in df.select_dtypes(include=[np.datetime64]).columns:
-            dataframes.append(
-                copy_dataframe_by_col(df, col))
+            dataframes.append(copy_dataframe_by_col(df, col))
 
     # Transform the rows of the DataFrame into
     # a human-readable string that will be used
-    # as the entry in the timeline `_message` field. 
+    # as the entry in the timeline `_message` field.
     # Then sort the timeline.
     timeline = (
         pd.concat(dataframes, ignore_index=True)
-        .assign(_message=lambda x: x.apply(populate_timeline_entry, args=(timeline_entry_templates,), axis=1))
+        .assign(
+            _message=lambda x: x.apply(
+                populate_timeline_entry, args=(timeline_entry_templates,), axis=1
+            )
+        )
+        # TODO: Decide if a better column naming scheme is required.
+        # See the actual [`log2timeline` docs](https://plaso.readthedocs.io/en/latest/sources/user/Output-and-formatting.html)
+        # for column names that would be compatible with their data model.
+        #
         # Hacky way get these columns sorted first
-        .set_index(['_source_timestamp', '_table_name', '_message', '_object_id'])
-        .sort_index(axis=1) # The remaining columns are then sorted alphabetically
+        .set_index(["_source_timestamp", "_table_name", "_message", "_object_id"])
+        # The remaining columns are then sorted alphabetically
+        .sort_index(axis=1)
         .reset_index()
-        .set_index('_timestamp') # Set the index datetime
-        .sort_index() # Sort by timestamp
+        # Set the index datetime
+        .set_index("_timestamp")
+        # Sort by timestamp
+        .sort_index()
     )
 
     # Infer the output format based on the
     # file extension of the `--output-file`
     # argument.
-    if args.output_file.endswith('.jsonl'):
-        timeline.to_json(args.output_file, orient='records', lines=True, default_handler=str)
-    elif args.output_file.endswith('.pickle'):
-        timeline.to_pickle(args.output_file)
-    elif args.output_file.endswith('.csv'):
-        timeline.to_csv(args.output_file)
+    #
+    # While we could use any output format(s)
+    # that `pd.DataFrame` supports, there may
+    # be issues serializing some complex types.
+    output_file = Path(args.output_file)
+
+    if output_file.suffix == ".jsonl":
+        timeline.to_json(output_file, orient="records", lines=True, default_handler=str)
+    elif output_file.suffix == ".pickle":
+        timeline.to_pickle(str(output_file))
+    elif output_file.suffix == ".csv":
+        timeline.to_csv(output_file)
     else:
-        raise ValueError(f"Unable to determine output format \
+        raise ValueError(
+            f"Unable to determine output format \
             for `--output-file` argument {args.output_file}. \
             Filename must end with one of: [jsonl, pickle, csv]"
         )
 
+    print(f"Timeline saved to file {output_file.resolve()}")
 
-if __name__ == '__main__':
+    return output_file
+
+
+if __name__ == "__main__":
     main()
