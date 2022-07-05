@@ -80,7 +80,7 @@ def add_args(parser: argparse.ArgumentParser):
         "-f",
         "--output-file",
         action="store",
-        help="File to save timeline outputs. Output format determined by file extension. Supported extensions include: [csv, pickle, jsonl]",
+        help="File to save timeline outputs. Output format determined by file extension. Supported extensions include: [csv, pickle, jsonl, parquet]",
         default="timeline-output.jsonl",
     )
 
@@ -106,15 +106,15 @@ def populate_timeline_entry(
     """
 
     table_templates = timeline_entry_templates.get(row._table_name, {})
-    template_text = table_templates.get(row._source_timestamp)
+    template_text = table_templates.get(row._timestamp_column)
     if template_text:
         try:
             return template_text.format(**row.to_dict())
         except Exception as exc:
             print(f"There was a problem parsing the message: {str(exc)}")
-            return f"Error parsing template {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}"
+            return f"Error parsing template {row._table_name}.{row._timestamp_column}: Object ID - {row._object_id}"
     else:
-        return f"No template found for {row._table_name}.{row._source_timestamp}: Object ID - {row._object_id}"
+        return f"No template found for {row._table_name}.{row._timestamp_column}: Object ID - {row._object_id}"
 
 
 def to_dataframe(
@@ -139,7 +139,6 @@ def to_dataframe(
         All data from the table converted to Python data
         types
     """
-
     rows = session.query(table).all()
     if not rows:
         return pd.DataFrame()
@@ -162,6 +161,14 @@ def to_dataframe(
         if type(column.type) == sqlalchemy.sql.sqltypes.DATETIME:
             if column.name in df.columns:
                 df[column.name] = df[column.name].apply(pd.to_datetime, errors="coerce")
+
+    # for column in df.columns:
+    #    try:
+    #        df[column] = df[column].apply(pd.to_datetime, errors="raise")
+    #    except Exception as exc:
+    #        # TODO: Remove, debug only
+    #        print(column, exc)
+    #        continue
 
     return df
 
@@ -186,7 +193,7 @@ def copy_dataframe_by_col(df: pd.DataFrame, col: str) -> pd.DataFrame:
     """
     df = df.copy()
     df["_timestamp"] = df[col]
-    df["_source_timestamp"] = col
+    df["_timestamp_column"] = col
     return df[df[col].notnull()]
 
 
@@ -247,7 +254,7 @@ def main(args: Optional[argparse.Namespace] = None) -> Path:
         # for column names that would be compatible with their data model.
         #
         # Hacky way get these columns sorted first
-        .set_index(["_source_timestamp", "_table_name", "_message", "_object_id"])
+        .set_index(["_timestamp_column", "_table_name", "_message", "_object_id"])
         # The remaining columns are then sorted alphabetically
         .sort_index(axis=1)
         .reset_index()
@@ -255,6 +262,7 @@ def main(args: Optional[argparse.Namespace] = None) -> Path:
         .set_index("_timestamp")
         # Sort by timestamp
         .sort_index()
+        # .reset_index()
     )
 
     # Infer the output format based on the
@@ -272,11 +280,13 @@ def main(args: Optional[argparse.Namespace] = None) -> Path:
         timeline.to_pickle(str(output_file))
     elif output_file.suffix == ".csv":
         timeline.to_csv(output_file)
+    elif output_file.suffix == ".parquet":
+        timeline.to_parquet(output_file)
     else:
         raise ValueError(
             f"Unable to determine output format \
             for `--output-file` argument {args.output_file}. \
-            Filename must end with one of: [jsonl, pickle, csv]"
+            Filename must end with one of: [jsonl, pickle, csv, parquet]"
         )
 
     print(f"Timeline saved to file {output_file.resolve()}")
