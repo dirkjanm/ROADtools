@@ -2,7 +2,7 @@
 ROAD2Timeline Plugin
 Contributed by Ryan Marcotte Cobb (Secureworks)
 
-Copyright 2020 - MIT License
+Copyright 2022 - MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,11 +33,7 @@ from typing import Dict, Optional
 # Currently, there is no good way to specify
 # plugin-specific imports. Therefore, we need
 # to manually check that the necessary modules
-# are present in the environment. This will
-# likely be solved using namespace packages
-# in the future, since that is the natural
-# solution for lazy-loading modules with their
-# own dependencies in a predictable namespace.
+# are present in the environment.
 
 try:
     import yaml
@@ -162,14 +158,6 @@ def to_dataframe(
             if column.name in df.columns:
                 df[column.name] = df[column.name].apply(pd.to_datetime, errors="coerce")
 
-    # for column in df.columns:
-    #    try:
-    #        df[column] = df[column].apply(pd.to_datetime, errors="raise")
-    #    except Exception as exc:
-    #        # TODO: Remove, debug only
-    #        print(column, exc)
-    #        continue
-
     return df
 
 
@@ -206,12 +194,12 @@ def main(args: Optional[argparse.Namespace] = None) -> Path:
     # Connect to the database
     db_url = database.parse_db_argument(args.database)
     engine = database.init(dburl=db_url)
+    session = database.get_session(engine)
 
     # Do some reflection to grab the tables
     # and their respective column types
     db_metadata = sqlalchemy.MetaData(bind=engine, schema="main")
     db_metadata.reflect()
-    session = database.get_session(engine)
 
     # Find the templates file which is used
     # to populate timeline entries from the
@@ -268,10 +256,6 @@ def main(args: Optional[argparse.Namespace] = None) -> Path:
     # Infer the output format based on the
     # file extension of the `--output-file`
     # argument.
-    #
-    # While we could use any output format(s)
-    # that `pd.DataFrame` supports, there may
-    # be issues serializing some complex types.
     output_file = Path(args.output_file)
 
     if output_file.suffix == ".jsonl":
