@@ -100,7 +100,42 @@ class Authentication():
         # Overwrite fields
         for ikey, ivalue in newtokendata.items():
             self.tokendata[ikey] = ivalue
+        access_token = newtokendata['accessToken']
+        tokens = access_token.split('.')
+        inputdata = json.loads(base64.b64decode(tokens[1]+('='*(len(tokens[1])%4))))
+        self.tokendata['_clientId'] = self.client_id
+        self.tokendata['tenantId'] = inputdata['tid']
         return self.tokendata
+
+    def authenticate_with_prt_v2(self, prt, sessionkey):
+        """
+        KDF version 2 PRT auth
+        """
+        context = os.urandom(24)
+        headers = {
+            'ctx': base64.b64encode(context).decode('utf-8'), #.rstrip('=')
+            'kdf_ver': 2
+        }
+        if not '_' in prt:
+            prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
+        nonce = self.get_prt_cookie_nonce()
+        if not nonce:
+            return False
+        payload = {
+            "refresh_token": prt,
+            "is_primary": "true",
+            "request_nonce": nonce
+        }
+        # Sign with random key just to get jwt body in right encoding
+        tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers).decode('utf-8')
+        jbody = tempjwt.split('.')[1]
+        jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
+
+        # Now calculate the derived key based on random context plus jwt body
+        kdfcontext, derived_key = self.calculate_derived_key_v2(sessionkey, context, jwtbody)
+        sdata = binascii.unhexlify(derived_key)
+        cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
+        return self.authenticate_with_prt_cookie(cookie)
 
     def authenticate_with_prt(self, prt, context, derived_key=None, sessionkey=None):
         """
@@ -112,7 +147,7 @@ class Authentication():
         secret = derived_key.replace(' ','')
         sdata = binascii.unhexlify(secret)
         headers = {
-            'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8') #.rstrip('=')
+            'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8'),
         }
         if not '_' in prt:
             prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
@@ -126,6 +161,14 @@ class Authentication():
         }
         cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
         return self.authenticate_with_prt_cookie(cookie)
+
+    def calculate_derived_key_v2(self, sessionkey, context, jwtbody):
+        digest = hashes.Hash(hashes.SHA256())
+        digest.update(context)
+        digest.update(jwtbody)
+        kdfcontext = binascii.hexlify(digest.finalize())
+        # From here on identical to v1
+        return self.calculate_derived_key(sessionkey, kdfcontext)
 
     def calculate_derived_key(self, sessionkey, context=None):
         """
@@ -359,7 +402,7 @@ class Authentication():
                                  help='Initialize Primary Refresh Token authentication flow (get nonce)')
         auth_parser.add_argument('--prt',
                                  action='store',
-                                 help='Primary Refresh Token cookie from mimikatz CloudAP')
+                                 help='Primary Refresh Token')
         auth_parser.add_argument('--derived-key',
                                  action='store',
                                  help='Derived key used to re-sign the PRT cookie (as hex key)')
@@ -372,6 +415,9 @@ class Authentication():
         auth_parser.add_argument('--prt-verify',
                                  action='store_true',
                                  help='Verify the Primary Refresh Token and exit')
+        auth_parser.add_argument('--kdf-v1',
+                                 action='store_true',
+                                 help='Use the older KDF version for PRT auth, may not work with PRTs from modern OSs')
         auth_parser.add_argument('-f',
                                  '--tokenfile',
                                  action='store',
@@ -432,7 +478,10 @@ class Authentication():
         if args.prt and args.prt_context and args.derived_key:
             return self.authenticate_with_prt(args.prt, args.prt_context, derived_key=args.derived_key)
         if args.prt and args.prt_sessionkey:
-            return self.authenticate_with_prt(args.prt, args.prt_context, sessionkey=args.prt_sessionkey)
+            if args.kdf_v1:
+                return self.authenticate_with_prt(args.prt, None, sessionkey=args.prt_sessionkey)
+            else:
+                return self.authenticate_with_prt_v2(args.prt, args.prt_sessionkey)
         # If we are here, no auth to try
         print('Not enough information was supplied to authenticate')
         return False
