@@ -116,8 +116,6 @@ class Authentication():
             'ctx': base64.b64encode(context).decode('utf-8'), #.rstrip('=')
             'kdf_ver': 2
         }
-        if not '_' in prt:
-            prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
         nonce = self.get_prt_cookie_nonce()
         if not nonce:
             return False
@@ -133,8 +131,7 @@ class Authentication():
 
         # Now calculate the derived key based on random context plus jwt body
         kdfcontext, derived_key = self.calculate_derived_key_v2(sessionkey, context, jwtbody)
-        sdata = binascii.unhexlify(derived_key)
-        cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
+        cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers).decode('utf-8')
         return self.authenticate_with_prt_cookie(cookie)
 
     def authenticate_with_prt(self, prt, context, derived_key=None, sessionkey=None):
@@ -144,13 +141,10 @@ class Authentication():
         # If raw key specified, use that
         if not derived_key and sessionkey:
             context, derived_key = self.calculate_derived_key(sessionkey, context)
-        secret = derived_key.replace(' ','')
-        sdata = binascii.unhexlify(secret)
+
         headers = {
-            'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8'),
+            'ctx': base64.b64encode(context).decode('utf-8'),
         }
-        if not '_' in prt:
-            prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
         nonce = self.get_prt_cookie_nonce()
         if not nonce:
             return False
@@ -159,14 +153,14 @@ class Authentication():
             "is_primary": "true",
             "request_nonce": nonce
         }
-        cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
+        cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers).decode('utf-8')
         return self.authenticate_with_prt_cookie(cookie)
 
     def calculate_derived_key_v2(self, sessionkey, context, jwtbody):
         digest = hashes.Hash(hashes.SHA256())
         digest.update(context)
         digest.update(jwtbody)
-        kdfcontext = binascii.hexlify(digest.finalize())
+        kdfcontext = digest.finalize()
         # From here on identical to v1
         return self.calculate_derived_key(sessionkey, kdfcontext)
 
@@ -177,8 +171,6 @@ class Authentication():
         label = b"AzureAD-SecureConversation"
         if not context:
             context = os.urandom(24)
-        else:
-            context = binascii.unhexlify(context)
         backend = default_backend()
         kdf = KBKDFHMAC(
             algorithm=hashes.SHA256(),
@@ -192,13 +184,8 @@ class Authentication():
             fixed=None,
             backend=backend
         )
-        if len(sessionkey) == 44:
-            keybytes = base64.b64decode(sessionkey)
-        else:
-            keybytes = binascii.unhexlify(sessionkey)
-        derived_key = kdf.derive(keybytes)
-        # This is not ideal but further code expects it as hex string
-        return binascii.hexlify(context).decode('utf-8'), binascii.hexlify(derived_key).decode('utf-8')
+        derived_key = kdf.derive(sessionkey)
+        return context, derived_key
 
     def get_prt_cookie_nonce(self):
         """
@@ -280,8 +267,7 @@ class Authentication():
 
         # If a derived key was specified, we use that
         if derived_key:
-            secret = derived_key.replace(' ', '')
-            sdata = binascii.unhexlify(secret)
+            sdata = derived_key
             headers = jwt.get_unverified_header(cookie)
             if context is None or verify_only:
                 # Verify JWT
@@ -300,10 +286,9 @@ class Authentication():
             nonce = self.get_prt_cookie_nonce()
             jdata['request_nonce'] = nonce
             if context:
-                # Resign with custom context
-                # convert from ascii to base64
+                # Resign with custom context, should be in base64
                 newheaders = {
-                    'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8') #.rstrip('=')
+                    'ctx': base64.b64encode(context).decode('utf-8') #.rstrip('=')
                 }
                 cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders).decode('utf-8')
                 print('Re-signed PRT cookie using custom context')
@@ -431,6 +416,40 @@ class Authentication():
                                  help='Enable debug logging to disk')
         return auth_parser
 
+    @staticmethod
+    def ensure_binary_derivedkey(derived_key):
+        if not derived_key:
+            return None
+        secret = derived_key.replace(' ','')
+        sdata = binascii.unhexlify(secret)
+        return secret
+
+    @staticmethod
+    def ensure_binary_sessionkey(sessionkey):
+        if not sessionkey:
+            return None
+        if len(sessionkey) == 44:
+            keybytes = base64.b64decode(sessionkey)
+        else:
+            sessionkey = sessionkey.replace(' ','')
+            keybytes = binascii.unhexlify(sessionkey)
+        return keybytes
+
+    @staticmethod
+    def ensure_binary_context(context):
+        if not context:
+            return None
+        return binascii.unhexlify(context)
+
+    @staticmethod
+    def ensure_plain_prt(prt):
+        if not prt:
+            return None
+        # May be base64 encoded
+        if not '.' in prt:
+            prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
+        return prt
+
     def parse_args(self, args):
         self.username = args.username
         self.password = args.password
@@ -474,14 +493,22 @@ class Authentication():
                 print('Requested nonce from server to use with ROADtoken: %s' % nonce)
             return False
         if args.prt_cookie:
-            return self.authenticate_with_prt_cookie(args.prt_cookie, args.prt_context, args.derived_key, args.prt_verify, args.prt_sessionkey)
+            derived_key = self.ensure_binary_derivedkey(args.derived_key)
+            context = self.ensure_binary_context(args.prt_context)
+            sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
+            return self.authenticate_with_prt_cookie(args.prt_cookie, context, derived_key, args.prt_verify, sessionkey)
         if args.prt and args.prt_context and args.derived_key:
-            return self.authenticate_with_prt(args.prt, args.prt_context, derived_key=args.derived_key)
+            derived_key = self.ensure_binary_derivedkey(args.derived_key)
+            context = self.ensure_binary_context(args.prt_context)
+            prt = self.ensure_plain_prt(args.prt)
+            return self.authenticate_with_prt(prt, context, derived_key=derived_key)
         if args.prt and args.prt_sessionkey:
+            prt = self.ensure_plain_prt(args.prt)
+            sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
             if args.kdf_v1:
-                return self.authenticate_with_prt(args.prt, None, sessionkey=args.prt_sessionkey)
+                return self.authenticate_with_prt(prt, None, sessionkey=sessionkey)
             else:
-                return self.authenticate_with_prt_v2(args.prt, args.prt_sessionkey)
+                return self.authenticate_with_prt_v2(prt, sessionkey)
         # If we are here, no auth to try
         print('Not enough information was supplied to authenticate')
         return False
