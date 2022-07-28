@@ -125,13 +125,13 @@ class Authentication():
             "request_nonce": nonce
         }
         # Sign with random key just to get jwt body in right encoding
-        tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers).decode('utf-8')
+        tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
         jbody = tempjwt.split('.')[1]
         jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
 
         # Now calculate the derived key based on random context plus jwt body
         kdfcontext, derived_key = self.calculate_derived_key_v2(sessionkey, context, jwtbody)
-        cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers).decode('utf-8')
+        cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
         return self.authenticate_with_prt_cookie(cookie)
 
     def authenticate_with_prt(self, prt, context, derived_key=None, sessionkey=None):
@@ -153,7 +153,7 @@ class Authentication():
             "is_primary": "true",
             "request_nonce": nonce
         }
-        cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers).decode('utf-8')
+        cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
         return self.authenticate_with_prt_cookie(cookie)
 
     def calculate_derived_key_v2(self, sessionkey, context, jwtbody):
@@ -290,13 +290,13 @@ class Authentication():
                 newheaders = {
                     'ctx': base64.b64encode(context).decode('utf-8') #.rstrip('=')
                 }
-                cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders).decode('utf-8')
+                cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders)
                 print('Re-signed PRT cookie using custom context')
             else:
                 newheaders = {
                     'ctx': headers['ctx']
                 }
-                cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders).decode('utf-8')
+                cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders)
                 print('Re-signed PRT cookie using derived key')
 
         ses = requests.session()

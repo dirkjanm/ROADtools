@@ -15,6 +15,6 @@ setup(name='roadlib',
           'Programming Language :: Python :: 3.8',
       ],
       packages=find_namespace_packages(include=['roadtools.*']),
-      install_requires=['adal', 'sqlalchemy', 'pyjwt<2.0'],
+      install_requires=['adal', 'sqlalchemy', 'pyjwt>=2.0'],
       zip_safe=False
       )
