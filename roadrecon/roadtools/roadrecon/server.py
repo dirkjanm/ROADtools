@@ -365,7 +365,8 @@ def create_app_test():
     '''
     global db
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.getcwd(), 'roadrecon.db')
-    db = SQLAlchemy(app)
+    if not db:
+        db = SQLAlchemy(app)
     return app
 
 def main(args=None):
