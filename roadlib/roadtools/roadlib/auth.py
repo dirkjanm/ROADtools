@@ -15,6 +15,7 @@ from cryptography.hazmat.backends import default_backend
 import requests
 import adal
 import jwt
+import hashlib
 
 class Authentication():
     """
@@ -33,6 +34,7 @@ class Authentication():
         self.verify = True
         self.outfile = None
         self.debug = False
+        self.kdf2 = False
 
     def get_authority_url(self):
         """
@@ -106,14 +108,20 @@ class Authentication():
         """
         Authenticate with a PRT and given context/derived key
         """
-        # If raw key specified, use that
-        if not derived_key and sessionkey:
-            context, derived_key = self.calculate_derived_key(sessionkey, context)
-        secret = derived_key.replace(' ','')
-        sdata = binascii.unhexlify(secret)
-        headers = {
-            'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8') #.rstrip('=')
-        }
+
+
+        #headers = {
+        #    'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8').rstrip('=')
+        #}
+        if self.kdf2:
+            headers = {
+                'kdf_ver': 2,
+                'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8').rstrip('=')
+            }
+        else:
+            headers = {
+            'ctx': base64.b64encode(binascii.unhexlify(context)).decode('utf-8').rstrip('=')
+            }
         if not '_' in prt:
             prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
         nonce = self.get_prt_cookie_nonce()
@@ -124,6 +132,20 @@ class Authentication():
             "is_primary": "true",
             "request_nonce": nonce
         }
+
+        if self.kdf2:
+            kdf2string = binascii.unhexlify(context) + json.dumps(payload).replace(' ','').encode('ascii')
+            context=hashlib.sha256(kdf2string).hexdigest()
+        # If raw key specified, use that
+        if not derived_key and sessionkey:
+            context, derived_key = self.calculate_derived_key(sessionkey, context)
+        if self.debug:
+            print("Derived key is: %s" % derived_key)
+        secret = derived_key.replace(' ', '')
+        sdata = binascii.unhexlify(secret)
+
+
+
         cookie = jwt.encode(payload, sdata, algorithm='HS256', headers=headers).decode('utf-8')
         return self.authenticate_with_prt_cookie(cookie)
 
@@ -363,6 +385,9 @@ class Authentication():
         auth_parser.add_argument('--derived-key',
                                  action='store',
                                  help='Derived key used to re-sign the PRT cookie (as hex key)')
+        auth_parser.add_argument('--kdf2',
+                                 action='store_true',
+                                 help='Use KDFv2')
         auth_parser.add_argument('--prt-context',
                                  action='store',
                                  help='Primary Refresh Token context for the derived key (as hex key)')
@@ -395,6 +420,7 @@ class Authentication():
         self.outfile = args.tokenfile
         self.debug = args.debug
         self.resource_uri = args.resource
+        self.kdf2 = args.kdf2
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
