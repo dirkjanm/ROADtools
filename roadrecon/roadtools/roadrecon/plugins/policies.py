@@ -122,6 +122,11 @@ class AccessPoliciesPlugin():
             return self.session.query(User).filter(User.objectId.in_(uid)).all()
         return self.session.query(User).filter(User.objectId == uid).first()
 
+    def _get_serviceprincipal(self, uid):
+        if isinstance(uid, list):
+            return self.session.query(ServicePrincipal).filter(ServicePrincipal.objectId.in_(uid)).all()
+        return self.session.query(ServicePrincipal).filter(ServicePrincipal.objectId == uid).first()
+
     def _get_role(self, rid):
         if isinstance(rid, list):
             return self.session.query(DirectoryRole).filter(DirectoryRole.roleTemplateId.in_(rid)).all()
@@ -151,7 +156,8 @@ class AccessPoliciesPlugin():
             'Applications' : self._get_application,
             'Users' : self._get_user,
             'Groups' : self._get_group,
-            'Roles': self._get_role
+            'Roles': self._get_role,
+            'ServicePrincipals': self._get_serviceprincipal,
         }
         ot = ''
         for ctype, clist in crit.items():
@@ -170,6 +176,9 @@ class AccessPoliciesPlugin():
             if len(objects) > 0:
                 if ctype == 'Users':
                     ot += 'Users: '
+                    ot += ', '.join([escape(uobj.displayName) for uobj in objects])
+                elif ctype == 'ServicePrincipals':
+                    ot += 'Service Principals: '
                     ot += ', '.join([escape(uobj.displayName) for uobj in objects])
                 elif ctype == 'Groups':
                     ot += 'Users in groups: '
@@ -223,6 +232,45 @@ class AccessPoliciesPlugin():
                 ot += ', '.join(icrit['DevicePlatforms'])
         return ot
 
+    def _parse_devices(self, cond):
+        try:
+            pcond = cond['Devices']
+        except KeyError:
+            return ''
+        ot = '<strong>Including</strong>: '
+
+        for icrit in pcond['Include']:
+            if 'DeviceStates' in icrit.keys():
+                ot += 'Device states: '
+                if 'All' in icrit['DeviceStates']:
+                    ot += 'All'
+                else:
+                    ot += ' '.join(icrit['DeviceStates'])
+            if 'DeviceRule' in icrit.keys():
+                ot += 'Device rule: '
+                if 'All' in icrit['DeviceRule']:
+                    ot += 'All devices'
+                else:
+                    ot += icrit['DeviceRule']
+
+        if 'Exclude' in pcond:
+            ot += '\n<br /><strong>Excluding</strong>: '
+
+            for icrit in pcond['Exclude']:
+                if 'DeviceStates' in icrit.keys():
+                    ot += 'Device states: '
+                    if 'All' in icrit['DeviceStates']:
+                        ot += 'All'
+                    else:
+                        ot += ' '.join(icrit['DeviceStates'])
+                if 'DeviceRule' in icrit.keys():
+                    ot += 'Device rule: '
+                    if 'All' in icrit['DeviceRule']:
+                        ot += 'All devices'
+                    else:
+                        ot += icrit['DeviceRule']
+        return ot
+
     def _parse_locations(self, cond):
         try:
             lcond = cond['Locations']
@@ -265,7 +313,7 @@ class AccessPoliciesPlugin():
                     out.append(detaildata['KnownNetworkPolicies']['NetworkName'])
         # New format
         for loc in locs:
-            policies = self.session.query(Policy).filter(Policy.policyType == 6 and Policy.policyIdentifier == loc)
+            policies = self.session.query(Policy).filter(Policy.policyType == 6, Policy.policyIdentifier == loc).all()
             for policy in policies:
                 out.append(policy.displayName)
         return out
@@ -274,15 +322,29 @@ class AccessPoliciesPlugin():
         ucond = cond['Users']
         ot = '<strong>Including</strong>: '
 
-        for icrit in ucond['Include']:
-            ot += self._parse_ucrit(icrit)
+        if len(ucond['Include']) == 1 and 'Nobody' in self._parse_ucrit(ucond['Include'][0]) and cond['ServicePrincipals']:
+            # Service Principal policy
+            spcond = cond['ServicePrincipals']
+            for icrit in spcond['Include']:
+                ot += self._parse_ucrit(icrit)
 
-        if 'Exclude' in ucond:
-            ot += '\n<br /><strong>Excluding</strong>: '
-            otl = []
-            for icrit in ucond['Exclude']:
-                otl.append(self._parse_ucrit(icrit))
-            ot += '<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '.join(otl)
+            if 'Exclude' in spcond:
+                ot += '\n<br /><strong>Excluding</strong>: '
+                otl = []
+                for icrit in spcond['Exclude']:
+                    otl.append(self._parse_ucrit(icrit))
+                ot += '<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '.join(otl)
+
+        else:
+            for icrit in ucond['Include']:
+                ot += self._parse_ucrit(icrit)
+
+            if 'Exclude' in ucond:
+                ot += '\n<br /><strong>Excluding</strong>: '
+                otl = []
+                for icrit in ucond['Exclude']:
+                    otl.append(self._parse_ucrit(icrit))
+                ot += '<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '.join(otl)
         return ot
 
     def _parse_application(self, cond):
@@ -346,7 +408,9 @@ class AccessPoliciesPlugin():
                 print(policy.displayName)
                 print(policy.objectId)
             detail = json.loads(policy.policyDetail[0])
-            if detail['State'] != 'Enabled':
+            if detail['State'] == 'Reporting':
+                out['name'] += ' (<strong>Report only</strong>)'
+            elif detail['State'] != 'Enabled':
                 out['name'] += ' (<strong>Disabled</strong>)'
             if should_print:
                 pp.pprint(detail)
@@ -360,6 +424,7 @@ class AccessPoliciesPlugin():
             out['locations'] = self._parse_locations(conditions)
             out['clients'] = self._parse_clients(conditions)
             out['sessioncontrols'] = self._parse_sessioncontrols(detail)
+            out['devices'] = self._parse_devices(conditions)
 
             try:
                 controls = detail['Controls']
@@ -375,6 +440,8 @@ class AccessPoliciesPlugin():
             table += '<tr><td>Applications</td><td>{0}</td></tr>'.format(out['applications'])
             if out['platforms'] != '':
                 table += '<tr><td>On platforms</td><td>{0}</td></tr>'.format(out['platforms'])
+            if out['devices'] != '':
+                table += '<tr><td>Device filter</td><td>{0}</td></tr>'.format(out['devices'])
             if out['clients'] != '':
                 table += '<tr><td>Using clients</td><td>{0}</td></tr>'.format(out['clients'])
             if out['locations'] != '':
