@@ -45,6 +45,7 @@ export class UsersdialogComponent {
   public displayedColumns: string[] = ['displayName', 'description']
   public displayedColumnsServicePrincipals: string[] = ['displayName', 'publisherName', 'microsoftFirstParty', 'passwordCredentials', 'keyCredentials', 'appRoles', 'oauth2Permissions'];
   public displayedColumnsDevices: string[] = ['displayName', 'deviceManufacturer', 'accountEnabled', 'deviceModel', 'deviceOSType', 'deviceOSVersion', 'deviceTrustType', 'isCompliant', 'isManaged', 'isRooted'];
+  public displayedColumnsApplications: string[] = ['displayName', 'passwordCredentials', 'keyCredentials', 'appRoles', 'oauth2Permissions'];
 
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(
