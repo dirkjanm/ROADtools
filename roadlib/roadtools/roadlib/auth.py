@@ -107,18 +107,19 @@ class Authentication():
         self.tokendata['tenantId'] = inputdata['tid']
         return self.tokendata
 
-    def authenticate_with_prt_v2(self, prt, sessionkey):
+    def create_prt_cookie_kdf_ver_2(self, prt, sessionkey, nonce=None):
         """
-        KDF version 2 PRT auth
+        KDF version 2 cookie construction
         """
         context = os.urandom(24)
         headers = {
             'ctx': base64.b64encode(context).decode('utf-8'), #.rstrip('=')
             'kdf_ver': 2
         }
-        nonce = self.get_prt_cookie_nonce()
         if not nonce:
-            return False
+            nonce = self.get_prt_cookie_nonce()
+            if not nonce:
+                return False
         payload = {
             "refresh_token": prt,
             "is_primary": "true",
@@ -130,13 +131,25 @@ class Authentication():
         jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
 
         # Now calculate the derived key based on random context plus jwt body
-        kdfcontext, derived_key = self.calculate_derived_key_v2(sessionkey, context, jwtbody)
+        _, derived_key = self.calculate_derived_key_v2(sessionkey, context, jwtbody)
         cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
+        return cookie
+
+    def authenticate_with_prt_v2(self, prt, sessionkey):
+        """
+        KDF version 2 PRT auth
+        """
+        nonce = self.get_prt_cookie_nonce()
+        if not nonce:
+            return False
+
+        cookie = self.create_prt_cookie_kdf_ver_2(prt, sessionkey, nonce)
         return self.authenticate_with_prt_cookie(cookie)
 
     def authenticate_with_prt(self, prt, context, derived_key=None, sessionkey=None):
         """
         Authenticate with a PRT and given context/derived key
+        Uses KDF version 1 (legacy)
         """
         # If raw key specified, use that
         if not derived_key and sessionkey:
@@ -157,6 +170,9 @@ class Authentication():
         return self.authenticate_with_prt_cookie(cookie)
 
     def calculate_derived_key_v2(self, sessionkey, context, jwtbody):
+        """
+        Derived key calculation v2, which uses the JWT body
+        """
         digest = hashes.Hash(hashes.SHA256())
         digest.update(context)
         digest.update(jwtbody)
@@ -186,6 +202,11 @@ class Authentication():
         )
         derived_key = kdf.derive(sessionkey)
         return context, derived_key
+
+    def get_srv_challenge(self):
+        data = {'grant_type':'srv_challenge'}
+        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=data)
+        return res.json()
 
     def get_prt_cookie_nonce(self):
         """
