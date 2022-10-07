@@ -39,10 +39,10 @@ class DateTime(TypeDecorator):
                 if '+' in value:
                     value = datetime.datetime.strptime(value[:-7], '%Y-%m-%dT%H:%M:%S.%f')
                 else:
-                     try:
-                         value = datetime.datetime.strptime(value[:-1], '%Y-%m-%dT%H:%M:%S.%f')
-                     except ValueError:
-                         value = datetime.datetime.strptime(value[:-1], '%Y-%m-%dT%H:%M:%S.')
+                    try:
+                        value = datetime.datetime.strptime(value[:-1], '%Y-%m-%dT%H:%M:%S.%f')
+                    except ValueError:
+                        value = datetime.datetime.strptime(value[:-1], '%Y-%m-%dT%H:%M:%S.')
             else:
                 value = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S')
 
