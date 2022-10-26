@@ -9,12 +9,25 @@ import binascii
 import time
 from urllib.parse import urlparse, parse_qs
 import os
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization, padding, hashes
 from cryptography.hazmat.primitives.kdf.kbkdf import CounterLocation, KBKDFHMAC, Mode
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import requests
 import adal
 import jwt
+
+
+WELLKNOWN_RESOURCES = {
+    "msgraph": "https://graph.microsoft.com/",
+    "aadgraph": "https://graph.windows.net/",
+    "devicereg": "urn:ms-drs:enterpriseregistration.windows.net",
+    "azrm": "https://management.core.windows.net/",
+    "azurerm": "https://management.core.windows.net/",
+}
+
+def get_data(data):
+    return base64.urlsafe_b64decode(data+('='*(len(data)%4)))
 
 class Authentication():
     """
@@ -43,6 +56,12 @@ class Authentication():
             return 'https://login.microsoftonline.com/{}'.format(self.tenant)
         return 'https://login.microsoftonline.com/common'
 
+    def set_resource_uri(self, uri):
+        """
+        Sets resource URI to use (accepts aliases)
+        """
+        self.resource_uri = self.lookup_resource_uri(uri)
+
     def authenticate_device_code(self):
         """
         Authenticate the end-user using device auth.
@@ -66,7 +85,6 @@ class Authentication():
         self.tokendata = context.acquire_token_with_username_password(self.resource_uri, self.username, self.password, self.client_id)
 
         return self.tokendata
-
 
     def authenticate_as_app(self):
         """
@@ -116,15 +134,20 @@ class Authentication():
             'ctx': base64.b64encode(context).decode('utf-8'), #.rstrip('=')
             'kdf_ver': 2
         }
-        if not nonce:
-            nonce = self.get_prt_cookie_nonce()
-            if not nonce:
-                return False
-        payload = {
-            "refresh_token": prt,
-            "is_primary": "true",
-            "request_nonce": nonce
-        }
+        # Nonce should be requested by calling function, otherwise
+        # old time based model is used
+        if nonce:
+            payload = {
+                "refresh_token": prt,
+                "is_primary": "true",
+                "request_nonce": nonce
+            }
+        else:
+            payload = {
+                "refresh_token": prt,
+                "is_primary": "true",
+                "iat": '{}'.format(int(time.time()))
+            }
         # Sign with random key just to get jwt body in right encoding
         tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
         jbody = tempjwt.split('.')[1]
@@ -203,14 +226,47 @@ class Authentication():
         derived_key = kdf.derive(sessionkey)
         return context, derived_key
 
+    def decrypt_auth_response(self, responsedata, sessionkey, asjson=False):
+        """
+        Decrypt an encrypted authentication response, which is a JWE
+        encrypted using the sessionkey
+        """
+        if responsedata[:2] == '{"':
+            # This doesn't appear encrypted
+            if asjson:
+                return json.loads(responsedata)
+            return responsedata
+        dataparts = responsedata.split('.')
+
+        headers = json.loads(get_data(dataparts[0]))
+        _, derived_key = self.calculate_derived_key(sessionkey, base64.b64decode(headers['ctx']))
+        data = dataparts[3]
+        iv = dataparts[2]
+
+        cipher = Cipher(algorithms.AES(derived_key), modes.CBC(get_data(iv)))
+        decryptor = cipher.decryptor()
+        decrypted_data = decryptor.update(get_data(data)) + decryptor.finalize()
+        unpadder = padding.PKCS7(128).unpadder()
+        depadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
+        if asjson:
+            jdata = json.loads(depadded_data)
+            return jdata
+        else:
+            return depadded_data
+
     def get_srv_challenge(self):
+        """
+        Request server challenge (nonce) to use with a PRT
+        """
         data = {'grant_type':'srv_challenge'}
         res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=data)
         return res.json()
 
     def get_prt_cookie_nonce(self):
         """
-        Request a nonce to sign in with
+        Request a nonce to sign in with. This nonce is taken from the sign-in page, which
+        is how Chrome processes it, but it could probably also be obtained using the much
+        simpler request from the get_srv_challenge function.
         """
         ses = requests.session()
         params = {
@@ -443,7 +499,7 @@ class Authentication():
             return None
         secret = derived_key.replace(' ','')
         sdata = binascii.unhexlify(secret)
-        return secret
+        return sdata
 
     @staticmethod
     def ensure_binary_sessionkey(sessionkey):
@@ -471,6 +527,54 @@ class Authentication():
             prt = base64.b64decode(prt+('='*(len(prt)%4))).decode('utf-8')
         return prt
 
+    @staticmethod
+    def parse_accesstoken(token):
+        tokenparts = token.split('.')
+        tokendata = json.loads(get_data(tokenparts[1]))
+        tokenobject = {
+            'accessToken': token,
+            'tokenType': 'Bearer',
+            'expiresOn': datetime.datetime.fromtimestamp(tokendata['exp']).strftime('%Y-%m-%d %H:%M:%S'),
+            'tenantId': tokendata['tid'],
+            '_clientId': tokendata['appid']
+        }
+        return tokenobject, tokendata
+
+    @staticmethod
+    def parse_compact_jwe(jwe, verbose=False, decode_header=True):
+        """
+        Parse compact JWE according to
+        https://datatracker.ietf.org/doc/html/rfc7516#section-3.1
+        """
+        dataparts = jwe.split('.')
+        header, enc_key, iv, ciphertext, auth_tag = dataparts
+        parsed_header = json.loads(get_data(header))
+        if verbose:
+            print("Header (decoded):")
+            print(json.dumps(parsed_header, sort_keys=True, indent=4))
+            print("Encrypted key:")
+            print(enc_key)
+            print('IV:')
+            print(iv)
+            print("Ciphertext:")
+            print(ciphertext)
+            print("Auth tag:")
+            print(auth_tag)
+        if decode_header:
+            return parsed_header, enc_key, iv, ciphertext, auth_tag
+        return header, enc_key, iv, ciphertext, auth_tag
+
+    @staticmethod
+    def lookup_resource_uri(uri):
+        """
+        Translate resource URI aliases
+        """
+        try:
+            resolved = WELLKNOWN_RESOURCES[uri.lower()]
+            return resolved
+        except KeyError:
+            return uri
+
     def parse_args(self, args):
         self.username = args.username
         self.password = args.password
@@ -480,7 +584,7 @@ class Authentication():
         self.refresh_token = args.refresh_token
         self.outfile = args.tokenfile
         self.debug = args.debug
-        self.resource_uri = args.resource
+        self.set_resource_uri(args.resource)
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
@@ -492,15 +596,7 @@ class Authentication():
             token_data = {'refreshToken': self.refresh_token}
             return self.authenticate_with_refresh(token_data)
         if self.access_token and not self.refresh_token:
-            tokens = self.access_token.split('.')
-            inputdata = json.loads(base64.b64decode(tokens[1]+('='*(len(tokens[1])%4))))
-            self.tokendata = {
-                'accessToken': self.access_token,
-                'tokenType': 'Bearer',
-                'expiresOn': datetime.datetime.fromtimestamp(inputdata['exp']).strftime('%Y-%m-%d %H:%M:%S'),
-                'tenantId': inputdata['tid'],
-                '_clientId': inputdata['appid']
-            }
+            self.tokendata, _ = self.parse_accesstoken(self.access_token)
             return self.tokendata
         if self.username and self.password:
             return self.authenticate_username_password()
