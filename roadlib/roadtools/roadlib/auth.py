@@ -18,6 +18,7 @@ import adal
 import jwt
 
 
+
 WELLKNOWN_RESOURCES = {
     "msgraph": "https://graph.microsoft.com/",
     "aadgraph": "https://graph.windows.net/",
@@ -26,8 +27,21 @@ WELLKNOWN_RESOURCES = {
     "azurerm": "https://management.core.windows.net/",
 }
 
+WELLKNOWN_CLIENTS = {
+    "aadps": "1b730954-1685-4b74-9bfd-dac224a7b894",
+    "azcli": "04b07795-8ddb-461a-bbee-02f9e1bf7b46",
+    "teams": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
+    "azps": "1950a258-227b-4e31-a9cf-717495945fc2",
+}
+
 def get_data(data):
     return base64.urlsafe_b64decode(data+('='*(len(data)%4)))
+
+class AuthenticationException(Exception):
+    """
+    Generic exception we can throw when auth fails so that the error
+    goes back to the user.
+    """
 
 class Authentication():
     """
@@ -37,7 +51,7 @@ class Authentication():
         self.username = username
         self.password = password
         self.tenant = tenant
-        self.client_id = client_id
+        self.set_client_id(client_id)
         self.resource_uri = 'https://graph.windows.net/'
         self.tokendata = {}
         self.refresh_token = None
@@ -55,6 +69,12 @@ class Authentication():
         if self.tenant is not None:
             return 'https://login.microsoftonline.com/{}'.format(self.tenant)
         return 'https://login.microsoftonline.com/common'
+
+    def set_client_id(self, clid):
+        """
+        Sets client ID to use (accepts aliases)
+        """
+        self.client_id = self.lookup_client_id(clid)
 
     def set_resource_uri(self, uri):
         """
@@ -123,6 +143,30 @@ class Authentication():
         inputdata = json.loads(base64.b64decode(tokens[1]+('='*(len(tokens[1])%4))))
         self.tokendata['_clientId'] = self.client_id
         self.tokendata['tenantId'] = inputdata['tid']
+        return self.tokendata
+
+    def authenticate_with_code_native(self, code, redirurl, client_secret=None, pkce_secret=None):
+        """
+        Authenticate with a code plus optional secret in case of a non-public app (authorization grant)
+        Native ROADlib implementation without adal requirement - also supports PKCE
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirurl,
+            "resource": self.resource_uri,
+        }
+        if client_secret:
+            data['client_secret'] = client_secret
+        if pkce_secret:
+            raise NotImplementedError
+        res = requests.post(f"{authority_uri}/oauth2/token", data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
     def create_prt_cookie_kdf_ver_2(self, prt, sessionkey, nonce=None):
@@ -541,6 +585,26 @@ class Authentication():
         return tokenobject, tokendata
 
     @staticmethod
+    def tokenreply_to_tokendata(tokenreply):
+        """
+        Convert /token reply from Azure to ADAL compatible object
+        """
+        tokenobject = {
+            'tokenType': tokenreply['token_type'],
+            'expiresOn': datetime.datetime.fromtimestamp(int(tokenreply['expires_on'])).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        translate_map = {
+            'access_token': 'accessToken',
+            'refresh_token': 'refreshToken',
+            'id_token': 'idToken',
+            'token_type': 'tokenType'
+        }
+        for newname, oldname in translate_map.items():
+            if newname in tokenreply:
+                tokenobject[oldname] = tokenreply[newname]
+        return tokenobject
+
+    @staticmethod
     def parse_compact_jwe(jwe, verbose=False, decode_header=True):
         """
         Parse compact JWE according to
@@ -574,6 +638,17 @@ class Authentication():
             return resolved
         except KeyError:
             return uri
+
+    @staticmethod
+    def lookup_client_id(clid):
+        """
+        Translate client ID aliases
+        """
+        try:
+            resolved = WELLKNOWN_CLIENTS[clid.lower()]
+            return resolved
+        except KeyError:
+            return clid
 
     def parse_args(self, args):
         self.username = args.username
