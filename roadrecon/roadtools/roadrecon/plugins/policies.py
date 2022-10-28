@@ -197,19 +197,23 @@ class AccessPoliciesPlugin():
     def _parse_appcrit(self, crit):
         ot = ''
         for ctype, clist in crit.items():
-            if 'All' in clist:
-                ot += 'All applications'
-                break
-            if 'None' in clist:
-                ot += 'None'
-                break
-            if 'Office365' in clist:
-                ot += 'All Office 365 applications'
-            objects = self._get_application(clist)
-            if len(objects) > 0:
-                if ctype == 'Applications':
-                    ot += 'Applications: '
-                    ot += ', '.join([escape(uobj.displayName) for uobj in objects])
+            if ctype == 'Acrs':
+                ot += 'Action: '
+                ot += ', '.join([escape(action) for action in clist])
+            else:
+                if 'All' in clist:
+                    ot += 'All applications'
+                    break
+                if 'None' in clist:
+                    ot += 'None'
+                    break
+                if 'Office365' in clist:
+                    ot += 'All Office 365 applications'
+                objects = self._get_application(clist)
+                if len(objects) > 0:
+                    if ctype == 'Applications':
+                        ot += 'Applications: '
+                        ot += ', '.join([escape(uobj.displayName) for uobj in objects])
         return ot
 
     def _parse_platform(self, cond):
