@@ -13,3 +13,7 @@ __pycache__
 *.key
 *.pfx
 *.prt
+*.kdbx
+geckodriver
+*.log
+.env

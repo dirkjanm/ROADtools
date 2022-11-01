@@ -7,7 +7,7 @@ import datetime
 import uuid
 import binascii
 import time
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote_plus
 import os
 from cryptography.hazmat.primitives import serialization, padding, hashes
 from cryptography.hazmat.primitives.kdf.kbkdf import CounterLocation, KBKDFHMAC, Mode
@@ -168,6 +168,60 @@ class Authentication():
         tokenreply = res.json()
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
+
+    def authenticate_with_code_encrypted(self, code, sessionkey, redirurl):
+        '''
+        Encrypted code redemption. Like normal code flow but requires
+        session key to decrypt response.
+        '''
+        authority_uri = self.get_authority_url()
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirurl,
+            "client_id": self.client_id,
+            "client_info":1,
+            "windows_api_version":"2.0"
+        }
+        res = requests.post(f"{authority_uri}/oauth2/token", data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        prtdata = res.text
+        data = self.decrypt_auth_response(prtdata, sessionkey, asjson=True)
+        return data
+
+    def build_auth_url(self, redirurl, response_type, scope=None, state=None):
+        '''
+        Build authorize URL. Can be v2 by specifying scope, otherwise defaults
+        to v1 with resource
+        '''
+        urlt_v2 = 'https://login.microsoftonline.com/{3}/oauth2/v2.0/authorize?response_type={4}&client_id={0}&scope={2}&redirect_uri={1}&state={5}'
+        urlt_v1 = 'https://login.microsoftonline.com/{3}/oauth2/authorize?response_type={4}&client_id={0}&resource={2}&redirect_uri={1}&state={5}'
+        if not state:
+            state = str(uuid.uuid4())
+        if not self.tenant:
+            tenant = 'common'
+        else:
+            tenant = self.tenant
+        if scope:
+            # v2
+            return urlt_v2.format(
+                quote_plus(self.client_id),
+                quote_plus(redirurl),
+                quote_plus(scope),
+                quote_plus(tenant),
+                quote_plus(response_type),
+                quote_plus(state)
+            )
+        # Else default to v1 identity endpoint
+        return urlt_v1.format(
+            quote_plus(self.client_id),
+            quote_plus(redirurl),
+            quote_plus(self.resource_uri),
+            quote_plus(tenant),
+            quote_plus(response_type),
+            quote_plus(state)
+        )
 
     def create_prt_cookie_kdf_ver_2(self, prt, sessionkey, nonce=None):
         """
