@@ -1,0 +1,10 @@
+{
+  "name": "com.microsoft.browsercore",
+  "description": "BrowserCore",
+  "path": "BrowserCore.py",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://ppnbnpeolgkicgegkbkbjmhlideopiji/",
+    "chrome-extension://ndjpnladcallmjemlbaebfadecfhkepb/"
+  ]
+}
