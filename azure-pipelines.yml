@@ -109,7 +109,7 @@ jobs:
       pip install .
       python setup.py sdist
       python setup.py bdist_wheel
-    displayName: 'Create ROADlib package'
+    displayName: 'Create roadlib package'
     workingDirectory: roadlib
 
   - script: |
@@ -118,6 +118,13 @@ jobs:
       python setup.py bdist_wheel
     displayName: 'Create ROADrecon package'
     workingDirectory: roadrecon
+
+  - script: |
+      pip install .
+      python setup.py sdist
+      python setup.py bdist_wheel
+    displayName: 'Create roadtx package'
+    workingDirectory: roadtx
 
   - task: CopyFiles@2
     displayName: 'Copy ROADrecon Files to: $(build.artifactstagingdirectory)'
@@ -131,6 +138,14 @@ jobs:
     displayName: 'Copy ROADlib Files to: $(build.artifactstagingdirectory)'
     inputs:
       SourceFolder: 'roadlib/dist/'
+      Contents: '*'
+      TargetFolder: '$(build.artifactstagingdirectory)'
+    condition: succeededOrFailed()
+
+  - task: CopyFiles@2
+    displayName: 'Copy roadtx Files to: $(build.artifactstagingdirectory)'
+    inputs:
+      SourceFolder: 'roadtx/dist/'
       Contents: '*'
       TargetFolder: '$(build.artifactstagingdirectory)'
     condition: succeededOrFailed()

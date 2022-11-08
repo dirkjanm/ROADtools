@@ -1,12 +1,12 @@
 # ROADtools 
 *(**R**ogue **O**ffice 365 and **A**zure (active) **D**irectory tools)*
 
-![Python 3 only](https://img.shields.io/badge/python-3.6+-blue.svg)
+![Python 3 only](https://img.shields.io/badge/python-3.7+-blue.svg)
 ![License: MIT](https://img.shields.io/pypi/l/roadlib.svg)
 
 <img src="roadrecon/frontend/src/assets/rt_transparent.svg" width="300px" alt="ROADtools logo" />
 
-ROADtools is a framework to interact with Azure AD. It currently consists of a library (roadlib) and the ROADrecon Azure AD exploration tool.
+ROADtools is a framework to interact with Azure AD. It consists of a library (roadlib) with common components, the ROADrecon Azure AD exploration tool and the ROADtools Token eXchange (roadtx) tool.
 
 ## ROADlib
 ![PyPI version](https://img.shields.io/pypi/v/roadlib.svg)
@@ -55,3 +55,26 @@ You can run the Angular frontend with `npm start` or `ng serve` using the Angula
 
 ### Using ROADrecon
 See [this Wiki page](https://github.com/dirkjanm/ROADtools/wiki/Getting-started-with-ROADrecon) on how to get started.
+
+## ROADtools Token eXchange (roadtx)
+![PyPI version](https://img.shields.io/pypi/v/roadtx.svg)
+[![Build Status](https://dev.azure.com/dirkjanm/ROADtools/_apis/build/status/dirkjanm.ROADtools?branchName=master)](https://dev.azure.com/dirkjanm/ROADtools/_build/latest?definitionId=19&branchName=master)
+
+### Installation
+There are multiple ways to install roadtx. Note that roadtx requires Python 3.7 or newer.
+
+**Using a published version on PyPi**  
+Stable versions can be installed with `pip install roadtx`. This will automatically add the `roadtx` command to your PATH.
+
+**Using a version from GitHub** 
+You can clone this repository and install `roadlib` and then `roadtx` to make sure you have the latest versions of both the tool and the library:
+
+```
+pip install roadlib/
+pip install roadtx/
+```
+
+You can also install them in development mode with `pip install -e roadtx/`.
+
+### Using roadtx
+See [the Wiki](https://github.com/dirkjanm/ROADtools/wiki/ROADtools-Token-eXchange-(roadtx)) on how to use roadtx.
