@@ -45,6 +45,12 @@ jobs:
     workingDirectory: roadrecon
 
   - script: |
+      pip install .
+      find roadtools/ -name '*.py' -exec python -m py_compile {} \;
+    displayName: 'Install roadtx'
+    workingDirectory: roadtx
+
+  - script: |
       roadrecon -h
       roadrecon-gui -h
       roadrecon plugin bloodhound -h
@@ -55,6 +61,17 @@ jobs:
       rm .roadtools_auth
       rm caps.html
     displayName: 'Run ROADrecon gathering tests'
+    env:
+      rtuser: $(rtuser)
+      rtpass: $(rtpass)
+
+  - script: |
+      roadtx -h
+      roadtx gettokens -u $rtuser -p $rtpass
+      roadtx gettokens -u $rtuser -p $rtpass -c azcli -r azrm
+      roadtx gettokens --refresh-token file -c msteams
+      rm .roadtools_auth
+    displayName: 'Run basic roadtx tests'
     env:
       rtuser: $(rtuser)
       rtpass: $(rtpass)
