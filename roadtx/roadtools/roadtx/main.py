@@ -639,7 +639,7 @@ def main():
 
     elif args.command == 'getotp':
         selauth = SeleniumAuthentication(auth, deviceauth, None)
-        if args.keepass and (args.keepass_password or 'KPPASS' in os.environ or args.keepass.endswith('.xml')):
+        if args.keepass and args.username and (args.keepass_password or 'KPPASS' in os.environ or args.keepass.endswith('.xml')):
             _, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         else:
             otpseed = args.otpseed
