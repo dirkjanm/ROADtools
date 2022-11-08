@@ -687,6 +687,18 @@ class Authentication():
         return header, enc_key, iv, ciphertext, auth_tag
 
     @staticmethod
+    def parse_jwt(jwt):
+        """
+        Simple JWT parsing function
+        returns header and body as dict and signature as bytes
+        """
+        dataparts = jwt.split('.')
+        header = json.loads(get_data(dataparts[0]))
+        body = json.loads(get_data(dataparts[1]))
+        signature = get_data(dataparts[2])
+        return header, body, signature
+
+    @staticmethod
     def lookup_resource_uri(uri):
         """
         Translate resource URI aliases
