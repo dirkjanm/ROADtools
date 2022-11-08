@@ -7,6 +7,7 @@ import datetime
 import uuid
 import binascii
 import time
+import codecs
 from urllib.parse import urlparse, parse_qs, quote_plus
 import os
 from cryptography.hazmat.primitives import serialization, padding, hashes
@@ -23,6 +24,7 @@ WELLKNOWN_RESOURCES = {
     "msgraph": "https://graph.microsoft.com/",
     "aadgraph": "https://graph.windows.net/",
     "devicereg": "urn:ms-drs:enterpriseregistration.windows.net",
+    "drs": "urn:ms-drs:enterpriseregistration.windows.net",
     "azrm": "https://management.core.windows.net/",
     "azurerm": "https://management.core.windows.net/",
 }
@@ -31,6 +33,7 @@ WELLKNOWN_CLIENTS = {
     "aadps": "1b730954-1685-4b74-9bfd-dac224a7b894",
     "azcli": "04b07795-8ddb-461a-bbee-02f9e1bf7b46",
     "teams": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
+    "msteams": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
     "azps": "1950a258-227b-4e31-a9cf-717495945fc2",
 }
 
@@ -51,6 +54,7 @@ class Authentication():
         self.username = username
         self.password = password
         self.tenant = tenant
+        self.client_id = None
         self.set_client_id(client_id)
         self.resource_uri = 'https://graph.windows.net/'
         self.tokendata = {}
@@ -708,7 +712,7 @@ class Authentication():
         self.username = args.username
         self.password = args.password
         self.tenant = args.tenant
-        self.client_id = args.client
+        self.set_client_id(args.client)
         self.access_token = args.access_token
         self.refresh_token = args.refresh_token
         self.outfile = args.tokenfile
@@ -722,7 +726,11 @@ class Authentication():
         if self.tokendata:
             return self.tokendata
         if self.refresh_token and not self.access_token:
-            token_data = {'refreshToken': self.refresh_token}
+            if self.refresh_token == 'file':
+                with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
+                    token_data = json.load(infile)
+            else:
+                token_data = {'refreshToken': self.refresh_token}
             return self.authenticate_with_refresh(token_data)
         if self.access_token and not self.refresh_token:
             self.tokendata, _ = self.parse_accesstoken(self.access_token)
@@ -763,7 +771,7 @@ class Authentication():
         if args.tokens_stdout:
             sys.stdout.write(json.dumps(self.tokendata))
         else:
-            with open(self.outfile, 'w') as outfile:
+            with codecs.open(self.outfile, 'w', 'utf-8') as outfile:
                 json.dump(self.tokendata, outfile)
             print('Tokens were written to {}'.format(self.outfile))
 
