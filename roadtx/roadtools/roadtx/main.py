@@ -626,16 +626,16 @@ def main():
         selauth.driver = selauth.get_webdriver(service, intercept=True)
         tokenreply = selauth.selenium_enrich_prt(url, otpseed=otpseed)
         # Save tokens
-        if args.ngcmfa_drs_auth:
-            auth.tokendata = auth.tokenreply_to_tokendata(tokenreply)
-            auth.outfile = args.tokenfile
-            auth.save_tokens(args)
+        # if args.ngcmfa_drs_auth:
+        #     auth.tokendata = auth.tokenreply_to_tokendata(tokenreply)
+        #     auth.outfile = args.tokenfile
+        #     auth.save_tokens(args)
+        # else:
+        if tokenreply['refresh_token']:
+            print('Got refresh token. Can be used to request prt with roadtx prt -r <refreshtoken>')
+            print(tokenreply['refresh_token'])
         else:
-            if tokenreply['refresh_token']:
-                print('Got refresh token. Can be used to request prt with roadtx prt -r <refreshtoken>')
-                print(tokenreply['refresh_token'])
-            else:
-                print('No tokendata found. Something probably went wrong')
+            print('No tokendata found. Something probably went wrong')
 
     elif args.command == 'getotp':
         selauth = SeleniumAuthentication(auth, deviceauth, None)
