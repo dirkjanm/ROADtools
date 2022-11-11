@@ -77,6 +77,20 @@ jobs:
       rtpass: $(rtpass)
 
   - script: |
+      roadtx gettokens -u $rtuser -p $rtpass -r drs
+      roadtx device -a join -c pipeline.pem -k pipeline.key
+      roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null
+      roadtx prtauth
+      roadtx prt -a renew >/dev/null
+      roadtx prtauth -c azcli -r azrm
+      roadtx device -a delete -c pipeline.pem -k pipeline.key
+      rm .roadtools_auth pipeline.pem pipeline.key
+    displayName: 'Run roadtx device tests'
+    env:
+      rtuser: $(rtuser)
+      rtpass: $(rtpass)
+
+  - script: |
       pip install pytest pytest-flask
       py.test tests/
     displayName: 'Run ROADrecon API tests'
