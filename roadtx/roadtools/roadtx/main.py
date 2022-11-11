@@ -29,7 +29,7 @@ def main():
     device_parser.add_argument('-a',
                                 '--action',
                                 action='store',
-                                choices=['join','register'],
+                                choices=['join','register','delete'],
                                 default='join',
                                 help='Action to perform (default: join)')
     device_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', help='Certificate file to save device cert to (default: <devicename>.pem)')
@@ -413,6 +413,10 @@ def main():
             else:
                 jointype = 4
             deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version)
+        elif args.action == 'delete':
+            if not deviceauth.loadcert(args.cert_pem, args.key_pem):
+                return
+            deviceauth.delete_device(args.cert_pem, args.key_pem)
     elif args.command == 'prt':
         if args.action == 'request':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):

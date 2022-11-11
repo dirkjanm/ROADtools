@@ -243,6 +243,24 @@ class DeviceAuthentication():
         print(f'Saved device certificate to {certout}')
         return True
 
+    def delete_device(self, certpath, keypath):
+        """
+        Delete the device from Azure ID. Requires client cert auth
+        """
+        # Get device ID from certificate
+        deviceid = None
+        for attribute in self.certificate.subject:
+            deviceid = attribute.value
+        if not deviceid:
+            return
+        res = requests.delete(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}', cert=(certpath, keypath))
+        if res.status_code != 200:
+            print('Error deleting device:')
+            print(res.content)
+            return False
+        print('Device was deleted in Azure AD')
+        return True
+
     def request_token_with_devicecert_signed_payload(self, payload):
         """
         Wrap the request payload in a JWT and sign this using the device cert / key
