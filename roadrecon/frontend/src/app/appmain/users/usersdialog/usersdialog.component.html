@@ -20,7 +20,7 @@
     <mat-expansion-panel expanded>
       <mat-expansion-panel-header>
         <mat-panel-title>
-          Groups ({{ user.memberOf.length }})
+          Group memberhips ({{ user.memberOf.length }})
         </mat-panel-title>
       </mat-expansion-panel-header>
 
@@ -42,7 +42,7 @@
     <mat-expansion-panel expanded>
       <mat-expansion-panel-header>
         <mat-panel-title>
-          Roles ({{ user.memberOfRole.length }})
+          Role memberships ({{ user.memberOfRole.length }})
         </mat-panel-title>
       </mat-expansion-panel-header>
 
@@ -162,7 +162,7 @@
 
     <ng-container matColumnDef="ownerUsers">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Custom owner</th>
-      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.ownerUsers.length + row.ownedServicePrincipals.length > 0" aria-hidden="false" aria-label="Yes">check</mat-icon></td>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.ownerUsers.length + row.ownerServiceprincipals.length > 0" aria-hidden="false" aria-label="Yes">check</mat-icon></td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumnsServicePrincipals"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumnsServicePrincipals;"></tr>
@@ -208,6 +208,29 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumnsApplications"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumnsApplications;"></tr>
   </table>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel expanded *ngIf="user.ownedGroups.length > 0">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Groups ({{ user.ownedGroups.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table mat-table [dataSource]="user.ownedGroups">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row"><a [routerLink]="['/groups/', row.objectId]">{{row.displayName}}</a></td>
+        </ng-container>
+
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{row.description}}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
     </mat-expansion-panel>
   </mat-tab>
   <mat-tab label="Raw"><mat-card appJsonFormat [json]="user"></mat-card></mat-tab>

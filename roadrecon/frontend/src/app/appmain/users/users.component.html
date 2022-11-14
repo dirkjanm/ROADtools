@@ -39,8 +39,13 @@
     </ng-container>
 
     <ng-container matColumnDef="dirSyncEnabled">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Account type</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Account source</th>
       <td mat-cell *matCellDef="let row">{{ row.dirSyncEnabled? 'AD':'Cloud' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="userType">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Account type</th>
+      <td mat-cell *matCellDef="let row">{{ row.userType }}</td>
     </ng-container>
 
     <ng-container matColumnDef="mobile">

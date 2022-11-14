@@ -9,7 +9,8 @@
         <tr><th>ObjectId</th><td>{{ group.objectId }}</td></tr>
         <tr *ngIf="group.membershipRule != null"><th>Dynamic Membership</th><td>{{ group.membershipRule }}</td></tr>
         <tr *ngIf="group.mail != null"><th>Email</th><td>{{ group.mail }}</td></tr>
-        <tr *ngIf="group.isPublic != null"><th>Public?</th><td>{{ group.isPublic }}</td></tr>
+        <tr *ngIf="group.isPublic != null"><th>Public group</th><td>{{ group.isPublic? 'Yes':'No' }}</td></tr>
+        <tr *ngIf="group.isAssignableToRole != null"><th>Can be assigned to roles</th><td>{{ group.isAssignableToRole? 'Yes':'No' }}</td></tr>
         <tr *ngIf="group.createdDateTime != null"><th>Created</th><td>{{ group.createdDateTime }}</td></tr>
         <tr><th>Group type</th><td>{{ group.dirSyncEnabled? 'Synced with AD':'Cloud-only' }}</td></tr>
       </table>
@@ -47,8 +48,14 @@
           <th mat-header-cell *matHeaderCellDef>Description</th>
           <td mat-cell *matCellDef="let row">{{row.description}}</td>
         </ng-container>
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <ng-container matColumnDef="userType">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let row">{{row.userType}}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumnsUsers"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumnsUsers;"></tr>
       </table>
     </mat-expansion-panel>
     <mat-expansion-panel expanded>

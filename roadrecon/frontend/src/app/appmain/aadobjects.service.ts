@@ -18,11 +18,15 @@ export interface GroupsItem {
   objectType: string;
   mail: string;
   isPublic: boolean;
+  isAssignableToRole: boolean;
   membershipRule: string;
+  groupTypes: string[];
   memberOf: GroupsItem[];
   memberUsers: UsersItem[];
   memberServicePrincipals: ServicePrincipalsItem[];
   memberOfRole: DirectoryRolesItem[];
+  ownerUsers: UsersItem[];
+  ownerServicePrincipals: ServicePrincipalsItem[];
 }
 
 export interface DirectoryRolesItem {
@@ -70,8 +74,10 @@ export interface UsersItem {
   memberOfRole: DirectoryRolesItem[];
   ownedServicePrincipals: ServicePrincipalsItem[];
   ownedDevices: DevicesItem[];
+  ownedGroups: GroupsItem[];
   ownedApplications: ApplicationsItem[];
   strongAuthenticationDetail: object;
+  userType: string;
 }
 
 export interface appMetadata {
@@ -125,6 +131,8 @@ export interface ServicePrincipalsItem {
   ownerServicePrincipals: ServicePrincipalsItem[];
   memberOfRole: DirectoryRolesItem[];
   memberOf: GroupsItem[];
+  appRolesAssignedTo: object[];
+  appRolesAssigned: object[];
 }
 
 export interface TenantDetail {
@@ -175,6 +183,21 @@ export interface DevicesItem {
   displayName: string;
   domainName: string;
   owner: UsersItem[];
+}
+
+export interface AuthorizationPolicy {
+    id: string;
+    allowInvitesFrom: string;
+    allowedToSignUpEmailBasedSubscriptions: boolean;
+    allowedToUseSSPR: boolean;
+    allowEmailVerifiedUsersToJoinOrganization: boolean;
+    blockMsolPowerShell: boolean;
+    defaultUserRolePermissions: object;
+    displayName: string;
+    description: string;
+    enabledPreviewFeatures: object;
+    guestUserRoleId: string;
+    permissionGrantPolicyIdsAssignedToDefaultUserRole: object[];
 }
 
 @Injectable({
@@ -240,8 +263,20 @@ export class DatabaseService {
       return this.http.get<TenantDetail>(environment.apibase + 'tenantdetails');
   }
 
+  public getAuthorizationPolicies(): Observable<AuthorizationPolicy[]> {
+      return this.http.get<AuthorizationPolicy[]>(environment.apibase + 'authorizationpolicies');
+  }
+
   public getAppRoles():  Observable<AppRolesItem[]> {
       return this.http.get<AppRolesItem[]>(environment.apibase + 'approles');
+  }
+
+  public getAppRolesByResource(spid):  Observable<AppRolesItem[]> {
+      return this.http.get<AppRolesItem[]>(environment.apibase + 'approles_by_resource/' + spid);
+  }
+
+  public getAppRolesByPrincipal(pid):  Observable<AppRolesItem[]> {
+      return this.http.get<AppRolesItem[]>(environment.apibase + 'approles_by_principal/' + pid);
   }
 
   public getMfa():  Observable<MfaItem[]> {
@@ -385,4 +420,3 @@ export class ServicePrincipalsByAppIdResolveService implements Resolve<ServicePr
     );
   }
 }
-

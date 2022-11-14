@@ -18,9 +18,14 @@
       <td mat-cell *matCellDef="let row">{{row.createdDateTime}}</td>
     </ng-container>
 
-    <ng-container matColumnDef="type">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+    <ng-container matColumnDef="dirSyncEnabled">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Group source</th>
       <td mat-cell *matCellDef="let row">{{ row.dirSyncEnabled? 'Synced with AD':'Cloud-only' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="groupTypes">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Group type</th>
+      <td mat-cell *matCellDef="let row">{{ row.groupTypes.includes('Unified')? 'Microsoft 365':'Security' }}</td>
     </ng-container>
 
     <ng-container matColumnDef="mail">
@@ -33,14 +38,14 @@
       <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isPublic" aria-hidden="false" aria-label="Public group">check</mat-icon></td>
     </ng-container>
 
-    <ng-container matColumnDef="jobTitle">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Job title</th>
-      <td mat-cell *matCellDef="let row">{{row.jobTitle}}</td>
+    <ng-container matColumnDef="isAssignableToRole">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Role assignable?</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isAssignableToRole" aria-hidden="false" aria-label="Can be assigned to roles">check</mat-icon></td>
     </ng-container>
 
-    <ng-container matColumnDef="mobile">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Mobile</th>
-      <td mat-cell *matCellDef="let row">{{row.mobile}}</td>
+    <ng-container matColumnDef="membershipRule">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Dynamic membership</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.membershipRule != null" aria-hidden="false" aria-label="Can be assigned to roles">check</mat-icon></td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>

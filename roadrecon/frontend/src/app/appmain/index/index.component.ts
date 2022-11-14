@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { DatabaseService, TenantDetail, TenantStats } from '../aadobjects.service'
+import { DatabaseService, TenantDetail, TenantStats, AuthorizationPolicy } from '../aadobjects.service'
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 
 @Component({
@@ -11,12 +11,18 @@ import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog
 export class IndexComponent implements OnInit {
   public tenantdetails: TenantDetail;
   public tenantstats: TenantStats;
+  public authorizationPolicy: AuthorizationPolicy;
   public displayedColumns: string[] = ['name', 'type', 'capabilities', 'properties']
   constructor(private service: DatabaseService, public dialog: MatDialog) {  }
 
   ngOnInit(): void {
     this.service.getTenantDetail().subscribe((data: TenantDetail) => this.tenantdetails = data);
     this.service.getTenantStats().subscribe((data: TenantStats) => this.tenantstats = data);
+    this.service.getAuthorizationPolicies().subscribe((data: AuthorizationPolicy[]) => {
+      if(data.length > 0){
+        this.authorizationPolicy = data[0];
+      }
+    });
   }
 
   showDetails(): void {

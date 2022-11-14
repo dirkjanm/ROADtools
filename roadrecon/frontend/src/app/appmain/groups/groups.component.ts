@@ -20,7 +20,7 @@ export class GroupsComponent implements AfterViewInit, OnInit {
   constructor(private service: DatabaseService) {  }
 
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['displayName', 'description', 'type', 'mail', 'isPublic'];
+  displayedColumns = ['displayName', 'description', 'groupTypes', 'dirSyncEnabled', 'mail', 'isPublic', 'isAssignableToRole', 'membershipRule'];
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();

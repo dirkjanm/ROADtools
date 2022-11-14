@@ -21,7 +21,7 @@ export class UsersComponent implements AfterViewInit, OnInit {
   constructor(private service: DatabaseService, private localSt:LocalStorageService) {  }
 
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['displayName', 'userPrincipalName', 'accountEnabled',  'mail', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled'];
+  displayedColumns = ['displayName', 'userPrincipalName', 'accountEnabled',  'mail', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled', 'userType'];
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();

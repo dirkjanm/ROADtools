@@ -75,7 +75,103 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
     </mat-expansion-panel>
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Assigned application roles ({{ sp.appRolesAssigned.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <table *ngIf="sp.appRolesAssigned.length > 0" mat-table [dataSource]="sp.appRolesAssigned">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>displayName</th>
+          <td mat-cell *matCellDef="let row">{{row.displayName}}</td>
+        </ng-container>
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{row.description}}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-expansion-panel>
     </mat-tab>
+
+  <mat-tab label="Application roles assigned to others" *ngIf="sp.appRolesAssigned.length > 0">
+    <h2>Granted roles</h2>
+    <p>This table shows roles that are exposed by this Service Principal, which are granted to other principals. These roles give the principals some form of privileges to the application of this Service Principal, or its data.</p>
+    <table *ngIf="approlesgiven.length > 0" mat-table matSort [dataSource]="approlesgiven">
+      <ng-container matColumnDef="pname">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Principal Name</th>
+        <td mat-cell *matCellDef="let row"><a [routerLink]="['/', row.ptype.toLowerCase()+'s', row.objid]">{{row.pname}}</a></td>
+      </ng-container>
+
+      <ng-container matColumnDef="ptype">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Principal Type</th>
+        <td mat-cell *matCellDef="let row">{{row.ptype}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="objid">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Object ID</th>
+        <td mat-cell *matCellDef="let row">{{row.objid}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="app">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Application</th>
+        <td mat-cell *matCellDef="let row"><a [routerLink]="['/serviceprincipals', row.spid]">{{row.app}}</a></td>
+      </ng-container>
+
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Role</th>
+        <td mat-cell *matCellDef="let row">{{row.value}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="desc">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+        <td mat-cell *matCellDef="let row">{{row.desc}} </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumnsAppRolesAssigned"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumnsAppRolesAssigned;"></tr>
+    </table>
+  </mat-tab>
+
+  <mat-tab label="Application roles assigned to this principal" *ngIf="sp.appRolesAssignedTo.length > 0">
+    <h2>Granted roles</h2>
+    <p>This table shows roles that are exposed by other Service Principals, which are granted to this service principal. These roles give the service principal some rights, usually API rights on a resource.</p>
+    <table *ngIf="approlesgivento.length > 0" mat-table matSort [dataSource]="approlesgivento">
+      <ng-container matColumnDef="pname">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Principal Name</th>
+        <td mat-cell *matCellDef="let row"><a [routerLink]="['/', row.ptype.toLowerCase()+'s', row.objid]">{{row.pname}}</a></td>
+      </ng-container>
+
+      <ng-container matColumnDef="ptype">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Principal Type</th>
+        <td mat-cell *matCellDef="let row">{{row.ptype}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="objid">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Object ID</th>
+        <td mat-cell *matCellDef="let row">{{row.objid}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="app">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Application</th>
+        <td mat-cell *matCellDef="let row"><a [routerLink]="['/serviceprincipals', row.spid]">{{row.app}}</a></td>
+      </ng-container>
+
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Role</th>
+        <td mat-cell *matCellDef="let row">{{row.value}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="desc">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+        <td mat-cell *matCellDef="let row">{{row.desc}} </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumnsAppRolesAssignedTo"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumnsAppRolesAssignedTo;"></tr>
+    </table>
+  </mat-tab>
+
   <mat-tab label="Application defined permissons" *ngIf="sp.appRoles.length > 0 || sp.oauth2Permissions.length > 0">
     <h2 *ngIf="sp.appRoles.length > 0">Application roles (application permissions)</h2>
     <table *ngIf="sp.appRoles.length > 0" mat-table [dataSource]="sp.appRoles">
