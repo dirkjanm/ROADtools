@@ -399,6 +399,20 @@ class DataDumper(object):
                         i = 0
         self.session.commit()
 
+    async def dump_keycredentials(self, objecttype, dbtype, method=None):
+        if method is None:
+            method = self.ahsession.get
+        cache = []
+        url = 'https://graph.windows.net/%s/%s?api-version=1.61-internal&$select=keyCredentials,objectId' % (self.tenantid, objecttype)
+        async for obj in dumphelper(url, method=method):
+            cache.append({'userid':obj['objectId'], 'keyCredentials':obj['keyCredentials']})
+            if len(cache) > 1000:
+                commitmfa(self.session, dbtype, cache)
+                del cache[:]
+        if len(cache) > 0:
+            commitmfa(self.session, dbtype, cache)
+        del cache[:]
+
     async def dump_apps_from_list(self, parents, endpoint, dbtype, ignore_duplicates=True):
         cache = []
         jobs = []
@@ -556,6 +570,8 @@ async def run(args):
         if args.mfa:
             tasks.append(dumper.dump_mfa('users', User, method=ahsession.get))
         tasks.append(dumper.dump_each(ServicePrincipal, 'applicationRefs', ApplicationRef))
+        tasks.append(dumper.dump_keycredentials('servicePrincipals', ServicePrincipal))
+        tasks.append(dumper.dump_keycredentials('applications', Application))
         await asyncio.gather(*tasks)
     dbsession.commit()
 
