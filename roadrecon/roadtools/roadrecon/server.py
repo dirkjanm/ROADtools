@@ -4,7 +4,7 @@ from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from marshmallow_sqlalchemy import ModelConverter
 from marshmallow import fields
-from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant
+from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting
 import os
 import argparse
 from sqlalchemy import func
@@ -64,7 +64,7 @@ class AppRoleAssignmentsSchema(ma.SQLAlchemyAutoSchema):
 class GroupsSchema(ma.Schema):
     class Meta:
         model = Group
-        fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'objectType', 'mail', 'isPublic')
+        fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'objectType', 'groupTypes', 'mail', 'isPublic', 'isAssignableToRole', 'membershipRule')
 
 class SimpleServicePrincipalsSchema(ma.Schema):
     """
@@ -104,6 +104,7 @@ class UserSchema(RTModelSchema):
     ownedDevices = fields.Nested(DevicesSchema, many=True)
     ownedServicePrincipals = fields.Nested(ServicePrincipalsSchema, many=True)
     ownedApplications = fields.Nested(ApplicationsSchema, many=True)
+    ownedGroups = fields.Nested(GroupsSchema, many=True)
 
 class DeviceSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -117,6 +118,8 @@ class GroupSchema(RTModelSchema):
     memberOf = fields.Nested(GroupsSchema, many=True)
     memberUsers = fields.Nested(UsersSchema, many=True)
     memberServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
+    ownerUsers = fields.Nested(UsersSchema, many=True)
+    ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 
 class ServicePrincipalSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -127,6 +130,7 @@ class ServicePrincipalSchema(RTModelSchema):
     memberOf = fields.Nested(GroupSchema, many=True)
     oauth2PermissionGrants = fields.Nested(OAuth2PermissionGrantsSchema, many=True)
     appRolesAssigned = fields.Nested(AppRoleAssignmentsSchema, many=True)
+    appRolesAssignedTo = fields.Nested(AppRoleAssignmentsSchema, many=True)
 
 class ApplicationSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -138,6 +142,10 @@ class TenantDetailSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = TenantDetail
 
+class AuthorizationPolicySchema(RTModelSchema):
+    class Meta(RTModelSchema.Meta):
+        model = AuthorizationPolicy
+
 # Instantiate all schemas
 user_schema = UserSchema()
 device_schema = DeviceSchema()
@@ -145,6 +153,7 @@ group_schema = GroupSchema()
 application_schema = ApplicationSchema()
 td_schema = TenantDetailSchema()
 serviceprincipal_schema = ServicePrincipalSchema()
+authorizationpolicy_schema = AuthorizationPolicySchema(many=True)
 users_schema = UsersSchema(many=True)
 devices_schema = DevicesSchema(many=True)
 groups_schema = GroupsSchema(many=True)
@@ -278,37 +287,54 @@ def application_detail(id):
         abort(404)
     return application_schema.jsonify(application)
 
+def process_approle(approles, ar):
+    rsp = db.session.query(ServicePrincipal).get(ar.resourceId)
+    if ar.principalType == 'ServicePrincipal':
+        sp = db.session.query(ServicePrincipal).get(ar.principalId)
+    if ar.principalType == 'User':
+        sp = db.session.query(User).get(ar.principalId)
+    if ar.principalType == 'Group':
+        sp = db.session.query(Group).get(ar.principalId)
+    if ar.id == '00000000-0000-0000-0000-000000000000':
+        approles.append({'objid':sp.objectId,
+                         'ptype':ar.principalType,
+                         'pname':sp.displayName,
+                         'app':ar.resourceDisplayName,
+                         'value':'Default',
+                         'desc':'Default Role',
+                         'spid':ar.resourceId,
+                        })
+    else:
+        for approle in rsp.appRoles:
+            if approle['id'] == ar.id:
+                approles.append({'objid':sp.objectId,
+                                 'ptype':ar.principalType,
+                                 'pname':sp.displayName,
+                                 'app':ar.resourceDisplayName,
+                                 'value':approle['value'],
+                                 'desc':approle['displayName'],
+                                 'spid':ar.resourceId,
+                                })
+
 @app.route("/api/approles", methods=["GET"])
 def get_approles():
     approles = []
     for ar in db.session.query(AppRoleAssignment).all():
-        rsp = db.session.query(ServicePrincipal).get(ar.resourceId)
-        if ar.principalType == 'ServicePrincipal':
-            sp = db.session.query(ServicePrincipal).get(ar.principalId)
-        if ar.principalType == 'User':
-            sp = db.session.query(User).get(ar.principalId)
-        if ar.principalType == 'Group':
-            sp = db.session.query(Group).get(ar.principalId)
-        if ar.id == '00000000-0000-0000-0000-000000000000':
-            approles.append({'objid':sp.objectId,
-                             'ptype':ar.principalType,
-                             'pname':sp.displayName,
-                             'app':ar.resourceDisplayName,
-                             'value':'Default',
-                             'desc':'Default Role',
-                             'spid':ar.resourceId,
-                            })
-        else:
-            for approle in rsp.appRoles:
-                if approle['id'] == ar.id:
-                    approles.append({'objid':sp.objectId,
-                                     'ptype':ar.principalType,
-                                     'pname':sp.displayName,
-                                     'app':ar.resourceDisplayName,
-                                     'value':approle['value'],
-                                     'desc':approle['displayName'],
-                                     'spid':ar.resourceId,
-                                    })
+        process_approle(approles, ar)
+    return jsonify(approles)
+
+@app.route("/api/approles_by_resource/<spid>", methods=["GET"])
+def get_approles_by_resource(spid):
+    approles = []
+    for ar in db.session.query(AppRoleAssignment).filter(AppRoleAssignment.resourceId == spid):
+        process_approle(approles, ar)
+    return jsonify(approles)
+
+@app.route("/api/approles_by_principal/<pid>", methods=["GET"])
+def get_approles_by_principal(pid):
+    approles = []
+    for ar in db.session.query(AppRoleAssignment).filter(AppRoleAssignment.principalId == pid):
+        process_approle(approles, ar)
     return jsonify(approles)
 
 @app.route("/api/oauth2permissions", methods=["GET"])
@@ -338,15 +364,18 @@ def get_oauth2permissions():
 
 @app.route("/api/directoryroles", methods=["GET"])
 def get_dirroles():
-    approles = []
     drs = db.session.query(DirectoryRole).all()
     return directoryroles_schema.jsonify(drs)
 
 @app.route("/api/tenantdetails", methods=["GET"])
 def get_tenantdetails():
-    approles = []
     drs = db.session.query(TenantDetail).first()
     return td_schema.jsonify(drs)
+
+@app.route("/api/authorizationpolicies", methods=["GET"])
+def get_authpolicies():
+    drs = db.session.query(AuthorizationPolicy).all()
+    return authorizationpolicy_schema.jsonify(drs)
 
 @app.route("/api/stats", methods=["GET"])
 def get_stats():
