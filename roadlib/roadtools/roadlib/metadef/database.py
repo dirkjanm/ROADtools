@@ -132,6 +132,16 @@ lnk_role_member_group = Table('lnk_role_member_group', Base.metadata,
     Column('Group', Text, ForeignKey('Groups.objectId'))
 )
 
+lnk_group_owner_user = Table('lnk_group_owner_user', Base.metadata,
+    Column('Group', Text, ForeignKey('Groups.objectId')),
+    Column('User', Text, ForeignKey('Users.objectId'))
+)
+
+lnk_group_owner_serviceprincipal = Table('lnk_group_owner_serviceprincipal', Base.metadata,
+    Column('Group', Text, ForeignKey('Groups.objectId')),
+    Column('ServicePrincipal', Text, ForeignKey('ServicePrincipals.objectId'))
+)
+
 class AppRoleAssignment(Base, SerializeMixin):
     __tablename__ = "AppRoleAssignments"
     objectType = Column(Text)
@@ -299,6 +309,10 @@ class User(Base, SerializeMixin):
         secondary=lnk_device_owner,
         back_populates="owner")
 
+    ownedGroups = relationship("Group",
+        secondary=lnk_group_owner_user,
+        back_populates="ownerUsers")
+
 
 class ServicePrincipal(Base, SerializeMixin):
     __tablename__ = "ServicePrincipals"
@@ -371,6 +385,10 @@ class ServicePrincipal(Base, SerializeMixin):
     memberOf = relationship("Group",
         secondary=lnk_group_member_serviceprincipal,
         back_populates="memberServicePrincipals")
+
+    ownedGroups = relationship("Group",
+        secondary=lnk_group_owner_serviceprincipal,
+        back_populates="ownerServicePrincipals")
 
 
     oauth2PermissionGrants = relationship("OAuth2PermissionGrant",
@@ -451,6 +469,14 @@ class Group(Base, SerializeMixin):
     memberServicePrincipals = relationship("ServicePrincipal",
         secondary=lnk_group_member_serviceprincipal,
         back_populates="memberOf")
+
+    ownerUsers = relationship("User",
+        secondary=lnk_group_owner_user,
+        back_populates="ownedGroups")
+
+    ownerServicePrincipals = relationship("ServicePrincipal",
+        secondary=lnk_group_owner_serviceprincipal,
+        back_populates="ownedGroups")
 
     memberOf = relationship("Group",
         secondary=lnk_group_member_group,
