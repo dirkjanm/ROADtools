@@ -11,8 +11,8 @@ import aiohttp
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func, bindparam
-from roadtools.roadlib.metadef.database import User, ServicePrincipal, Application, Group, Device, DirectoryRole, RoleAssignment,  ExtensionProperty, Contact, OAuth2PermissionGrant, Policy, RoleDefinition, AppRoleAssignment, TenantDetail
-from roadtools.roadlib.metadef.database import lnk_group_member_user, lnk_group_member_group, lnk_group_member_contact, lnk_group_member_device, lnk_group_member_serviceprincipal, lnk_device_owner
+from roadtools.roadlib.metadef.database import User, ServicePrincipal, Application, Group, Device, DirectoryRole, RoleAssignment, ExtensionProperty, Contact, OAuth2PermissionGrant, Policy, RoleDefinition, AppRoleAssignment, TenantDetail, AuthorizationPolicy, DirectorySetting
+from roadtools.roadlib.metadef.database import lnk_group_member_user, lnk_group_member_group, lnk_group_member_contact, lnk_group_member_device, lnk_group_member_serviceprincipal, lnk_device_owner, lnk_group_owner_user, lnk_group_owner_serviceprincipal
 #from roadlib.metadef.database import Domain
 from roadtools.roadlib.auth import Authentication
 from roadtools.roadlib.metadef.database import ApplicationRef
@@ -208,7 +208,7 @@ class DataDumper(object):
             cache.append(obj)
             if len(cache) > 1000:
                 commit(self.engine, dbtype, cache)
-                cache = []
+                del cache[:]
         if len(cache) > 0:
             commit(self.engine, dbtype, cache)
 
@@ -239,7 +239,7 @@ class DataDumper(object):
                 i = 0
         if str(parent.__table__) == 'Groups':
             groupcounter += 1
-            print('Done processing {0}/{1} groups'.format(groupcounter, totalgroups), end='\r')
+            print('Done processing {0}/{1} groups'.format(int(groupcounter/2), totalgroups), end='\r')
 
     async def dump_l_to_linktable(self, url, method, mapping, parentid, objecttype):
         global groupcounter, totalgroups, devicecounter, totaldevices
@@ -266,10 +266,10 @@ class DataDumper(object):
         commitlink(self.session, cache)
         if str(objecttype) == 'groups':
             groupcounter += 1
-            print('Done processing {0}/{1} groups {2}/{3} devices'.format(groupcounter, totalgroups, devicecounter, totaldevices), end='\r')
+            print('Done processing {0}/{1} groups {2}/{3} devices'.format(int(groupcounter/2), totalgroups, devicecounter, totaldevices), end='\r')
         if str(objecttype) == 'devices':
             devicecounter += 1
-            print('Done processing {0}/{1} groups {2}/{3} devices'.format(groupcounter, totalgroups, devicecounter, totaldevices), end='\r')
+            print('Done processing {0}/{1} groups {2}/{3} devices'.format(int(groupcounter/2), totalgroups, devicecounter, totaldevices), end='\r')
 
     async def dump_links(self, objecttype, linktype, parenttbl, mapping=None, linkname=None, childtbl=None, method=None):
         if method is None:
@@ -399,7 +399,18 @@ class DataDumper(object):
                         i = 0
         self.session.commit()
 
-    async def dump_each(self, parenttbl, endpoint, dbtype, ignore_duplicates=False):
+    async def dump_apps_from_list(self, parents, endpoint, dbtype, ignore_duplicates=True):
+        cache = []
+        jobs = []
+        for parentid in parents:
+            url = 'https://graph.windows.net/%s/%s/%s?api-version=%s' % (self.tenantid, endpoint, parentid, self.api_version)
+            jobs.append(self.dump_so_to_db(url, self.ahsession.get, dbtype, cache, ignore_duplicates=ignore_duplicates))
+        await asyncio.gather(*jobs)
+        if len(cache) > 0:
+            commit(self.session, dbtype, cache, ignore=ignore_duplicates)
+        self.session.commit()
+
+    async def dump_each(self, parenttbl, endpoint, dbtype, ignore_duplicates=True):
         parents = self.session.query(parenttbl).all()
         cache = []
         jobs = []
@@ -408,7 +419,7 @@ class DataDumper(object):
             jobs.append(self.dump_so_to_db(url, self.ahsession.get, dbtype, cache, ignore_duplicates=ignore_duplicates))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
-            commit(self.session, dbtype, cache)
+            commit(self.session, dbtype, cache, ignore=ignore_duplicates)
         self.session.commit()
 
     async def dump_custom_role_members(self, dbtype):
@@ -466,6 +477,8 @@ async def run(args):
             tasks.append(dumper.dump_object('contacts', Contact))
             # tasks.append(dumper.dump_object('getAvailableExtensionProperties', ExtensionProperty, method=ahsession.post))
             tasks.append(dumper.dump_object('oauth2PermissionGrants', OAuth2PermissionGrant))
+            tasks.append(dumper.dump_object('authorizationPolicy', AuthorizationPolicy))
+            tasks.append(dumper.dump_object('settings', DirectorySetting))
             await asyncio.gather(*tasks)
 
     Session = sessionmaker(bind=engine)
@@ -488,6 +501,10 @@ async def run(args):
         'Microsoft.DirectoryServices.Device': (Device, 'memberDevices'),
         'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'memberServicePrincipals'),
     }
+    group_owner_mapping = {
+        'Microsoft.DirectoryServices.User': (User, 'ownerUsers'),
+        'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'ownerServicePrincipals'),
+    }
     owner_mapping = {
         'Microsoft.DirectoryServices.User': (User, 'ownerUsers'),
         'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'ownerServicePrincipals'),
@@ -505,9 +522,14 @@ async def run(args):
         'Microsoft.DirectoryServices.Device': (lnk_group_member_device, 'Group', 'Device'),
         'Microsoft.DirectoryServices.ServicePrincipal': (lnk_group_member_serviceprincipal, 'Group', 'ServicePrincipal'),
     }
+    group_owner_link_mapping = {
+        'Microsoft.DirectoryServices.User': (lnk_group_owner_user, 'Group', 'User'),
+        'Microsoft.DirectoryServices.ServicePrincipal': (lnk_group_owner_serviceprincipal, 'Group', 'ServicePrincipal'),
+    }
     device_link_mapping = {
         'Microsoft.DirectoryServices.User': (lnk_device_owner, 'Device', 'User'),
     }
+
     tasks = []
     dumper.session = dbsession
     totalgroups = dbsession.query(func.count(Group.objectId)).scalar()
@@ -523,6 +545,7 @@ async def run(args):
         # If we have a lot of groups, dump them separately
         if totalgroups <= MAX_GROUPS:
             tasks.append(dumper.dump_links('groups', 'members', Group, mapping=group_mapping))
+            tasks.append(dumper.dump_links('groups', 'owners', Group, mapping=group_owner_mapping))
             tasks.append(dumper.dump_object_expansion('devices', Device, 'registeredOwners', 'owner', User))
         tasks.append(dumper.dump_links('directoryRoles', 'members', DirectoryRole, mapping=role_mapping))
         tasks.append(dumper.dump_linked_objects('servicePrincipals', 'appRoleAssignedTo', ServicePrincipal, AppRoleAssignment, ignore_duplicates=True))
@@ -533,7 +556,6 @@ async def run(args):
         if args.mfa:
             tasks.append(dumper.dump_mfa('users', User, method=ahsession.get))
         tasks.append(dumper.dump_each(ServicePrincipal, 'applicationRefs', ApplicationRef))
-
         await asyncio.gather(*tasks)
     dbsession.commit()
 
@@ -550,6 +572,7 @@ async def run(args):
 
             tasks.append(dumper.dump_links_with_queue(queue, 'devices', 'registeredOwners', Device, mapping=device_link_mapping))
             tasks.append(dumper.dump_links_with_queue(queue, 'groups', 'members', Group, mapping=group_link_mapping))
+            tasks.append(dumper.dump_links_with_queue(queue, 'groups', 'owners', Group, mapping=group_owner_link_mapping))
 
             await asyncio.gather(*tasks)
             await queue.join()
