@@ -377,6 +377,9 @@ class ServicePrincipal(Base, SerializeMixin):
         primaryjoin=objectId == foreign(OAuth2PermissionGrant.clientId))
 
     appRolesAssigned = relationship("AppRoleAssignment",
+        primaryjoin=objectId == foreign(AppRoleAssignment.resourceId))
+
+    appRolesAssignedTo = relationship("AppRoleAssignment",
         primaryjoin=objectId == foreign(AppRoleAssignment.principalId))
 
 
