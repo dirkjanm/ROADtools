@@ -113,7 +113,7 @@ jobs:
     inputs:
       command: 'custom'
       workingDir: 'roadrecon/frontend/'
-      customCommand: 'run build -- --prod'
+      customCommand: 'run build -- --configuration production'
 
   - script: |
       pip install --upgrade setuptools wheel
