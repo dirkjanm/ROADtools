@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(name='roadtx',
       version='1.0.1',
-      description='Azure AD Token eXchange',
+      description='ROADtools Token eXchange',
       author='Dirk-jan Mollema',
       author_email='dirkjan@outsidersecurity.nl',
       url='https://github.com/dirkjanm/ROADtools/',
