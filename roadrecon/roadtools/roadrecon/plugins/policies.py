@@ -151,6 +151,20 @@ class AccessPoliciesPlugin():
                 pass
             print()
 
+    def _translate_guestsexternal(self, value):
+        return [value['GuestOrExternalUserTypes'], ]
+
+    def _translate_authstrength(self, authstrengthguid):
+        built_in = {
+            '00000000-0000-0000-0000-000000000002': 'Multi-factor authentication',
+            '00000000-0000-0000-0000-000000000003': 'Passwordless MFA',
+            '00000000-0000-0000-0000-000000000004': 'Phishing-resistant MFA'
+        }
+        try:
+            return built_in[authstrengthguid]
+        except KeyError:
+            return f"Unknown authentication strengh policy: {authstrengthguid} (probably custom)"
+
     def _parse_ucrit(self, crit):
         funct = {
             'Applications' : self._get_application,
@@ -158,6 +172,7 @@ class AccessPoliciesPlugin():
             'Groups' : self._get_group,
             'Roles': self._get_role,
             'ServicePrincipals': self._get_serviceprincipal,
+            'GuestsOrExternalUsers': self._translate_guestsexternal
         }
         ot = ''
         for ctype, clist in crit.items():
@@ -186,6 +201,9 @@ class AccessPoliciesPlugin():
                 elif ctype == 'Roles':
                     ot += 'Users in roles: '
                     ot += ', '.join([escape(uobj.displayName) for uobj in objects])
+                elif ctype == 'GuestsOrExternalUsers':
+                    ot += 'Guests or external user types: '
+                    ot += ', '.join([escape(uobj) for uobj in objects])
                 else:
                     raise Exception('Unsupported criterium type: {0}'.format(ctype))
             else:
@@ -366,7 +384,12 @@ class AccessPoliciesPlugin():
         return ot
 
     def _parse_controls(self, controls):
-        acontrols = [', '.join(c['Control']) for c in controls]
+        acontrols = []
+        for c in controls:
+            if 'Control' in c:
+                acontrols.append(', '.join(c['Control']))
+            if 'AuthStrengthIds' in c:
+                acontrols.append(', '.join([self._translate_authstrength(authstrengthguid) for authstrengthguid in c['AuthStrengthIds']]))
         if 'Block' in acontrols:
             ot = '<strong>Deny logon</strong>'
             return ot
