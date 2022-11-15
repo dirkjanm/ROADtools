@@ -344,7 +344,7 @@ class AccessPoliciesPlugin():
         ucond = cond['Users']
         ot = '<strong>Including</strong>: '
 
-        if len(ucond['Include']) == 1 and 'Nobody' in self._parse_ucrit(ucond['Include'][0]) and cond['ServicePrincipals']:
+        if len(ucond['Include']) == 1 and 'Nobody' in self._parse_ucrit(ucond['Include'][0]) and 'ServicePrincipals' in cond:
             # Service Principal policy
             spcond = cond['ServicePrincipals']
             for icrit in spcond['Include']:
