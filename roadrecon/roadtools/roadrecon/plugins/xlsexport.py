@@ -246,6 +246,9 @@ class ExportToFilePlugin():
                 sp = self.session.query(User).get(ar.principalId)
             if ar.principalType == 'Group':
                 sp = self.session.query(Group).get(ar.principalId)
+            if not sp:
+                self._print_msg('Could not resolve service principal for approle {0}'.format(str(ar)))
+                continue
             if ar.id == '00000000-0000-0000-0000-000000000000':
                 approles.append({
                     'objid': sp.objectId,
