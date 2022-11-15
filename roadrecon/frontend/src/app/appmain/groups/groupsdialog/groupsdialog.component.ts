@@ -47,6 +47,8 @@ export class GroupsdialogComponent {
   public displayedColumns: string[] = ['displayName', 'description']
   public displayedColumnsUsers: string[] = ['displayName', 'description', 'userType']
   public displayedColumnsServicePrincipal: string[] = ['displayName']
+  public displayedColumnsOwners: string[] = ['displayName', 'userPrincipalName']
+  public displayedColumnsDevices: string[] = ['displayName', 'deviceModel', 'deviceOSType', 'deviceTrustType'];
 
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(

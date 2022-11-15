@@ -117,6 +117,8 @@ class GroupSchema(RTModelSchema):
         model = Group
     memberOf = fields.Nested(GroupsSchema, many=True)
     memberUsers = fields.Nested(UsersSchema, many=True)
+    memberOfRole = fields.Nested(DirectoryRoleSchema, many=True)
+    memberDevices = fields.Nested(DevicesSchema, many=True)
     memberServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
     ownerUsers = fields.Nested(UsersSchema, many=True)
     ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)

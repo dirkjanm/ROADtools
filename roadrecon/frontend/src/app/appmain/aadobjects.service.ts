@@ -23,6 +23,7 @@ export interface GroupsItem {
   groupTypes: string[];
   memberOf: GroupsItem[];
   memberUsers: UsersItem[];
+  memberDevices: DevicesItem[];
   memberServicePrincipals: ServicePrincipalsItem[];
   memberOfRole: DirectoryRolesItem[];
   ownerUsers: UsersItem[];
