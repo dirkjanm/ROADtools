@@ -1,0 +1,21 @@
+AppRoleAssignments:
+  creationTimestamp: App role for {resourceDisplayName} ({resourceId}) assigned to {principalType} named {principalDisplayName} ({principalId})
+Devices:
+  lastDirSyncTime: 'Directory sync for {deviceOSType} device {displayName} (SID: {onPremisesSecurityIdentifier}, Device ID: {deviceId}, Object ID: {objectId})'
+  approximateLastLogonTimestamp: 'Approximate last logon for {deviceOSType} device {displayName} (Device ID: {deviceId})'
+Groups:
+  createdDateTime: 'Group {displayName} was created by application {createdByAppId} (
+    Group Object ID: {objectId}, SID: {onPremisesSecurityIdentifier})'
+  lastDirSyncTime: 'Directory sync for {visibility} group {displayName} (On-Prem SID: {onPremisesSecurityIdentifier}, Cloud SID: {cloudSecurityIdentifier})'
+  renewedDateTime: 'Renewed {visibility} group {displayName} (Cloud SID: {cloudSecurityIdentifier})'
+OAuth2PermissionGrants:
+  expiryTime: 'Delegated permission expired for {scope} scope on {resourceId} for principals: {consentType}'
+Users:
+  acceptedOn: '{creationType} {userState} for {userType} user {displayName} (UPN: {userPrincipalName})'
+  createdDateTime: 'User {userPrincipalName} was created in the directory (Cloud SID: {cloudSecurityIdentifier})'
+  invitedOn: 'User {userPrincipalName} was invited to the directory (Cloud SID: {cloudSecurityIdentifier})'
+  lastDirSyncTime: 'Directory sync for user {userPrincipalName} (On-Prem SID: {onPremisesSecurityIdentifier}, Cloud SID: {cloudSecurityIdentifier}, Immutable ID: {immutableId})'
+  lastPasswordChangeDateTime: 'Cloud password was changed for user {userPrincipalName} (Cloud SID: {cloudSecurityIdentifier})'
+  onPremisesPasswordChangeTimestamp: 'On-Prem password was changed for user {userPrincipalName} (On-Prem SID: {onPremisesSecurityIdentifier}, Cloud SID: {cloudSecurityIdentifier}, Immutable ID: {immutableId})'
+  refreshTokensValidFromDateTime: 'Refresh tokens revoked for user {userPrincipalName} (On-Prem SID: {onPremisesSecurityIdentifier}, Cloud SID: {cloudSecurityIdentifier}, Immutable ID: {immutableId})'
+  userStateChangedOn: 'State changed to {userState} for {userType} user {displayName} (UPN: {userPrincipalName})'
