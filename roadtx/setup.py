@@ -17,7 +17,7 @@ setup(name='roadtx',
       ],
       packages=['roadtools.roadtx'],
       install_requires=[
-          'roadlib>=0.14',
+          'roadlib>=0.15',
           'requests',
           'selenium',
           'selenium-wire',

@@ -39,6 +39,19 @@ def main():
     device_parser.add_argument('--device-type', action='store', help='Device OS type (default: Windows)')
     device_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
 
+    # Construct hybrid device module
+    hdevice_parser = subparsers.add_parser('hybriddevice', help='Join an on-prem device to Azure AD')
+    hdevice_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', help='Certificate file containing on-prem device cert')
+    hdevice_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for device certificate')
+    hdevice_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Device cert and key as PFX file')
+    hdevice_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    hdevice_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    hdevice_parser.add_argument('-n', '--name', action='store', help='Device display name (default: DESKTOP-<RANDOM>)')
+    hdevice_parser.add_argument('--device-type', action='store', help='Device OS type (default: Windows)')
+    hdevice_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
+    hdevice_parser.add_argument('--sid', action='store', required=True, help='Device SID in AD')
+    hdevice_parser.add_argument('-t', '--tenant', action='store', required=True, help='Tenant ID where device exists')
+
     # Construct PRT module
     prt_parser = subparsers.add_parser('prt', help='PRT request/renewal module')
     prt_parser.add_argument('-a',
@@ -417,6 +430,10 @@ def main():
             if not deviceauth.loadcert(args.cert_pem, args.key_pem):
                 return
             deviceauth.delete_device(args.cert_pem, args.key_pem)
+    elif args.command == 'hybriddevice':
+        if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+            return
+        deviceauth.register_hybrid_device(args.sid, args.tenant, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version)
     elif args.command == 'prt':
         if args.action == 'request':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
