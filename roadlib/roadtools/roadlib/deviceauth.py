@@ -49,6 +49,11 @@ class DeviceAuthentication():
         # Hello key as PEM
         self.hellokeydata = None
 
+        # Proxies
+        self.proxies = {}
+        # Verify TLS certs
+        self.verify = True
+
     def loadcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
         """
         Load a device certificate from disk
@@ -229,7 +234,7 @@ class DeviceAuthentication():
         }
 
         print('Registering device')
-        res = requests.post('https://enterpriseregistration.windows.net/EnrollmentServer/device/?api-version=2.0', json=data, headers=headers)
+        res = requests.post('https://enterpriseregistration.windows.net/EnrollmentServer/device/?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -332,7 +337,7 @@ class DeviceAuthentication():
             deviceid = attr.value
         print(f"Device ID (from certificate): {deviceid}")
         print('Registering device')
-        res = requests.put(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}?api-version=2.0', json=data, headers=headers)
+        res = requests.put(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -383,7 +388,7 @@ class DeviceAuthentication():
             'client_info':'1',
             'tgt':True
         }
-        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=prt_request_data)
+        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=prt_request_data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         prtdata = res.json()
@@ -445,7 +450,7 @@ class DeviceAuthentication():
         }
         if reqtgt:
             token_request_data['tgt'] = True
-        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=token_request_data)
+        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         responsedata = res.text

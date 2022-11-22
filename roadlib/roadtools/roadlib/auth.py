@@ -166,7 +166,7 @@ class Authentication():
             data['client_secret'] = client_secret
         if pkce_secret:
             raise NotImplementedError
-        res = requests.post(f"{authority_uri}/oauth2/token", data=data)
+        res = requests.post(f"{authority_uri}/oauth2/token", data=data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         tokenreply = res.json()
@@ -187,7 +187,7 @@ class Authentication():
             "client_info":1,
             "windows_api_version":"2.0"
         }
-        res = requests.post(f"{authority_uri}/oauth2/token", data=data)
+        res = requests.post(f"{authority_uri}/oauth2/token", data=data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         prtdata = res.text
@@ -361,7 +361,7 @@ class Authentication():
         Request server challenge (nonce) to use with a PRT
         """
         data = {'grant_type':'srv_challenge'}
-        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=data)
+        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=data, proxies=self.proxies, verify=self.verify)
         return res.json()
 
     def get_prt_cookie_nonce(self):
@@ -370,7 +370,7 @@ class Authentication():
         is how Chrome processes it, but it could probably also be obtained using the much
         simpler request from the get_srv_challenge function.
         """
-        ses = requests.session()
+        ses = requests.session(proxies=self.proxies, verify=self.verify)
         params = {
             'resource': self.resource_uri,
             'client_id': self.client_id,
@@ -478,7 +478,7 @@ class Authentication():
                 cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders)
                 print('Re-signed PRT cookie using derived key')
 
-        ses = requests.session()
+        ses = requests.session(proxies=self.proxies, verify=self.verify)
         params = {
             'resource': self.resource_uri,
             'client_id': self.client_id,
