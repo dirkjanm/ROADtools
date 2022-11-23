@@ -370,13 +370,15 @@ class Authentication():
         is how Chrome processes it, but it could probably also be obtained using the much
         simpler request from the get_srv_challenge function.
         """
-        ses = requests.session(proxies=self.proxies, verify=self.verify)
+        ses = requests.session()
+        ses.proxies = self.proxies
+        ses.verify = self.verify
         params = {
             'resource': self.resource_uri,
             'client_id': self.client_id,
             'response_type': 'code',
             'haschrome': '1',
-            'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
+            'redirect_uri': 'https://login.microsoftonline.com/common/oauth2/nativeclient',
             'client-request-id': str(uuid.uuid4()),
             'x-client-SKU': 'PCL.Desktop',
             'x-client-Ver': '3.19.7.16602',
@@ -478,13 +480,15 @@ class Authentication():
                 cookie = jwt.encode(jdata, sdata, algorithm='HS256', headers=newheaders)
                 print('Re-signed PRT cookie using derived key')
 
-        ses = requests.session(proxies=self.proxies, verify=self.verify)
+        ses = requests.session()
+        ses.proxies = self.proxies
+        ses.verify = self.verify
         params = {
             'resource': self.resource_uri,
             'client_id': self.client_id,
             'response_type': 'code',
             'haschrome': '1',
-            'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob',
+            'redirect_uri': 'https://login.microsoftonline.com/common/oauth2/nativeclient',
             'client-request-id': str(uuid.uuid4()),
             'x-client-SKU': 'PCL.Desktop',
             'x-client-Ver': '3.19.7.16602',
@@ -506,11 +510,36 @@ class Authentication():
             ups = urlparse(res.headers['Location'])
             qdata = parse_qs(ups.query)
             return self.authenticate_with_code(qdata['code'][0], params['redirect_uri'])
+        if res.status_code == 302 and 'sso_nonce' in res.headers['Location'].lower():
+            ups = urlparse(res.headers['Location'])
+            qdata = parse_qs(ups.query)
+            if 'sso_nonce' in qdata:
+                nonce = qdata['sso_nonce'][0]
+                print(f'Redirected with new nonce. Old nonce may be expired. New nonce: {nonce}')
         if self.debug:
             with open('roadtools.debug.html','w') as outfile:
                 outfile.write(str(res.headers))
                 outfile.write('------\n\n\n-----')
                 outfile.write(res.content.decode('utf-8'))
+
+        # Try to find SSO nonce in json config
+        startpos = res.content.find(b'$Config=')
+        stoppos = res.content.find(b'//]]></script>')
+        if startpos != -1 and stoppos != -1:
+            jsonbytes = res.content[startpos+8:stoppos-2]
+            try:
+                jdata = json.loads(jsonbytes)
+                try:
+                    error = jdata['strMainMessage']
+                    print(f'Error from STS: {error}')
+                    error = jdata['strAdditionalMessage']
+                    print(f'Additional info: {error}')
+                    error = jdata['strServiceExceptionMessage']
+                    print(f'Exception: {error}')
+                except KeyError:
+                    pass
+            except json.decoder.JSONDecodeError:
+                pass
         print('No authentication code was returned, make sure the PRT cookie is valid')
         print('It is also possible that the sign-in was blocked by Conditional Access policies')
         return False
