@@ -41,7 +41,7 @@ class RTModelSchema(ma.SQLAlchemyAutoSchema):
 class UsersSchema(ma.Schema):
     class Meta:
         model = User
-        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled', 'strongAuthenticationDetail')
+        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled', 'strongAuthenticationDetail', 'userType')
 
 class DevicesSchema(ma.Schema):
     class Meta:

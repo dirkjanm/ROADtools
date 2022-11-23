@@ -12,7 +12,8 @@
         <tr *ngIf="user.lastPasswordChangeDateTime != null"><th>Last password change</th><td>{{ user.lastPasswordChangeDateTime }}</td></tr>
         <tr *ngIf="user.jobTitle != null"><th>Job Title</th><td>{{ user.jobTitle }}</td></tr>
         <tr *ngIf="user.mobile != null"><th>Mobile</th><td>{{ user.mobile }}</td></tr>
-        <tr><th>Account type</th><td>{{ user.dirSyncEnabled? 'Synced with AD':'Cloud-only' }}</td></tr>
+        <tr><th>Account source</th><td>{{ user.dirSyncEnabled? 'Synced with AD':'Cloud-only' }}</td></tr>
+        <tr><th>Account type</th><td>{{ user.userType }}</td></tr>
         <tr><th>Status</th><td>{{ user.accountEnabled? 'Enabled':'Disabled' }}</td></tr>
       </table>
     </mat-card>
