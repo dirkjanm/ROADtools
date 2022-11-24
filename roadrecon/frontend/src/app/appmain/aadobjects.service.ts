@@ -22,6 +22,7 @@ export interface GroupsItem {
   membershipRule: string;
   groupTypes: string[];
   memberOf: GroupsItem[];
+  memberGroups: GroupsItem[];
   memberUsers: UsersItem[];
   memberDevices: DevicesItem[];
   memberServicePrincipals: ServicePrincipalsItem[];

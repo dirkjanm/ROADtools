@@ -116,6 +116,7 @@ class GroupSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = Group
     memberOf = fields.Nested(GroupsSchema, many=True)
+    memberGroups = fields.Nested(GroupsSchema, many=True)
     memberUsers = fields.Nested(UsersSchema, many=True)
     memberOfRole = fields.Nested(DirectoryRoleSchema, many=True)
     memberDevices = fields.Nested(DevicesSchema, many=True)
