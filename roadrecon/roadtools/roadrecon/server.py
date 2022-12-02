@@ -257,10 +257,10 @@ def get_applications():
 @app.route("/api/mfa", methods=["GET"])
 def get_mfa():
     # First get all users with per-user MFA
-    per_user = db.session.query(AppRoleAssignment).filter(AppRoleAssignment.resourceDisplayName == "MicrosoftAzureActiveAuthn" and AppRoleAssignment.principalType == "User").all()
-    enabledusers = []
-    for approle in per_user:
-        enabledusers.append(approle.principalId)
+    # per_user = db.session.query(AppRoleAssignment).filter(AppRoleAssignment.resourceDisplayName == "MicrosoftAzureActiveAuthn" and AppRoleAssignment.principalType == "User").all()
+    # enabledusers = []
+    # for approle in per_user:
+    #     enabledusers.append(approle.principalId)
 
     all_mfa = db.session.query(User).all()
     out = []
@@ -270,12 +270,15 @@ def get_mfa():
         has_app = 'PhoneAppOTP' in methods or 'PhoneAppNotification' in methods
         has_phonenr = 'OneWaySms' in methods or 'TwoWayVoiceMobile' in methods
         has_fido = 'FIDO' in [key['usage'] for key in user.searchableDeviceKey]
+        perusermfa = None
+        if len(user.strongAuthenticationDetail['requirements']) > 0:
+            perusermfa = user.strongAuthenticationDetail['requirements'][0]['state']
         out.append({
             'objectId': user.objectId,
             'displayName': user.displayName,
             'mfamethods': mfa_methods,
             'accountEnabled': user.accountEnabled,
-            'perusermfa': user.objectId in enabledusers,
+            'perusermfa': perusermfa,
             'has_app': has_app,
             'has_phonenr': has_phonenr,
             'has_fido': has_fido,

@@ -22,8 +22,8 @@
     </ng-container>
 
     <ng-container matColumnDef="perusermfa">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Per-user MFA enforced</th>
-      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.perusermfa" aria-hidden="false" aria-label="Enabled">check</mat-icon></td>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Per-user MFA</th>
+      <td mat-cell *matCellDef="let row">{{row.perusermfa}}</td>
     </ng-container>
 
     <ng-container matColumnDef="has_app">
