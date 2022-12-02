@@ -68,7 +68,10 @@ class SeleniumAuthentication():
         if not entry:
             raise AuthenticationException(f'Specified username {identity} not found in KeePass file')
         userpassword = entry['Password']
-        otpseed = entry['otp']
+        try:
+            otpseed = entry['otp']
+        except KeyError:
+            otpseed = None
         return userpassword, otpseed
 
     def selenium_login(self, url, identity=None, password=None, otpseed=None, keep=False):
