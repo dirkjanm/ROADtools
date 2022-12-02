@@ -444,6 +444,10 @@ class AccessPoliciesPlugin():
             try:
                 conditions = detail['Conditions']
             except KeyError:
+                conditions = None
+            if conditions is None:
+                if should_print:
+                    print('Invalid policy - no conditions')
                 continue
             out['who'] = self._parse_who(conditions)
             out['applications'] = self._parse_application(conditions)
@@ -454,7 +458,6 @@ class AccessPoliciesPlugin():
             out['devices'] = self._parse_devices(conditions)
 
             try:
-                controls = detail['Controls']
                 out['controls'] = self._parse_controls(detail['Controls'])
             except KeyError:
                 out['controls'] = ''
