@@ -75,25 +75,6 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
     </mat-expansion-panel>
-    <mat-expansion-panel expanded>
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          Assigned application roles ({{ sp.appRolesAssigned.length }})
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <table *ngIf="sp.appRolesAssigned.length > 0" mat-table [dataSource]="sp.appRolesAssigned">
-        <ng-container matColumnDef="displayName">
-          <th mat-header-cell *matHeaderCellDef>displayName</th>
-          <td mat-cell *matCellDef="let row">{{row.displayName}}</td>
-        </ng-container>
-        <ng-container matColumnDef="description">
-          <th mat-header-cell *matHeaderCellDef>Description</th>
-          <td mat-cell *matCellDef="let row">{{row.description}}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-    </mat-expansion-panel>
     </mat-tab>
 
   <mat-tab label="Application roles assigned to others" *ngIf="sp.appRolesAssigned.length > 0">
