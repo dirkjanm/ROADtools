@@ -35,6 +35,7 @@ WELLKNOWN_CLIENTS = {
     "teams": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
     "msteams": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
     "azps": "1950a258-227b-4e31-a9cf-717495945fc2",
+    "msedge": "ecd6b820-32c2-49b6-98a6-444530e5a77a",
 }
 
 def get_data(data):
@@ -64,6 +65,7 @@ class Authentication():
         self.verify = True
         self.outfile = None
         self.debug = False
+        self.scope = None
 
     def get_authority_url(self):
         """
@@ -149,7 +151,58 @@ class Authentication():
         self.tokendata['tenantId'] = inputdata['tid']
         return self.tokendata
 
-    def authenticate_with_code_native(self, code, redirurl, client_secret=None, pkce_secret=None):
+    def authenticate_with_refresh_native(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate with a refresh token plus optional secret in case of a non-public app (authorization grant)
+        Native ROADlib implementation without adal requirement
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "resource": self.resource_uri,
+        }
+        if client_secret:
+            data['client_secret'] = client_secret
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = requests.post(f"{authority_uri}/oauth2/token", data=data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def authenticate_with_refresh_native_v2(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate with a refresh token plus optional secret in case of a non-public app (authorization grant)
+        Native ROADlib implementation without adal requirement
+        This function calls identity platform v2 and thus requires a scope instead of resource
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "scope": self.scope,
+        }
+        if client_secret:
+            data['client_secret'] = client_secret
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = requests.post(f"{authority_uri}/oauth2/v2.0/token", data=data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def authenticate_with_code_native(self, code, redirurl, client_secret=None, pkce_secret=None, additionaldata=None, returnreply=False):
         """
         Authenticate with a code plus optional secret in case of a non-public app (authorization grant)
         Native ROADlib implementation without adal requirement - also supports PKCE
@@ -164,12 +217,45 @@ class Authentication():
         }
         if client_secret:
             data['client_secret'] = client_secret
+        if additionaldata:
+            data = {**data, **additionaldata}
         if pkce_secret:
             raise NotImplementedError
         res = requests.post(f"{authority_uri}/oauth2/token", data=data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def authenticate_with_code_native_v2(self, code, redirurl, client_secret=None, pkce_secret=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate with a code plus optional secret in case of a non-public app (authorization grant)
+        Native ROADlib implementation without adal requirement - also supports PKCE
+        This function calls identity platform v2 and thus requires a scope instead of resource
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirurl,
+            "scope": self.scope,
+        }
+        if client_secret:
+            data['client_secret'] = client_secret
+        if additionaldata:
+            data = {**data, **additionaldata}
+        if pkce_secret:
+            raise NotImplementedError
+        res = requests.post(f"{authority_uri}/oauth2/v2.0/token", data=data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
@@ -678,8 +764,11 @@ class Authentication():
         """
         tokenobject = {
             'tokenType': tokenreply['token_type'],
-            'expiresOn': datetime.datetime.fromtimestamp(int(tokenreply['expires_on'])).strftime('%Y-%m-%d %H:%M:%S')
         }
+        try:
+            tokenobject['expiresOn'] = datetime.datetime.fromtimestamp(int(tokenreply['expires_on'])).strftime('%Y-%m-%d %H:%M:%S')
+        except KeyError:
+            tokenobject['expiresOn'] = (datetime.datetime.now() + datetime.timedelta(seconds=int(tokenreply['expires_in']))).strftime('%Y-%m-%d %H:%M:%S')
         translate_map = {
             'access_token': 'accessToken',
             'refresh_token': 'refreshToken',
@@ -772,7 +861,7 @@ class Authentication():
                     token_data = json.load(infile)
             else:
                 token_data = {'refreshToken': self.refresh_token}
-            return self.authenticate_with_refresh(token_data)
+            return self.authenticate_with_refresh_native(token_data['refreshToken'])
         if self.access_token and not self.refresh_token:
             self.tokendata, _ = self.parse_accesstoken(self.access_token)
             return self.tokendata
