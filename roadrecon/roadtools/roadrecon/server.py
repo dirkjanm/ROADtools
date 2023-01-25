@@ -363,7 +363,7 @@ def get_oauth2permissions():
         grant['targetspobjectid'] = targetapp.objectId
         grant['sourceapplication'] = rsp.displayName
         grant['sourcespobjectid'] = rsp.objectId
-        grant['expiry'] = permgrant.expiryTime
+        grant['expiry'] = permgrant.expiryTime.strftime("%Y-%m-%dT%H:%M:%S")
         grant['scope'] = permgrant.scope
         oauth2permissions.append(grant)
     return jsonify(oauth2permissions)
