@@ -82,8 +82,7 @@ jobs:
       set -e
       roadtx gettokens -u $rtuser -p $rtpass -r drs
       roadtx device -a join -c pipeline.pem -k pipeline.key
-      sleep 10s
-      roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null
+      for i in 1 2 3 4 5; do roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null && break || sleep 10s; done
       roadtx prtauth
       roadtx prt -a renew >/dev/null
       roadtx prtauth -c azcli -r azrm
