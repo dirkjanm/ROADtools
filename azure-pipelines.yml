@@ -82,10 +82,14 @@ jobs:
       set -e
       roadtx gettokens -u $rtuser -p $rtpass -r drs
       roadtx device -a join -c pipeline.pem -k pipeline.key
-      for i in 1 2 3 4 5; do roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null && break || sleep 10s; done
-      roadtx prtauth
-      roadtx prt -a renew >/dev/null
-      roadtx prtauth -c azcli -r azrm
+      retry_if_fail()
+      {
+          for i in 1 2 3 4 5; do "$@" && break || sleep 10s; done
+      }
+      retry_if_fail roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null
+      retry_if_fail roadtx prtauth
+      retry_if_fail roadtx prt -a renew >/dev/null
+      retry_if_fail roadtx prtauth -c azcli -r azrm
       roadtx device -a delete -c pipeline.pem -k pipeline.key
       rm .roadtools_auth pipeline.pem pipeline.key
     displayName: 'Run roadtx device tests'
