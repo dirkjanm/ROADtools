@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='roadrecon',
-      version='1.0.3',
+      version='1.0.4',
       description='Azure AD recon for red/blue',
       author='Dirk-jan Mollema',
       author_email='dirkjan@dirkjanm.io',
@@ -21,7 +21,7 @@ setup(name='roadrecon',
       install_requires=[
           'roadlib>=0.15',
           'flask',
-          'sqlalchemy',
+          'sqlalchemy<2',
           'marshmallow',
           'flask-sqlalchemy>=2.5',
           'flask-marshmallow',
