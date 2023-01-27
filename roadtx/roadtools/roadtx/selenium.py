@@ -74,7 +74,7 @@ class SeleniumAuthentication():
             otpseed = None
         return userpassword, otpseed
 
-    def selenium_login(self, url, identity=None, password=None, otpseed=None, keep=False):
+    def selenium_login(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False):
         '''
         Selenium based login with optional autofill of whatever is provided
         '''
@@ -103,6 +103,9 @@ class SeleniumAuthentication():
             code = params['code'][0]
             if not keep:
                 driver.close()
+            if capture:
+                print(f'Captured auth code: {code}')
+                return True
             return self.auth.authenticate_with_code_native(code, self.redirurl)
         except TimeoutException:
             pass
@@ -130,14 +133,17 @@ class SeleniumAuthentication():
             code = params['code'][0]
             if not keep:
                 driver.close()
-            return self.auth.authenticate_with_code_native(code, self.redirurl)
+            if capture:
+                print(f'Captured auth code: {code}')
+            else:
+                return self.auth.authenticate_with_code_native(code, self.redirurl)
         except TimeoutException:
             if not keep:
                 driver.close()
                 raise AuthenticationException('Authentication did not complete within time limit')
         return False
 
-    def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False):
+    def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None):
         '''
         Selenium login with PRT injection.
         '''
@@ -151,16 +157,20 @@ class SeleniumAuthentication():
 
             if request.url.startswith('https://login.microsoftonline.com'):
                 if '/authorize' in request.url or '/login' in request.url or '/kmsi' in request.url or '/reprocess' in request.url or '/resume' in request.url:
-                    if 'sso_nonce' in request.url:
-                        res = urlparse(request.url)
-                        params = parse_qs(res.query)
-                        cookie = self.auth.create_prt_cookie_kdf_ver_2(self.deviceauth.prt,
-                                                                       self.deviceauth.session_key,
-                                                                       params['sso_nonce'][0])
+                    if prtcookie:
+                        # Force single cookie injection
+                        request.headers['X-Ms-Refreshtokencredential'] = prtcookie
                     else:
-                        cookie = self.auth.create_prt_cookie_kdf_ver_2(self.deviceauth.prt,
-                                                                       self.deviceauth.session_key)
-                    request.headers['X-Ms-Refreshtokencredential'] = cookie
+                        if 'sso_nonce' in request.url:
+                            res = urlparse(request.url)
+                            params = parse_qs(res.query)
+                            cookie = self.auth.create_prt_cookie_kdf_ver_2(self.deviceauth.prt,
+                                                                           self.deviceauth.session_key,
+                                                                           params['sso_nonce'][0])
+                        else:
+                            cookie = self.auth.create_prt_cookie_kdf_ver_2(self.deviceauth.prt,
+                                                                           self.deviceauth.session_key)
+                        request.headers['X-Ms-Refreshtokencredential'] = cookie
         self.driver.request_interceptor = interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep)
 
