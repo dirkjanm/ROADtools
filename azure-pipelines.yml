@@ -82,6 +82,7 @@ jobs:
       set -e
       roadtx gettokens -u $rtuser -p $rtpass -r drs
       roadtx device -a join -c pipeline.pem -k pipeline.key
+      sleep 10s
       roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null
       roadtx prtauth
       roadtx prt -a renew >/dev/null
