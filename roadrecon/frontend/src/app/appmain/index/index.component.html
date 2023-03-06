@@ -38,7 +38,7 @@
         </tr>
         <tr *ngIf="authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole.length > 0"><th>Default user role permissions</th><td>{{ authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole[0] }}</td></tr>
         <tr><th>Guest access settings</th><td [ngSwitch]="authorizationPolicy.guestUserRoleId">
-          <span *ngSwitchCase="'0b1b346-4d3e-4e8b-98f8-753987be4970'">Same as member users</span>
+          <span *ngSwitchCase="'a0b1b346-4d3e-4e8b-98f8-753987be4970'">Same as member users</span>
           <span *ngSwitchCase="'10dae51f-b6af-4016-8d66-8c2a99b929b3'">Limited access (default)</span>
           <span *ngSwitchCase="'2af84b1e-32c8-42b7-82bc-daa82404023b'">Restricted access</span>
           <span *ngSwitchDefault>Unknown: {{ authorizationPolicy.guestUserRoleId }}</span>

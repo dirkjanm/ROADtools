@@ -135,6 +135,9 @@ async def dumpsingle(url, method):
                 # This can happen
                 if res.status == 404 and 'applicationRefs' in url:
                     return
+                # Ignore default users role not being found
+                if res.status == 404 and 'a0b1b346-4d3e-4e8b-98f8-753987be4970' in url:
+                    return
                 print('Error %d for URL %s' % (res.status, url))
                 return
             objects = await res.json()
