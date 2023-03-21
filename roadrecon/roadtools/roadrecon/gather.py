@@ -59,6 +59,9 @@ async def dumphelper(url, method=requests.get):
                         print('Sleeping because of rate-limit hit')
                     continue
                 if req.status != 200:
+                    # Ignore default users role not being found
+                    if req.status == 404 and 'a0b1b346-4d3e-4e8b-98f8-753987be4970' in url:
+                        return
                     print('Error %d for URL %s' % (req.status, nexturl))
                     # print(await req.text())
                     # print(req.headers)
