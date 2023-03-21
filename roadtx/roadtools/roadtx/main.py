@@ -38,6 +38,7 @@ def main():
     device_parser.add_argument('--access-token', action='store', help='Access token for device registration service. If not specified, taken from .roadtools_auth')
     device_parser.add_argument('--device-type', action='store', help='Device OS type (default: Windows)')
     device_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
+    device_parser.add_argument('--deviceticket', action='store', help='Device MSA ticket to match with existing device')
 
     # Construct hybrid device module
     hdevice_parser = subparsers.add_parser('hybriddevice', help='Join an on-prem device to Azure AD')
@@ -319,6 +320,9 @@ def main():
     browserprtauth_parser.add_argument('-k', '--keep-open',
                                        action='store_true',
                                        help='Do not close the browser window after timeout. Useful if you want to browse online apps with the obtained credentials')
+    browserprtauth_parser.add_argument('--capture-code',
+                                       action='store_true',
+                                       help='Do not attempt to redeem any authentication code but print it instead')
 
     # Interactive auth using Selenium - inject PRT to other user
     injauth_parser = subparsers.add_parser('browserprtinject', help='Selenium based auth with automatic PRT injection. Can be used with other users to add device state to session')
@@ -431,7 +435,7 @@ def main():
                 jointype = 0
             else:
                 jointype = 4
-            deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version)
+            deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version, deviceticket=args.deviceticket)
         elif args.action == 'delete':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem):
                 return
@@ -591,7 +595,9 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service, intercept=True)
-        if not selauth.selenium_login_with_prt(url, keep=args.keep_open, prtcookie=args.prt_cookie):
+        if not selauth.selenium_login_with_prt(url, keep=args.keep_open, prtcookie=args.prt_cookie, capture=args.capture_code):
+            return
+        if args.capture_code:
             return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)

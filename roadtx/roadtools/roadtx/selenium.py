@@ -143,7 +143,7 @@ class SeleniumAuthentication():
                 raise AuthenticationException('Authentication did not complete within time limit')
         return False
 
-    def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None):
+    def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None, capture=False):
         '''
         Selenium login with PRT injection.
         '''
@@ -172,7 +172,7 @@ class SeleniumAuthentication():
                                                                            self.deviceauth.session_key)
                         request.headers['X-Ms-Refreshtokencredential'] = cookie
         self.driver.request_interceptor = interceptor
-        return self.selenium_login(url, identity, password, otpseed, keep=keep)
+        return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
     def selenium_enrich_prt(self, url, otpseed=None):
         '''

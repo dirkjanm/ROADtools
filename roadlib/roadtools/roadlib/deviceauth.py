@@ -13,6 +13,8 @@ import os
 import time
 import warnings
 import datetime
+import uuid
+import urllib3
 from cryptography.hazmat.primitives import serialization, padding, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding as apadding
@@ -23,8 +25,8 @@ from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.utils import CryptographyDeprecationWarning
 from roadtools.roadlib.auth import Authentication, get_data, AuthenticationException
-
 warnings.filterwarnings("ignore", category=CryptographyDeprecationWarning)
+warnings.filterwarnings("ignore", category=urllib3.exceptions.InsecureRequestWarning)
 
 
 class DeviceAuthentication():
@@ -164,7 +166,37 @@ class DeviceAuthentication():
         pubkeycngblob = b''.join(header)+exponent_as_bytes+modulus_as_bytes
         return pubkeycngblob
 
-    def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None):
+    def create_public_jwk_from_key(self, key, for_registration=False):
+        """
+        Convert a key (or certificate) to JWK public numbers
+        https://www.rfc-editor.org/rfc/rfc7517
+        """
+        pubkey = key.public_key()
+        pubnumbers = pubkey.public_numbers()
+
+        # From python docs https://docs.python.org/3/library/stdtypes.html#int.to_bytes
+        exponent_as_bytes = pubnumbers.e.to_bytes((pubnumbers.e.bit_length() + 7) // 8, byteorder='big')
+        modulus_as_bytes = pubnumbers.n.to_bytes((pubnumbers.n.bit_length() + 7) // 8, byteorder='big')
+
+
+        if for_registration:
+            # Registration expects additional parameters and different encoding (regular base64 instead of urlsafe)
+            jwk = {
+                'kty': 'RSA',
+                'e': base64.b64encode(exponent_as_bytes).decode('utf-8'),
+                'n': base64.b64encode(modulus_as_bytes).decode('utf-8'),
+                'alg': 'RS256',
+                'kid': str(uuid.uuid4()).upper()
+            }
+        else:
+            jwk = {
+                'kty': 'RSA',
+                'e': base64.urlsafe_b64encode(exponent_as_bytes).decode('utf-8'),
+                'n': base64.urlsafe_b64encode(modulus_as_bytes).decode('utf-8'),
+            }
+        return json.dumps(jwk, separators=(',', ':'))
+
+    def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None, deviceticket=None):
         """
         Registers a device in Azure AD. Requires an access token to the device registration service.
         """
@@ -209,24 +241,45 @@ class DeviceAuthentication():
 
         pubkeycngblob = base64.b64encode(self.create_pubkey_blob_from_key(key))
 
-        data = {
-            "CertificateRequest":
-                {
-                    "Type": "pkcs10",
-                    "Data": certbytes.decode('utf-8')
-                },
-            "TransportKey": pubkeycngblob.decode('utf-8'),
-            # Can likely be edited to anything, are not validated afaik
-            "TargetDomain": "iminyour.cloud",
-            "DeviceType": device_type,
-            "OSVersion": os_version,
-            "DeviceDisplayName": device_name,
-            "JoinType": jointype,
-            "attributes": {
-                "ReuseDevice": "true",
-                "ReturnClientSid": "true"
+
+        if device_type.lower() == 'macos':
+            data = {
+              "DeviceDisplayName" : device_name,
+              "CertificateRequest" : {
+                "Type" : "pkcs10",
+                "Data" : certbytes.decode('utf-8')
+              },
+              "OSVersion" : "12.2.0",
+              "TargetDomain" : "iminyour.cloud",
+              "AikCertificate" : "",
+              "DeviceType" : "MacOS",
+              "TransportKey" : base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
+              "JoinType" : jointype,
+              "AttestationData" : ""
             }
-        }
+        else:
+            data = {
+                "CertificateRequest":
+                    {
+                        "Type": "pkcs10",
+                        "Data": certbytes.decode('utf-8')
+                    },
+                "TransportKey": pubkeycngblob.decode('utf-8'),
+                # Can likely be edited to anything, are not validated afaik
+                "TargetDomain": "iminyour.cloud",
+                "DeviceType": device_type,
+                "OSVersion": os_version,
+                "DeviceDisplayName": device_name,
+                "JoinType": jointype,
+                "attributes": {
+                    "ReuseDevice": "true",
+                    "ReturnClientSid": "true"
+                }
+            }
+            # Add device ticket if requested
+            if deviceticket:
+                data['attributes']['MSA-DDID'] = base64.b64encode(deviceticket.encode('utf-8')).decode('utf-8')
+
 
         headers = {
             'Authorization': f'Bearer {access_token}',
