@@ -45,7 +45,7 @@
 
     <ng-container matColumnDef="membershipRule">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Dynamic membership</th>
-      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.membershipRule != null" aria-hidden="false" aria-label="Can be assigned to roles">check</mat-icon></td>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.membershipRule != null" aria-hidden="false" aria-label="Has dynamic membership">check</mat-icon></td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>

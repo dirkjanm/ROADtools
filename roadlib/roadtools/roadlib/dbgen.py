@@ -123,6 +123,7 @@ custom_splinks = '''
 
 coldef = '    %s = Column(%s)'
 pcoldef = '    %s = Column(%s, primary_key=True)'
+fcoldef = '    %s = Column(%s, ForeignKey("%s"))'
 
 def gen_db_class(classdef, rels, rev_rels):
     classname = classdef.__name__
@@ -145,8 +146,10 @@ def gen_db_class(classdef, rels, rev_rels):
             dbtype = 'Text'
         if dbtype == 'LargeBinary':
             dbtype = 'Text'
-        if pname == 'objectId' or (classname == 'Domain' and pname == 'name') or (classname == 'RoleAssignment' and pname == 'id') or (classname == 'ApplicationRef' and pname == 'appId') or (classname == 'AuthorizationPolicy' and pname == 'id') or (classname == 'DirectorySetting' and pname == 'id') :
+        if pname == 'objectId' or (classname == 'Domain' and pname == 'name') or (classname in ['RoleAssignment', 'EligibleRoleAssignment', 'AuthorizationPolicy', 'DirectorySetting'] and pname == 'id') or (classname == 'ApplicationRef' and pname == 'appId'):
             cols.append(pcoldef % (pname, dbtype))
+        elif pname == 'roleDefinitionId':
+            cols.append(fcoldef % (pname, dbtype, 'RoleDefinitions.objectId'))
         else:
             cols.append(coldef % (pname, dbtype))
     outrels = []
@@ -154,6 +157,8 @@ def gen_db_class(classdef, rels, rev_rels):
         reldata = relations[rel]
         if reldata[0] == reldata[1]:
             outrels.append(gen_link_fkey(rel, reldata[1], reldata[2], reldata[3], reldata[0], 'child'+reldata[0]))
+        elif reldata[0] == 'RoleDefinition' or reldata[1] == 'RoleDefinition':
+            outrels.append(gen_link_nolinktbl(reldata[1], reldata[2], reldata[3]))
         else:
             outrels.append(gen_link(rel, reldata[1], reldata[2], reldata[3]))
 
@@ -161,6 +166,8 @@ def gen_db_class(classdef, rels, rev_rels):
         reldata = relations[rel]
         if reldata[0] == reldata[1]:
             outrels.append(gen_link_fkey(rel, reldata[0], reldata[3], reldata[2], 'child'+reldata[0], reldata[0]))
+        elif reldata[0] == 'RoleDefinition' or reldata[1] == 'RoleDefinition':
+            outrels.append(gen_link_nolinktbl(reldata[0], reldata[3], reldata[2]))
         else:
             outrels.append(gen_link(rel, reldata[0], reldata[3], reldata[2]))
 
@@ -186,6 +193,11 @@ relations = {
     'role_member_group': ('DirectoryRole', 'Group', 'memberGroups', 'memberOfRole'),
     'group_owner_user': ('Group', 'User', 'ownerUsers', 'ownedGroups'),
     'group_owner_serviceprincipal': ('Group', 'ServicePrincipal', 'ownerServicePrincipals', 'ownedGroups'),
+    'au_member_user': ('AdministrativeUnit', 'User', 'memberUsers', 'memberOfAu'),
+    'au_member_group': ('AdministrativeUnit', 'Group', 'memberGroups', 'memberOfAu'),
+    'au_member_device': ('AdministrativeUnit', 'Device', 'memberDevices', 'memberOfAu'),
+    'role_assignment_active': ('RoleDefinition', 'RoleAssignment', 'assignments', 'roleDefinition'),
+    'role_assignment_eligible': ('RoleDefinition', 'EligibleRoleAssignment', 'eligibleAssignments', 'roleDefinition'),
 }
 
 link_tbl_tpl = '''
@@ -203,7 +215,7 @@ def gen_link_table(linkname, left_tbl, right_tbl):
         right_tbl_name = right_tbl
     return link_tbl_tpl % (linkname, linkname, left_tbl, left_tbl, right_tbl_name, right_tbl)
 
-# Simple link template
+# Simple link template for many to many relationships with link table
 link_tpl = '''    %s = relationship("%s",
         secondary=lnk_%s,
         back_populates="%s")
@@ -211,6 +223,14 @@ link_tpl = '''    %s = relationship("%s",
 
 def gen_link(link_name, ref_table, rel_name, rev_rel_name):
     return link_tpl % (rel_name, ref_table, link_name, rev_rel_name)
+
+# Simple link template for one to many relationships
+link_tpl_nolinktbl = '''    %s = relationship("%s",
+        back_populates="%s")
+'''
+
+def gen_link_nolinktbl(ref_table, rel_name, rev_rel_name):
+    return link_tpl_nolinktbl % (rel_name, ref_table, rev_rel_name)
 
 # Link template with explicit foreign key
 # this voodoo is inspired by https://docs.sqlalchemy.org/en/13/orm/join_conditions.html#self-referential-many-to-many-relationship
@@ -230,11 +250,11 @@ tables = [
     # These come first since they are referenced from service principals
     (AppRoleAssignment, [], []),
     (OAuth2PermissionGrant, [], []),
-    (User, [], ['group_member_user', 'application_owner_user', 'serviceprincipal_owner_user', 'role_member_user', 'device_owner', 'group_owner_user']),
+    (User, [], ['group_member_user', 'application_owner_user', 'serviceprincipal_owner_user', 'role_member_user', 'device_owner', 'group_owner_user', 'au_member_user']),
     (ServicePrincipal, ['serviceprincipal_owner_user', 'serviceprincipal_owner_serviceprincipal'], ['role_member_serviceprincipal', 'serviceprincipal_owner_serviceprincipal', 'application_owner_serviceprincipal', 'group_member_serviceprincipal', 'group_owner_serviceprincipal']),
-    (Group, ['group_member_group', 'group_member_user', 'group_member_contact', 'group_member_device', 'group_member_serviceprincipal', 'group_owner_user', 'group_owner_serviceprincipal'], ['group_member_group', 'role_member_group']),
+    (Group, ['group_member_group', 'group_member_user', 'group_member_contact', 'group_member_device', 'group_member_serviceprincipal', 'group_owner_user', 'group_owner_serviceprincipal'], ['group_member_group', 'role_member_group', 'au_member_group']),
     (Application, ['application_owner_user', 'application_owner_serviceprincipal'], []),
-    (Device, ['device_owner'], ['group_member_device']),
+    (Device, ['device_owner'], ['group_member_device', 'au_member_device']),
     # (Domain, [], []),
     (DirectoryRole, ['role_member_user', 'role_member_serviceprincipal', 'role_member_group'], []),
     (TenantDetail, [], []),
@@ -242,14 +262,18 @@ tables = [
     (ExtensionProperty, [], []),
     (Contact, [], ['group_member_contact']),
     (Policy, [], []),
-    (RoleDefinition, [], []),
-    (RoleAssignment, [], []),
+    (RoleDefinition, ['role_assignment_eligible', 'role_assignment_active'], []),
+    (RoleAssignment, [], ['role_assignment_active']),
+    (EligibleRoleAssignment, [], ['role_assignment_eligible']),
     (AuthorizationPolicy, [], []),
-    (DirectorySetting, [], [])
+    (DirectorySetting, [], []),
+    (AdministrativeUnit, ['au_member_group', 'au_member_user', 'au_member_device'], [])
 ]
 with open('metadef/database.py', 'w') as outf:
     outf.write(header)
     for relname, reldata in relations.items():
+        if relname == 'role_assignment_active' or relname == 'role_assignment_eligible':
+            continue
         outf.write(gen_link_table(relname, reldata[0], reldata[1]))
     for table, links, revlinks in tables:
         outf.write(gen_db_class(table, links, revlinks))

@@ -22,6 +22,7 @@ import { UsersItem, DatabaseService, UsersResolveService, DevicesResolveService,
 import { RouterModule } from '@angular/router';
 import { UsersdialogComponent } from './users/usersdialog/usersdialog.component';
 import { GroupsdialogComponent } from './groups/groupsdialog/groupsdialog.component';
+import { AdministrativeUnitsdialogComponent } from './administrativeunits/administrativeunitsdialog/administrativeunitsdialog.component';
 import { ServicePrincipalsComponent } from './serviceprincipals/serviceprincipals.component';
 import { ServicePrincipalsdialogComponent } from './serviceprincipals/serviceprincipalsdialog/serviceprincipalsdialog.component';
 import { MatInputModule } from '@angular/material/input';
@@ -31,6 +32,7 @@ import { ApplicationsdialogComponent } from './applications/applicationsdialog/a
 import { DirectoryRolesComponent } from './directoryroles/directoryroles.component';
 import { RoletableComponent } from './directoryroles/roletable.component';
 import { DevicesComponent } from './devices/devices.component';
+import { AdministrativeUnitsComponent } from './administrativeunits/administrativeunits.component';
 import { DevicesdialogComponent } from './devices/devicesdialog/devicesdialog.component'
 import { JsonFormatDirective } from './json-format.directive';
 import { ConfigComponent } from './config/config.component';
@@ -46,6 +48,8 @@ import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permission
     UsersdialogComponent,
     GroupsComponent,
     GroupsdialogComponent,
+    AdministrativeUnitsComponent,
+    AdministrativeUnitsdialogComponent,
     ServicePrincipalsComponent,
     ServicePrincipalsdialogComponent,
     AppRolesComponent,

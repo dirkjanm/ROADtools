@@ -11,8 +11,8 @@ import aiohttp
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func, bindparam
-from roadtools.roadlib.metadef.database import User, ServicePrincipal, Application, Group, Device, DirectoryRole, RoleAssignment, ExtensionProperty, Contact, OAuth2PermissionGrant, Policy, RoleDefinition, AppRoleAssignment, TenantDetail, AuthorizationPolicy, DirectorySetting
-from roadtools.roadlib.metadef.database import lnk_group_member_user, lnk_group_member_group, lnk_group_member_contact, lnk_group_member_device, lnk_group_member_serviceprincipal, lnk_device_owner, lnk_group_owner_user, lnk_group_owner_serviceprincipal
+from roadtools.roadlib.metadef.database import User, ServicePrincipal, Application, Group, Device, DirectoryRole, RoleAssignment, ExtensionProperty, Contact, OAuth2PermissionGrant, Policy, RoleDefinition, AppRoleAssignment, TenantDetail, AuthorizationPolicy, DirectorySetting, EligibleRoleAssignment, AdministrativeUnit
+from roadtools.roadlib.metadef.database import lnk_group_member_user, lnk_group_member_group, lnk_group_member_contact, lnk_group_member_device, lnk_group_member_serviceprincipal, lnk_device_owner, lnk_group_owner_user, lnk_group_owner_serviceprincipal, lnk_au_member_user, lnk_au_member_device, lnk_au_member_group
 #from roadlib.metadef.database import Domain
 from roadtools.roadlib.auth import Authentication
 from roadtools.roadlib.metadef.database import ApplicationRef
@@ -107,7 +107,10 @@ def checktoken():
     global token, expiretime
     if time.time() > expiretime - 300:
         auth = Authentication()
-        auth.client_id = token['_clientId']
+        try:
+            auth.client_id = token['_clientId']
+        except KeyError:
+            auth.client_id = '1b730954-1685-4b74-9bfd-dac224a7b894'
         auth.tenant = token['tenantId']
         auth.tokendata = token
         if 'refreshToken' in token:
@@ -454,6 +457,18 @@ class DataDumper(object):
             commit(self.session, dbtype, cache)
         self.session.commit()
 
+    async def dump_eligible_role_members(self, dbtype):
+        parents = self.session.query(RoleDefinition).all()
+        cache = []
+        jobs = []
+        for parent in parents:
+            url = 'https://graph.windows.net/%s/eligibleRoleAssignments?api-version=%s&$filter=roleDefinitionId eq \'%s\'' % (self.tenantid, self.api_version, parent.objectId)
+            jobs.append(self.dump_lo_to_db(url, self.ahsession.get, dbtype, cache))
+        await asyncio.gather(*jobs)
+        if len(cache) > 0:
+            commit(self.session, dbtype, cache)
+        self.session.commit()
+
 async def run(args):
     global token, expiretime, headers, totalgroups, totaldevices, dburl
     if 'tenantId' in token:
@@ -487,6 +502,7 @@ async def run(args):
             tasks.append(dumper.dump_object('policies', Policy))
             tasks.append(dumper.dump_object('servicePrincipals', ServicePrincipal))
             tasks.append(dumper.dump_object('groups', Group))
+            tasks.append(dumper.dump_object('administrativeUnits', AdministrativeUnit))
 
             tasks.append(dumper.dump_object('applications', Application))
             tasks.append(dumper.dump_object('devices', Device))
@@ -511,6 +527,7 @@ async def run(args):
                 dbsession.execute("DELETE FROM {0}".format(table))
         dbsession.query(ApplicationRef).delete()
         dbsession.query(RoleAssignment).delete()
+        dbsession.query(EligibleRoleAssignment).delete()
         dbsession.commit()
 
     # Mapping object, mapping type returned to Table and link name
@@ -541,6 +558,11 @@ async def run(args):
         'Microsoft.DirectoryServices.Contact': (lnk_group_member_contact, 'Group', 'Contact'),
         'Microsoft.DirectoryServices.Device': (lnk_group_member_device, 'Group', 'Device'),
         'Microsoft.DirectoryServices.ServicePrincipal': (lnk_group_member_serviceprincipal, 'Group', 'ServicePrincipal'),
+    }
+    au_link_mapping = {
+        'Microsoft.DirectoryServices.User': (lnk_au_member_user, 'AdministrativeUnit', 'User'),
+        'Microsoft.DirectoryServices.Group': (lnk_au_member_group, 'AdministrativeUnit', 'Group'),
+        'Microsoft.DirectoryServices.Device': (lnk_au_member_device, 'AdministrativeUnit', 'Device'),
     }
     group_owner_link_mapping = {
         'Microsoft.DirectoryServices.User': (lnk_group_owner_user, 'Group', 'User'),
@@ -573,6 +595,7 @@ async def run(args):
         tasks.append(dumper.dump_object_expansion('servicePrincipals', ServicePrincipal, 'owners', 'owner', User, mapping=owner_mapping))
         tasks.append(dumper.dump_object_expansion('applications', Application, 'owners', 'owner', User, mapping=owner_mapping))
         tasks.append(dumper.dump_custom_role_members(RoleAssignment))
+        tasks.append(dumper.dump_eligible_role_members(EligibleRoleAssignment))
         if args.mfa:
             tasks.append(dumper.dump_mfa('users', User, method=ahsession.get))
         tasks.append(dumper.dump_each(ServicePrincipal, 'applicationRefs', ApplicationRef))
@@ -595,6 +618,7 @@ async def run(args):
             tasks.append(dumper.dump_links_with_queue(queue, 'devices', 'registeredOwners', Device, mapping=device_link_mapping))
             tasks.append(dumper.dump_links_with_queue(queue, 'groups', 'members', Group, mapping=group_link_mapping))
             tasks.append(dumper.dump_links_with_queue(queue, 'groups', 'owners', Group, mapping=group_owner_link_mapping))
+            tasks.append(dumper.dump_links_with_queue(queue, 'administrativeUnits', 'members', AdministrativeUnit, mapping=au_link_mapping))
 
             await asyncio.gather(*tasks)
             await queue.join()

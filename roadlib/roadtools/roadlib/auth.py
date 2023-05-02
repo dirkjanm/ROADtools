@@ -177,7 +177,15 @@ class Authentication():
         tokenreply = res.json()
         if returnreply:
             return tokenreply
+        access_token = tokenreply['access_token']
+        tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        try:
+            inputdata = json.loads(base64.b64decode(tokens[1]+('='*(len(tokens[1])%4))))
+            self.tokendata['_clientId'] = self.client_id
+            self.tokendata['tenantId'] = inputdata['tid']
+        except KeyError:
+            pass
         return self.tokendata
 
     def authenticate_with_refresh_native_v2(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
@@ -790,7 +798,7 @@ class Authentication():
         return tokenobject, tokendata
 
     @staticmethod
-    def tokenreply_to_tokendata(tokenreply):
+    def tokenreply_to_tokendata(tokenreply, client_id=None):
         """
         Convert /token reply from Azure to ADAL compatible object
         """
@@ -801,6 +809,20 @@ class Authentication():
             tokenobject['expiresOn'] = datetime.datetime.fromtimestamp(int(tokenreply['expires_on'])).strftime('%Y-%m-%d %H:%M:%S')
         except KeyError:
             tokenobject['expiresOn'] = (datetime.datetime.now() + datetime.timedelta(seconds=int(tokenreply['expires_in']))).strftime('%Y-%m-%d %H:%M:%S')
+
+        tokenparts = tokenreply['access_token'].split('.')
+        inputdata = json.loads(base64.b64decode(tokenparts[1]+('='*(len(tokenparts[1])%4))))
+        try:
+            tokenobject['tenantId'] = inputdata['tid']
+        except KeyError:
+            pass
+        if client_id:
+            tokenobject['_clientId'] = client_id
+        else:
+            try:
+                tokenobject['_clientId'] = inputdata['appid']
+            except KeyError:
+                pass
         translate_map = {
             'access_token': 'accessToken',
             'refresh_token': 'refreshToken',

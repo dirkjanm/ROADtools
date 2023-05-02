@@ -1,0 +1,25 @@
+<div class="mat-elevation-z8">
+    <mat-form-field>
+    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+  </mat-form-field>
+  <table mat-table class="full-width-table" matSort aria-label="Elements">
+    <ng-container matColumnDef="displayName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let row"><a [routerLink]="['/administrativeunits/', row.objectId]">{{row.displayName}}</a></td>
+    </ng-container>
+
+    <ng-container matColumnDef="description">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+      <td mat-cell *matCellDef="let row">{{row.description}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="membershipRule">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Membership rule</th>
+      <td mat-cell *matCellDef="let row">{{row.membershipRule}}</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+  <mat-paginator [pageSizeOptions]="[50, 100, 500, 1000, 5000]"></mat-paginator>
+</div>
+<router-outlet></router-outlet>

@@ -426,7 +426,7 @@ class AccessPoliciesPlugin():
         pp = pprint.PrettyPrinter(indent=4)
         ol = []
         html = '<table>'
-        for policy in self.session.query(Policy).filter(Policy.policyType == 18):
+        for policy in self.session.query(Policy).filter(Policy.policyType == 18).order_by(Policy.displayName):
             out = {}
             out['name'] = escape(policy.displayName)
             if should_print:

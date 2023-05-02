@@ -9,43 +9,53 @@
       <mat-table class="full-width-table" matSort aria-label="Elements">
     <ng-container matColumnDef="displayName">
       <mat-header-cell class="wider" *matHeaderCellDef mat-sort-header>Principal Name</mat-header-cell>
-      <mat-cell class="wider" *matCellDef="let row"><a [routerLink]="['/', row.objectType.toLowerCase()+'s', row.objectId]">{{row.displayName}}</a></mat-cell>
+      <mat-cell class="wider" *matCellDef="let row"><a [routerLink]="['/', row.principal.objectType.toLowerCase()+'s', row.principal.objectId]">{{row.principal.displayName}}</a></mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="type">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>Assignment Type</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{row.type == 'eligible'? 'Eligible':'Active'}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="scope">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>Scope</mat-header-cell>
+      <mat-cell *matCellDef="let row;"><span *ngFor="let scope of row.scope; index as i;"><a [routerLink]="['/',row.scopeTypes[i].toLowerCase()+'s', row.scopeIds[i]]" *ngIf="scope != '/'">{{ row.scopeNames[i]? row.scopeNames[i]:scope }}</a>{{ scope == '/'? 'Directory':''}} </span></mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="objectType">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Principal Type</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{row.objectType}} </mat-cell>
+      <mat-cell *matCellDef="let row">{{row.principal.objectType}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="objectId">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Object ID</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{row.objectId}} </mat-cell>
+      <mat-cell *matCellDef="let row">{{row.principal.objectId}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="userPrincipalName">
       <mat-header-cell class="wider" *matHeaderCellDef mat-sort-header>userPrincipalName</mat-header-cell>
-      <mat-cell class="wider" *matCellDef="let row">{{row.userPrincipalName}} </mat-cell>
+      <mat-cell class="wider" *matCellDef="let row">{{row.principal.userPrincipalName}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="dirSyncEnabled">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Account type</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.dirSyncEnabled || row.isDirSyncEnabled? 'AD':'Cloud' }}</mat-cell>
+      <mat-cell *matCellDef="let row">{{ row.principal.dirSyncEnabled || row.principal.isDirSyncEnabled? 'AD':'Cloud' }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="value">
       <mat-header-cell *matHeaderCellDef mat-sort-header>State</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{row.value}} </mat-cell>
+      <mat-cell *matCellDef="let row">{{row.principal.value}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="accountEnabled">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.objectType == 'Group' || row.accountEnabled? '':'Disabled' }}</mat-cell>
+      <mat-cell *matCellDef="let row">{{ row.principal.objectType == 'Group' || row.principal.accountEnabled? '':'Disabled' }}</mat-cell>
     </ng-container>
     <ng-container matColumnDef="strongAuthenticationDetail">
       <mat-header-cell *matHeaderCellDef mat-sort-header>MFA</mat-header-cell>
       <mat-cell *matCellDef="let row">
-      <div *ngIf="row.strongAuthenticationDetail">
-        <span *ngFor="let method of row.strongAuthenticationDetail.methods">
+      <div *ngIf="row.principal.strongAuthenticationDetail">
+        <span *ngFor="let method of row.principal.strongAuthenticationDetail.methods">
           <mat-icon *ngIf="method.methodType == 'PhoneAppOTP'" aria-label="App with OTP" [class.active]="method.isDefault" matTooltip="App with OTP" >phonelink_lock</mat-icon>
           <mat-icon *ngIf="method.methodType == 'PhoneAppNotification'" aria-label="Phone notification" [class.active]="method.isDefault" matTooltip="App with notification" >notifications_active</mat-icon>
           <mat-icon *ngIf="method.methodType == 'OneWaySms'" aria-label="Text message (SMS)" [class.active]="method.isDefault" matTooltip="Text message (SMS)" >sms</mat-icon>

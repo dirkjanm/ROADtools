@@ -2,7 +2,7 @@ import { AfterViewInit, Component, OnInit, ViewChild, Input } from '@angular/cor
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
-import { DirectoryRolesItem, UsersItem, ServicePrincipalsItem, GroupsItem } from '../aadobjects.service'
+import { RoleDefinitionsItem, RoleAssignmentsItem } from '../aadobjects.service'
 import { LocalStorageService } from 'ngx-webstorage';
 
 // import
@@ -14,22 +14,18 @@ import { LocalStorageService } from 'ngx-webstorage';
 export class RoletableComponent implements AfterViewInit, OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<ServicePrincipalsItem | UsersItem | GroupsItem>;
-  @Input() role: DirectoryRolesItem;
-  dataSource: MatTableDataSource<ServicePrincipalsItem | UsersItem | GroupsItem>;
+  @ViewChild(MatTable) table: MatTable<RoleAssignmentsItem>;
+  @Input() role: RoleDefinitionsItem;
+  dataSource: MatTableDataSource<RoleAssignmentsItem>;
 
   constructor(private localSt:LocalStorageService) {  }
 
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['displayName', 'objectType', 'userPrincipalName', 'dirSyncEnabled', 'accountEnabled'];
+  displayedColumns = ['displayName', 'scope', 'type', 'objectType', 'userPrincipalName', 'dirSyncEnabled', 'accountEnabled'];
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();
-    let roleMembers = Array<ServicePrincipalsItem | UsersItem | GroupsItem>();
-    roleMembers = roleMembers.concat(this.role.memberUsers);
-    roleMembers = roleMembers.concat(this.role.memberServicePrincipals);
-    roleMembers = roleMembers.concat(this.role.memberGroups);
-    this.dataSource.data = roleMembers;
+    this.dataSource.data = this.role.assignments;
     this.localSt.observe('mfa')
       .subscribe((value) => {
         this.updateMfaColumn(value);

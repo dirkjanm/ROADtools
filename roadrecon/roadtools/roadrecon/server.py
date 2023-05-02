@@ -4,7 +4,7 @@ from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from marshmallow_sqlalchemy import ModelConverter
 from marshmallow import fields
-from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting
+from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
 import os
 import argparse
 from sqlalchemy import func
@@ -66,6 +66,11 @@ class GroupsSchema(ma.Schema):
         model = Group
         fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'objectType', 'groupTypes', 'mail', 'isPublic', 'isAssignableToRole', 'membershipRule')
 
+class AdministrativeUnitsSchema(ma.Schema):
+    class Meta:
+        model = AdministrativeUnit
+        fields = ('displayName', 'description', 'createdDateTime', 'objectId', 'objectType', 'membershipType', 'membershipRule')
+
 class SimpleServicePrincipalsSchema(ma.Schema):
     """
     Simple ServicePrincipalSchema to prevent looping relationships with serviceprincipals
@@ -124,6 +129,13 @@ class GroupSchema(RTModelSchema):
     ownerUsers = fields.Nested(UsersSchema, many=True)
     ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 
+class AdministrativeUnitSchema(RTModelSchema):
+    class Meta(RTModelSchema.Meta):
+        model = AdministrativeUnit
+    memberGroups = fields.Nested(GroupsSchema, many=True)
+    memberUsers = fields.Nested(UsersSchema, many=True)
+    memberDevices = fields.Nested(DevicesSchema, many=True)
+
 class ServicePrincipalSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = ServicePrincipal
@@ -156,6 +168,7 @@ group_schema = GroupSchema()
 application_schema = ApplicationSchema()
 td_schema = TenantDetailSchema()
 serviceprincipal_schema = ServicePrincipalSchema()
+administrativeunit_schema = AdministrativeUnitSchema()
 authorizationpolicy_schema = AuthorizationPolicySchema(many=True)
 users_schema = UsersSchema(many=True)
 devices_schema = DevicesSchema(many=True)
@@ -163,6 +176,7 @@ groups_schema = GroupsSchema(many=True)
 applications_schema = ApplicationsSchema(many=True)
 serviceprincipals_schema = ServicePrincipalsSchema(many=True)
 directoryroles_schema = DirectoryRolesSchema(many=True)
+administrativeunits_schema = AdministrativeUnitsSchema(many=True)
 
 @app.route("/")
 def get_index():
@@ -228,10 +242,22 @@ def group_detail(id):
         abort(404)
     return group_schema.jsonify(group)
 
+@app.route("/api/administrativeunits", methods=["GET"])
+def get_administrativeunits():
+    all_administrativeunits = db.session.query(AdministrativeUnit).all()
+    result = administrativeunits_schema.dump(all_administrativeunits)
+    return jsonify(result)
+
+@app.route("/api/administrativeunits/<id>", methods=["GET"])
+def administrativeunit_detail(id):
+    administrativeunit = db.session.query(AdministrativeUnit).get(id)
+    if not administrativeunit:
+        abort(404)
+    return administrativeunit_schema.jsonify(administrativeunit)
+
 @app.route("/api/serviceprincipals", methods=["GET"])
 def get_sps():
     all_sps = db.session.query(ServicePrincipal).all()
-    result = serviceprincipals_schema.dump(all_sps)
     return serviceprincipals_schema.jsonify(all_sps)
 
 @app.route("/api/serviceprincipals/<id>", methods=["GET"])
@@ -292,6 +318,82 @@ def application_detail(id):
     if not application:
         abort(404)
     return application_schema.jsonify(application)
+
+def resolve_objectid(oid):
+    res = db.session.query(User).get(oid)
+    if res:
+        return 'User', users_schema.dump([res])[0]
+    res = db.session.query(ServicePrincipal).get(oid)
+    if res:
+        return 'ServicePrincipal', serviceprincipals_schema.dump([res])[0]
+    res = db.session.query(Group).get(oid)
+    if res:
+        return 'Group', groups_schema.dump([res])[0]
+    res = db.session.query(Device).get(oid)
+    if res:
+        return 'Device', devices_schema.dump([res])[0]
+    res = db.session.query(Application).get(oid)
+    if res:
+        return 'Application', applications_schema.dump([res])[0]
+    return 'Unknown', None
+
+def translate_rolescopes(scopes):
+    stypes = []
+    sids = []
+    snames = []
+    for scope in scopes:
+        parts = scope.split('/')
+        if len(parts) > 2:
+            # Includes type
+            stype = parts[1]
+            sid = parts[2]
+            if stype == 'administrativeUnits':
+                stype = 'AdministrativeUnit'
+                res = db.session.query(AdministrativeUnit).get(sid)
+                if res:
+                    sname = f'AU: {res.displayName}'
+                else:
+                    sname = 'Unknown administrative unit'
+            elif stype == 'applications':
+                stype = 'Application'
+                res = db.session.query(Application).get(sid)
+                if res:
+                    sname = f'Application: {res.displayName}'
+                else:
+                    sname = 'Unknown application'
+            elif stype == 'servicePrincipals':
+                stype = 'ServicePrincipal'
+                res = db.session.query(ServicePrincipal).get(sid)
+                if res:
+                    sname = f'ServicePrincipal: {res.displayName}'
+                else:
+                    sname = 'Unknown serviceprincipal'
+            else:
+                sname = f'Unsupported scope type: {scope}'
+        elif len(parts) > 1 and len(parts[1]) > 0:
+            sid = parts[1]
+            res = db.session.query(ServicePrincipal).get(sid)
+            if res:
+                stype = 'ServicePrincipal'
+                sname = f'ServicePrincipal: {res.displayName}'
+            else:
+                res = db.session.query(Application).get(sid)
+                if res:
+                    stype = 'Application'
+                    sname = f'Application: {res.displayName}'
+                else:
+                    stype = 'Unknown'
+                    sname = f'Unknown scope type: {scope}'
+        else:
+            # Scope is entire directory
+            stype = 'Directory'
+            sname = 'Directory'
+            sid = None
+        stypes.append(stype)
+        snames.append(sname)
+        sids.append(sid)
+    return stypes, snames, sids
+
 
 def process_approle(approles, ar):
     rsp = db.session.query(ServicePrincipal).get(ar.resourceId)
@@ -368,6 +470,45 @@ def get_oauth2permissions():
         oauth2permissions.append(grant)
     return jsonify(oauth2permissions)
 
+@app.route("/api/roledefinitions", methods=["GET"])
+def get_allroles():
+    allroles = []
+    for role in db.session.query(RoleDefinition).all():
+        roleobj = {
+            'objectId': role.objectId,
+            'displayName': role.displayName,
+            'description': role.description,
+            'isBuiltIn': role.isBuiltIn,
+            'templateId': role.templateId,
+            'assignments': []
+        }
+        for assignment in role.assignments:
+            stypes, snames, sids = translate_rolescopes(assignment.resourceScopes)
+            aobj = {
+                'type': 'assignment',
+                'scope': assignment.resourceScopes,
+                'scopeTypes': stypes,
+                'scopeNames': snames,
+                'scopeIds': sids
+            }
+            _, principal = resolve_objectid(assignment.principalId)
+            aobj['principal'] = principal
+            roleobj['assignments'].append(aobj)
+        for assignment in role.eligibleAssignments:
+            stypes, snames, sids = translate_rolescopes(assignment.resourceScopes)
+            aobj = {
+                'type': 'eligible',
+                'scope': assignment.resourceScopes,
+                'scopeTypes': stypes,
+                'scopeNames': snames,
+                'scopeIds': sids
+            }
+            _, principal = resolve_objectid(assignment.principalId)
+            aobj['principal'] = principal
+            roleobj['assignments'].append(aobj)
+        allroles.append(roleobj)
+    return jsonify(allroles)
+
 @app.route("/api/directoryroles", methods=["GET"])
 def get_dirroles():
     drs = db.session.query(DirectoryRole).all()
@@ -390,7 +531,8 @@ def get_stats():
         'countGroups': db.session.query(func.count(Group.objectId)).scalar(),
         'countServicePrincipals': db.session.query(func.count(ServicePrincipal.objectId)).scalar(),
         'countApplications': db.session.query(func.count(Application.objectId)).scalar(),
-        'countDevices': db.session.query(func.count(Device.objectId)).scalar()
+        'countDevices': db.session.query(func.count(Device.objectId)).scalar(),
+        'countAdministrativeUnits': db.session.query(func.count(AdministrativeUnit.objectId)).scalar(),
     }
     return jsonify(stats)
 

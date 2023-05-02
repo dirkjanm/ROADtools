@@ -125,6 +125,8 @@ class CompliantApplication(object):
     props = {
         'mamEnrollmentId': Edm.Guid,
         'expirationTime': Edm.DateTime,
+        'applicationId': Edm.Guid,
+        'userId': Edm.Guid,
     }
 
 
@@ -578,6 +580,12 @@ class VerifiedPublisher(object):
     }
 
 
+class CrossTenantSynchronizationInfo(object):
+    props = {
+        'creationType': Edm.String,
+    }
+
+
 class AddIn(object):
     props = {
         'id': Edm.Guid,
@@ -671,5 +679,13 @@ class ResourceAuthorizationDecision(object):
     props = {
         'resourceScope': Edm.String,
         'authorizationDecisions': Collection,
+    }
+
+
+class CrossTenantSynchronizationResource(object):
+    props = {
+        'originTenantId': Edm.String,
+        'originId': Edm.String,
+        'synchronizationInfo': CrossTenantSynchronizationInfo,
     }
 

@@ -51,6 +51,7 @@ class AdministrativeUnit(DirectoryObject):
     props = {
         'displayName': Edm.String,
         'description': Edm.String,
+        'isMemberManagementRestricted': Edm.Boolean,
         'membershipRule': Edm.String,
         'membershipRuleProcessingState': Edm.String,
         'membershipType': Edm.String,
@@ -124,6 +125,7 @@ class ApplicationRef(object):
         'appId': Edm.String,
         'appRoles': Collection,
         'availableToOtherTenants': Edm.Boolean,
+        'certification': Certification,
         'displayName': Edm.String,
         'errorUrl': Edm.String,
         'homepage': Edm.String,
@@ -927,6 +929,7 @@ class User(DirectoryObject):
         'onPremisesSecurityIdentifier': Edm.String,
         'onPremisesUserPrincipalName': Edm.String,
         'otherMails': Collection,
+        'originTenantInfo': CrossTenantSynchronizationResource,
         'passwordPolicies': Edm.String,
         'passwordProfile': PasswordProfile,
         'physicalDeliveryOfficeName': Edm.String,

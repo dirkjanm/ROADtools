@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { UsersComponent } from './users/users.component';
 import { DevicesComponent } from './devices/devices.component';
 import { GroupsComponent } from './groups/groups.component';
+import { AdministrativeUnitsComponent } from './administrativeunits/administrativeunits.component';
 import { ApplicationsComponent } from './applications/applications.component';
 import { AppRolesComponent } from './approles/approles.component';
 import { DirectoryRolesComponent } from './directoryroles/directoryroles.component';
@@ -11,9 +12,10 @@ import { ServicePrincipalsComponent } from './serviceprincipals/serviceprincipal
 import { UsersdialogInitComponent } from './users/usersdialog/usersdialog.component';
 import { DevicesdialogInitComponent } from './devices/devicesdialog/devicesdialog.component';
 import { GroupsdialogInitComponent } from './groups/groupsdialog/groupsdialog.component';
+import { AdministrativeUnitsdialogInitComponent } from './administrativeunits/administrativeunitsdialog/administrativeunitsdialog.component';
 import { ApplicationsdialogInitComponent } from './applications/applicationsdialog/applicationsdialog.component';
 import { ServicePrincipalsdialogInitComponent } from './serviceprincipals/serviceprincipalsdialog/serviceprincipalsdialog.component';
-import { UsersResolveService, GroupsResolveService, ServicePrincipalsResolveService, DevicesResolveService, ApplicationsResolveService, ServicePrincipalsByAppIdResolveService } from './aadobjects.service'
+import { UsersResolveService, GroupsResolveService, AdministrativeUnitsResolveService, ServicePrincipalsResolveService, DevicesResolveService, ApplicationsResolveService, ServicePrincipalsByAppIdResolveService } from './aadobjects.service'
 import { ConfigComponent } from './config/config.component';
 import { MfaComponent } from './mfa/mfa.component';
 import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permissions.component';
@@ -55,6 +57,18 @@ const routes: Routes = [
             component: GroupsdialogInitComponent,
             resolve: {
               user: GroupsResolveService
+            }
+          }
+        ]
+      },
+      { path: 'administrativeunits',
+        component: AdministrativeUnitsComponent,
+        children: [
+          {
+            path: ':id',
+            component: AdministrativeUnitsdialogInitComponent,
+            resolve: {
+              user: AdministrativeUnitsResolveService
             }
           }
         ]

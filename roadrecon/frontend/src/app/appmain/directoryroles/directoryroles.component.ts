@@ -4,7 +4,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable, MatTableDataSource } from '@angular/material/table';
 // import { DirectoryRolesDataSource } from './directoryroles-datasource';
-import { DatabaseService, DirectoryRolesItem, UsersItem } from '../aadobjects.service'
+import { DatabaseService, RoleDefinitionsItem, UsersItem } from '../aadobjects.service'
 // import
 @Component({
   selector: 'app-directoryroles',
@@ -13,7 +13,7 @@ import { DatabaseService, DirectoryRolesItem, UsersItem } from '../aadobjects.se
   providers: [DatabaseService]
 })
 export class DirectoryRolesComponent implements OnInit {
-  roles: DirectoryRolesItem[];
+  roles: RoleDefinitionsItem[];
 
   constructor(private service: DatabaseService) {  }
 
@@ -21,8 +21,8 @@ export class DirectoryRolesComponent implements OnInit {
   displayedColumns = ['displayName', 'name', 'mail', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled'];
 
   ngOnInit() {
-    this.service.getDirectoryRoles().subscribe((data: DirectoryRolesItem[]) => {
-      this.roles = data.filter((role: DirectoryRolesItem) => role.memberUsers.length + role.memberServicePrincipals.length > 0)
+    this.service.getRoleDefinitions().subscribe((data: RoleDefinitionsItem[]) => {
+      this.roles = data.filter((role: RoleDefinitionsItem) => role.assignments.length > 0)
     });
   }
 }
