@@ -194,6 +194,9 @@ def main():
     intauth_parser = subparsers.add_parser('interactiveauth', help='Interactive authentication in Selenium browser window, optional autofill')
     intauth_parser.add_argument('-u', '--username', action='store', metavar='USER', help='User to authenticate')
     intauth_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password of the user')
+    intauth_parser.add_argument('--krbtoken',
+                                action='store',
+                                help='Kerberos auth data from krbsso.py')
     intauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     intauth_parser.add_argument('-c',
                                 '--client',
@@ -230,6 +233,9 @@ def main():
     intauth_parser.add_argument('-k', '--keep-open',
                                 action='store_true',
                                 help='Do not close the browser window after timeout. Useful if you want to browse online apps with the obtained credentials')
+    intauth_parser.add_argument('--capture-code',
+                                action='store_true',
+                                help='Do not attempt to redeem any authentication code but print it instead')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
@@ -275,6 +281,7 @@ def main():
     kdbauth_parser.add_argument('--capture-code',
                                 action='store_true',
                                 help='Do not attempt to redeem any authentication code but print it instead')
+
 
     # Interactive auth using Selenium - inject PRT
     browserprtauth_parser = subparsers.add_parser('browserprtauth', help='Selenium based auth with automatic PRT usage. Emulates Edge browser with PRT')
@@ -398,9 +405,6 @@ def main():
     enrauth_parser.add_argument('--tokens-stdout',
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
-
-
-    args = parser.parse_args()
 
     if len(sys.argv) < 2:
         parser.print_help()
@@ -552,8 +556,15 @@ def main():
         service = selauth.get_service(args.driver_path)
         if not service:
             return
-        selauth.driver = selauth.get_webdriver(service)
-        selauth.selenium_login(url, args.username, args.password)
+        selauth.driver = selauth.get_webdriver(service, intercept=True)
+        if args.krbtoken:
+            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=args.krbtoken)
+        else:
+            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code)
+        if args.capture_code:
+            if result:
+                print(f'Captured auth code: {result}')
+            return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
     elif args.command == 'keepassauth':
@@ -569,8 +580,10 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service)
-        selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code)
+        result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code)
         if args.capture_code:
+            if result:
+                print(f'Captured auth code: {result}')
             return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
@@ -595,9 +608,12 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service, intercept=True)
-        if not selauth.selenium_login_with_prt(url, keep=args.keep_open, prtcookie=args.prt_cookie, capture=args.capture_code):
+        result = selauth.selenium_login_with_prt(url, keep=args.keep_open, prtcookie=args.prt_cookie, capture=args.capture_code)
+        if not result:
             return
         if args.capture_code:
+            if result:
+                print(f'Captured auth code: {result}')
             return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)

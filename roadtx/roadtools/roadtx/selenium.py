@@ -104,8 +104,7 @@ class SeleniumAuthentication():
             if not keep:
                 driver.close()
             if capture:
-                print(f'Captured auth code: {code}')
-                return True
+                return code
             return self.auth.authenticate_with_code_native(code, self.redirurl)
         except TimeoutException:
             pass
@@ -134,9 +133,8 @@ class SeleniumAuthentication():
             if not keep:
                 driver.close()
             if capture:
-                print(f'Captured auth code: {code}')
-            else:
-                return self.auth.authenticate_with_code_native(code, self.redirurl)
+                return code
+            return self.auth.authenticate_with_code_native(code, self.redirurl)
         except TimeoutException:
             if not keep:
                 driver.close()
@@ -155,7 +153,7 @@ class SeleniumAuthentication():
             request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
             request.headers['Sec-Ch-Ua-Platform-Version'] = '"10.0.0"'
 
-            if request.url.startswith('https://login.microsoftonline.com'):
+            if request.url.startswith('https://login.microsoftonline.com/'):
                 if '/authorize' in request.url or '/login' in request.url or '/kmsi' in request.url or '/reprocess' in request.url or '/resume' in request.url:
                     if prtcookie:
                         # Force single cookie injection
@@ -171,6 +169,27 @@ class SeleniumAuthentication():
                             cookie = self.auth.create_prt_cookie_kdf_ver_2(self.deviceauth.prt,
                                                                            self.deviceauth.session_key)
                         request.headers['X-Ms-Refreshtokencredential'] = cookie
+        self.driver.request_interceptor = interceptor
+        return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
+
+    def selenium_login_with_kerberos(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, krbdata=None):
+        '''
+        Selenium login with Kerberos auth header injection.
+        '''
+        def interceptor(request):
+            del request.headers['User-Agent']
+            request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71'
+            request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
+            request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
+            request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
+            request.headers['Sec-Ch-Ua-Platform-Version'] = '"10.0.0"'
+
+            if request.url.startswith('https://autologon.microsoftazuread-sso.com/'):
+                if '/winauth/sso' in request.url and krbdata:
+
+                    # Force single cookie injection
+                    request.headers['Authorization'] = f'Negotiate {krbdata}'
+
         self.driver.request_interceptor = interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
