@@ -41,6 +41,9 @@ class DeviceAuthentication():
         self.privkey = None
         # PEM key data
         self.keydata = None
+        # Separate transport key if applicable
+        self.transportprivkey = None
+        self.transportkeydata = None
 
         # PRT data
         self.prt = None
@@ -64,8 +67,8 @@ class DeviceAuthentication():
             with open(pemfile, "rb") as certf:
                 self.certificate = x509.load_pem_x509_certificate(certf.read())
             with open(privkeyfile, "rb") as keyf:
-                self.keydata = keyf.read()
-                self.privkey = serialization.load_pem_private_key(self.keydata, password=None)
+                self.transportkeydata = self.keydata = keyf.read()
+                self.transportprivkey = self.privkey = serialization.load_pem_private_key(self.keydata, password=None)
             return True
         if pfxfile or pfxbase64:
             if pfxfile:
@@ -74,8 +77,9 @@ class DeviceAuthentication():
             if pfxbase64:
                 pfxdata = base64.b64decode(pfxbase64)
             self.privkey, self.certificate, _ = pkcs12.load_key_and_certificates(pfxdata, pfxpass)
+            self.transportprivkey = self.privkey
             # PyJWT needs the key as PEM data anyway, so encode it
-            self.keydata = self.privkey.private_bytes(
+            self.transportkeydata = self.keydata = self.privkey.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
                 encryption_algorithm=serialization.NoEncryption(),
@@ -84,14 +88,20 @@ class DeviceAuthentication():
         print('You must specify either a PEM certificate file and private key file or a pfx file with the device keypair.')
         return False
 
-    def loadkey(self, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
+    def loadkey(self, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None, transport_only=False):
         """
         Load private key only (to use as transport key)
+        Optionally load it as transport key only and not as device key to support separate transport keys
         """
         if privkeyfile:
             with open(privkeyfile, "rb") as keyf:
-                self.keydata = keyf.read()
-                self.privkey = serialization.load_pem_private_key(self.keydata, password=None)
+                if transport_only:
+                    # Only load as transport key
+                    self.transportkeydata = keyf.read()
+                    self.transportprivkey = serialization.load_pem_private_key(self.keydata, password=None)
+                else:
+                    self.transportkeydata = self.keydata = keyf.read()
+                    self.transportprivkey = self.privkey = serialization.load_pem_private_key(self.keydata, password=None)
             return True
         if pfxfile or pfxbase64:
             if pfxfile:
@@ -100,13 +110,22 @@ class DeviceAuthentication():
             if pfxbase64:
                 pfxdata = base64.b64decode(pfxbase64)
             # Load cert anyway since it's in the same file
-            self.privkey, self.certificate, _ = pkcs12.load_key_and_certificates(pfxdata, pfxpass)
-            # PyJWT needs the key as PEM data anyway, so encode it
-            self.keydata = self.privkey.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.TraditionalOpenSSL,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
+            if not transport_only:
+                self.privkey, self.certificate, _ = pkcs12.load_key_and_certificates(pfxdata, pfxpass)
+                self.transportprivkey = self.privkey
+                # PyJWT needs the key as PEM data anyway, so encode it
+                self.transportkeydata = self.keydata = self.privkey.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            else:
+                self.transportprivkey, _, _ = pkcs12.load_key_and_certificates(pfxdata, pfxpass)
+                self.transportkeydata = self.privkey.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
             return True
         print('You must specify either a private key file or a pfx file with the device keypair.')
         return False
@@ -472,7 +491,7 @@ class DeviceAuthentication():
         wrapped_key = get_data(dataparts[1])
 
         # borrowed from https://github.com/mpdavis/python-jose/blob/16bde1737d8a4f498db2333e5fc7d191e0fc915f/jose/backends/cryptography_backend.py#L514
-        uwk = self.privkey.decrypt(wrapped_key, apadding.OAEP(apadding.MGF1(hashes.SHA1()), hashes.SHA1(), None))
+        uwk = self.transportprivkey.decrypt(wrapped_key, apadding.OAEP(apadding.MGF1(hashes.SHA1()), hashes.SHA1(), None))
         return uwk
 
     def request_token_with_sessionkey_signed_payload(self, payload, reqtgt=True):

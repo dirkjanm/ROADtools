@@ -66,6 +66,7 @@ def main():
     prt_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Device cert and key as PFX file')
     prt_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
     prt_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    prt_parser.add_argument('-tk', '--transport-key-pem', action='store', metavar='file', help='Private key file containing transport key (if different from device key)')
 
     prt_parser.add_argument('-u', '--username', action='store', metavar='USER', help='User to authenticate')
     prt_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password')
@@ -452,6 +453,10 @@ def main():
         if args.action == 'request':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
                 return
+            if args.transport_key_pem:
+                # Try loading transport key separately
+                if not deviceauth.loadkey(args.transport_key_pem, transport_only=True):
+                    return
             prtdata = None
             if args.username and args.password:
                 prtdata = deviceauth.get_prt_with_password(args.username, args.password)
