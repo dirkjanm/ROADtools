@@ -537,6 +537,7 @@ def main():
     elif args.command == 'codeauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
         auth.authenticate_with_code_native(args.code, args.redirect_url, client_secret=args.password)
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
@@ -553,6 +554,7 @@ def main():
     elif args.command == 'interactiveauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
         selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url)
         if args.auth_url:
             url = args.auth_url
@@ -575,6 +577,7 @@ def main():
     elif args.command == 'keepassauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
         selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url)
         password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         if args.auth_url:
@@ -595,6 +598,7 @@ def main():
     elif args.command == 'browserprtauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_cookie:
@@ -625,6 +629,7 @@ def main():
     elif args.command == 'browserprtinject':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_file and deviceauth.loadprt(args.prt_file):
