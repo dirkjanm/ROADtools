@@ -163,6 +163,37 @@ def main():
                                  action='store',
                                  help="Code to auth with that you got from Azure AD")
 
+    # Desktop SSO auth
+    desktopsso_parser = subparsers.add_parser('desktopsso', help='Desktop SSO authentication - either with plaintext creds or Kerberos auth')
+    clienthelptext = 'Client ID (application ID) to use when authenticating. Accepts aliases (list with roadtx listaliases)'
+    desktopsso_parser.add_argument('-c',
+                                   '--client',
+                                   action='store',
+                                   help=clienthelptext,
+                                   default='1b730954-1685-4b74-9bfd-dac224a7b894')
+    desktopsso_parser.add_argument('-u', '--username', action='store', metavar='USER', help='User to authenticate')
+    desktopsso_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password of the user')
+    desktopsso_parser.add_argument('--krbtoken',
+                                   action='store',
+                                   help='Kerberos auth data from krbsso.py')
+    desktopsso_parser.add_argument('-r',
+                                   '--resource',
+                                   action='store',
+                                   help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
+                                   default='https://graph.windows.net')
+    desktopsso_parser.add_argument('-t',
+                                   '--tenant',
+                                   action='store',
+                                   required=True,
+                                   help='Tenant ID or domain to auth to')
+    desktopsso_parser.add_argument('--tokenfile',
+                                   action='store',
+                                   help='File to store the credentials (default: .roadtools_auth)',
+                                   default='.roadtools_auth')
+    desktopsso_parser.add_argument('--tokens-stdout',
+                                   action='store_true',
+                                   help='Do not store tokens on disk, pipe to stdout instead')
+
     # List aliases
     subparsers.add_parser('listaliases', help='List aliases that can be used as client ID or resource URL')
 
@@ -541,6 +572,15 @@ def main():
         auth.authenticate_with_code_native(args.code, args.redirect_url, client_secret=args.password)
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
+    elif args.command == 'desktopsso':
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
+        dsso_code = auth.get_desktopsso_token(args.username, args.password, args.krbtoken)
+        if dsso_code:
+            auth.authenticate_with_desktopsso_token(dsso_code)
+            auth.outfile = args.tokenfile
+            auth.save_tokens(args)
     elif args.command == 'listaliases':
         print('Well-known clients. Can be used as alias with -c or --client')
         print()

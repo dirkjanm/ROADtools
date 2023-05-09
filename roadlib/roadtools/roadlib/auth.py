@@ -9,6 +9,9 @@ import binascii
 import time
 import codecs
 from urllib.parse import urlparse, parse_qs, quote_plus
+from xml.sax.saxutils import escape as xml_escape
+import xml.etree.ElementTree as ET
+from xml.dom.minidom import parseString
 import os
 from cryptography.hazmat.primitives import serialization, padding, hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -41,6 +44,69 @@ WELLKNOWN_CLIENTS = {
     "msbroker": "29d9ed98-a469-4536-ade2-f981bc1d605e",
     "broker": "29d9ed98-a469-4536-ade2-f981bc1d605e"
 }
+
+DSSO_BODY_KERBEROS = '''<?xml version='1.0' encoding='UTF-8'?>
+<s:Envelope
+    xmlns:s='http://www.w3.org/2003/05/soap-envelope'
+    xmlns:wsse='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'
+    xmlns:saml='urn:oasis:names:tc:SAML:1.0:assertion'
+    xmlns:wsp='http://schemas.xmlsoap.org/ws/2004/09/policy'
+    xmlns:wsu='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd'
+    xmlns:wsa='http://www.w3.org/2005/08/addressing'
+    xmlns:wssc='http://schemas.xmlsoap.org/ws/2005/02/sc'
+    xmlns:wst='http://schemas.xmlsoap.org/ws/2005/02/trust'>
+    <s:Header>
+        <wsa:Action s:mustUnderstand='1'>http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</wsa:Action>
+        <wsa:To s:mustUnderstand='1'>https://autologon.microsoftazuread-sso.com/{tenant}/winauth/trust/2005/windowstransport?client-request-id=4190b9ab-205d-4024-8caa-aedb3f79988b</wsa:To>
+        <wsa:MessageID>urn:uuid:36a2e970-3107-4e3f-99dd-569a9588f02c</wsa:MessageID>
+    </s:Header>
+    <s:Body>
+        <wst:RequestSecurityToken Id='RST0'>
+            <wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>
+            <wsp:AppliesTo>
+                <wsa:EndpointReference>
+                    <wsa:Address>urn:federation:MicrosoftOnline</wsa:Address>
+                </wsa:EndpointReference>
+            </wsp:AppliesTo>
+            <wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>
+        </wst:RequestSecurityToken>
+    </s:Body>
+</s:Envelope>
+'''
+
+DSSO_BODY_USERPASS = '''<?xml version='1.0' encoding='UTF-8'?>
+<s:Envelope xmlns:s='http://www.w3.org/2003/05/soap-envelope' xmlns:a='http://www.w3.org/2005/08/addressing' xmlns:u='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd'>
+  <s:Header>
+    <a:Action s:mustUnderstand='1'>http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a:Action>
+    <a:MessageID>urn:uuid:a5c80716-16fe-473c-bb5d-be0602f9e7fd</a:MessageID>
+    <a:ReplyTo>
+      <a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address>
+    </a:ReplyTo>
+    <a:To s:mustUnderstand='1'>https://autologon.microsoftazuread-sso.com/{tenant}/winauth/trust/2005/usernamemixed?client-request-id=19ac39db-81d2-4713-8046-b0b7240592be</a:To>
+    <o:Security s:mustUnderstand='1' xmlns:o='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'>
+      <u:Timestamp u:Id='_0'>
+        <u:Created>2020-11-23T14:50:44.068Z</u:Created>
+        <u:Expires>2020-11-23T15:00:44.068Z</u:Expires>
+      </u:Timestamp>
+      <o:UsernameToken u:Id='uuid-3e66cabc-66d3-4447-a1c2-ef7ba45274f7'>
+        <o:Username>{username}</o:Username>
+        <o:Password>{password}</o:Password>
+      </o:UsernameToken>
+    </o:Security>
+  </s:Header>
+  <s:Body>
+    <trust:RequestSecurityToken xmlns:trust='http://schemas.xmlsoap.org/ws/2005/02/trust'>
+      <wsp:AppliesTo xmlns:wsp='http://schemas.xmlsoap.org/ws/2004/09/policy'>
+        <a:EndpointReference>
+          <a:Address>urn:federation:MicrosoftOnline</a:Address>
+        </a:EndpointReference>
+      </wsp:AppliesTo>
+      <trust:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</trust:KeyType>
+      <trust:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</trust:RequestType>
+    </trust:RequestSecurityToken>
+  </s:Body>
+</s:Envelope>
+'''
 
 def get_data(data):
     return base64.urlsafe_b64decode(data+('='*(len(data)%4)))
@@ -291,6 +357,82 @@ class Authentication():
         prtdata = res.text
         data = self.decrypt_auth_response(prtdata, sessionkey, asjson=True)
         return data
+
+    def get_desktopsso_token(self, username=None, password=None, krbtoken=None):
+        '''
+        Get desktop SSO token either with plain username and password, or with a Kerberos auth token
+        '''
+        if username and password:
+            rbody = DSSO_BODY_USERPASS.format(username=xml_escape(username), password=xml_escape(password), tenant=self.tenant)
+            headers = {
+                'Content-Type':'application/soap+xml; charset=utf-8',
+                'SOAPAction': 'http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue',
+            }
+            res = requests.post(f'https://autologon.microsoftazuread-sso.com/{self.tenant}/winauth/trust/2005/usernamemixed?client-request-id=19ac39db-81d2-4713-8046-b0b7240592be', headers=headers, data=rbody, proxies=self.proxies, verify=self.verify)
+            tree = ET.fromstring(res.content)
+            els = tree.findall('.//DesktopSsoToken')
+            if len(els) > 0:
+                token = els[0].text
+                return token
+            else:
+                # Try finding error
+                elres = tree.iter('{http://schemas.microsoft.com/Passport/SoapServices/SOAPFault}text')
+                if elres:
+                    errtext = next(elres)
+                    raise AuthenticationException(errtext.text)
+                else:
+                    raise AuthenticationException(parseString(res.content).toprettyxml(indent='  '))
+        elif krbtoken:
+            rbody = DSSO_BODY_KERBEROS.format(tenant=self.tenant)
+            headers = {
+                'Content-Type':'application/soap+xml; charset=utf-8',
+                'SOAPAction': 'http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue',
+                'Authorization': f'Negotiate {krbtoken}'
+            }
+            res = requests.post(f'https://autologon.microsoftazuread-sso.com/{self.tenant}/winauth/trust/2005/windowstransport?client-request-id=19ac39db-81d2-4713-8046-b0b7240592be', headers=headers, data=rbody, proxies=self.proxies, verify=self.verify)
+            tree = ET.fromstring(res.content)
+            els = tree.findall('.//DesktopSsoToken')
+            if len(els) > 0:
+                token = els[0].text
+                return token
+            else:
+                print(parseString(res.content).toprettyxml(indent='  '))
+                return False
+        else:
+            return False
+
+    def authenticate_with_desktopsso_token(self, dssotoken, returnreply=False, additionaldata=None):
+        '''
+        Authenticate with Desktop SSO token
+        '''
+        headers = {
+            'x-client-SKU': 'PCL.Desktop',
+            'x-client-Ver': '3.19.7.16602',
+            'x-client-CPU': 'x64',
+            'x-client-OS': 'Microsoft Windows NT 10.0.18363.0',
+            'x-ms-PKeyAuth': '1.0',
+            'client-request-id': '19ac39db-81d2-4713-8046-b0b7240592be',
+            'return-client-request-id': 'true',
+        }
+        claim = base64.b64encode('<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion"><DesktopSsoToken>{0}</DesktopSsoToken></saml:Assertion>'.format(dssotoken).encode('utf-8')).decode('utf-8')
+        data = {
+            'resource': self.resource_uri,
+            'client_id': self.client_id,
+            'grant_type': 'urn:ietf:params:oauth:grant-type:saml1_1-bearer',
+            'assertion': claim,
+        }
+        authority_uri = self.get_authority_url()
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = requests.post(f"{authority_uri}/oauth2/token", headers=headers, data=data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
 
     def build_auth_url(self, redirurl, response_type, scope=None, state=None):
         '''
