@@ -35,8 +35,8 @@ Stable versions can be installed with `pip install roadrecon`. This will automat
 Every commit to master is automatically built into a release version with Azure Pipelines. This ensures that you can install the latest version of the GUI without having to install `npm` and all it's dependencies. You can download the `roadlib` and `roadrecon` build files from the [Azure Pipelines artifacts](https://dev.azure.com/dirkjanm/ROADtools/_build/latest?definitionId=19&branchName=master) (click on the button "1 Published". The build output files are stored in `ROADtools.zip`. You can either install the `.whl` or `.tar.gz` files directly using pip or unzip both and install the folders in the correct order (`roadlib` first):
 
 ```
-pip install roadlib/
-pip install roadrecon/
+pip install --include-deps  roadlib/ 
+pip install --include-deps roadrecon/
 ```
 
 You can also install them in development mode with `pip install -e roadlib/`.
@@ -45,8 +45,8 @@ You can also install them in development mode with `pip install -e roadlib/`.
 If you want to make changes to the Angular front-end, you will need to have `node` and `npm` installed. Then install the components from git:
 ```
 git clone https://github.com/dirkjanm/roadtools.git
-pip install -e roadlib/
-pip install -e roadrecon/
+pip install -e --include-deps roadlib/
+pip install -e --include-deps roadrecon/
 cd roadrecon/frontend/
 npm install
 ```
@@ -70,8 +70,8 @@ Stable versions can be installed with `pip install roadtx`. This will automatica
 You can clone this repository and install `roadlib` and then `roadtx` to make sure you have the latest versions of both the tool and the library:
 
 ```
-pip install roadlib/
-pip install roadtx/
+pip install --include-deps roadlib/
+pip install --include-deps roadtx/
 ```
 
 You can also install them in development mode with `pip install -e roadtx/`.
