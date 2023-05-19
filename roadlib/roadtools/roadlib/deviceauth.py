@@ -160,6 +160,108 @@ class DeviceAuthentication():
             json.dump(prtdata, prtf, sort_keys=True, indent=4)
         print(f"Saved PRT to {prtfile}")
 
+    def loadhellokey(self, privkeyfile):
+        """
+        Load Windows Hello key from file
+        """
+        if not privkeyfile:
+            return False
+        try:
+            with open(privkeyfile, "rb") as keyf:
+                self.hellokeydata = keyf.read()
+                self.hellokey = serialization.load_pem_private_key(self.hellokeydata, password=None)
+        except FileNotFoundError:
+            return False
+        return True
+
+    def get_privkey_kid(self, key=None):
+        """
+        Get the kid (key ID) for the given key from a file
+        """
+        if not key:
+            key = self.hellokey
+
+        pubkeycngblob = self.create_pubkey_blob_from_key(key)
+        digest = hashes.Hash(hashes.SHA256())
+        digest.update(pubkeycngblob)
+        kid = base64.b64encode(digest.finalize()).decode('utf-8')
+        return kid
+
+    def create_hello_key(self, privout=None):
+        """
+        Create a key for Windows Hello, saving it to a file
+        """
+        if not privout:
+            privout = 'winhello.key'
+
+        # Generate our key
+        key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+        )
+        # Write device key to disk
+        print(f'Saving private key to {privout}')
+        with open(privout, "wb") as keyf:
+            keyf.write(key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption(),
+            ))
+
+        pubkeycngblob = base64.b64encode(self.create_pubkey_blob_from_key(key))
+        return key, pubkeycngblob
+
+    def create_hello_prt_assertion(self, username):
+        now = int(time.time())
+        payload = {
+          "iss": username,
+          # Should be tenant ID, but this is not verified
+          "aud": "common",
+          "iat": now-3600,
+          "exp": now+3600,
+          "scope": "openid aza ugs"
+        }
+        headers = {
+            "kid": self.get_privkey_kid(),
+            "use": "ngc"
+        }
+        reqjwt = jwt.encode(payload, algorithm='RS256', key=self.hellokeydata, headers=headers)
+        return reqjwt
+
+    def get_prt_with_hello_key(self, username, assertion=None):
+        authlib = Authentication()
+        challenge = authlib.get_srv_challenge()['Nonce']
+        if not assertion:
+            assertion = self.create_hello_prt_assertion(username)
+        # Construct
+        payload = {
+            "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
+            "request_nonce": challenge,
+            "scope": "openid aza ugs",
+            # Not sure if these matter
+            "group_sids": [],
+            "win_ver": "10.0.19041.868",
+            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            # Windows includes this, but it is not required or used
+            # user is instead taken from JWT assertion
+            "username": username,
+            "assertion": assertion
+        }
+        return self.request_token_with_devicecert_signed_payload(payload)
+
+    def register_winhello_key(self, pubkeycngblob, access_token):
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Dsreg/10.0 (Windows 10.0.19044.1826)',
+            'Accept': 'application/json',
+        }
+        data = {
+            "kngc": pubkeycngblob.decode('utf-8')
+        }
+        res = requests.post('https://enterpriseregistration.windows.net/EnrollmentServer/key/?api-version=1.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        return res.json()
+
     def create_pubkey_blob_from_key(self, key):
         """
         Convert a key (or certificate) to RSA key blob

@@ -77,6 +77,17 @@ def main():
     prt_parser.add_argument('--prt', action='store', metavar='PRT', help='Primary Refresh Token (for renewal)')
     prt_parser.add_argument('-s', '--prt-sessionkey', action='store', help='Primary Refresh Token session key (as hex key)')
 
+    prt_parser.add_argument('-hk', '--hello-key', action='store', help='Windows Hello PEM file')
+    # Construct winhello module
+    winhello_parser = subparsers.add_parser('winhello', help='Register Windows Hello key')
+    winhello_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for key storage (default: winhello.key)')
+    winhello_parser.add_argument('--access-token', action='store', help='Access token for device registration service. If not specified, taken from .roadtools_auth')
+
+    # Construct winhello key generation module - included for reference
+    # winhello_parser = subparsers.add_parser('genhellokey', help='Generate Windows Hello key')
+    # winhello_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for key storage (default: winhello.key)')
+    # winhello_parser.add_argument('-d', '--device-id', action='store', help='Device ID to use for key object')
+
     # Construct PRT authmodule
     prtauth_parser = subparsers.add_parser('prtauth', help='Authenticate using a PRT (emulates WAM token broker)')
     helptext = 'Client ID to use when authenticating.'
@@ -429,7 +440,7 @@ def main():
     enrauth_parser.add_argument('--prt-sessionkey',
                                 action='store',
                                 help='Primary Refresh Token session key (as hex key)')
-    # enrauth_parser.add_argument('--ngcmfa-drs-auth', action='store_true', help="Don't request PRT with MFA claim but get access token with ngcmfa claim for DRS instead.")
+    enrauth_parser.add_argument('--ngcmfa-drs-auth', action='store_true', help="Don't request PRT with MFA claim but get access token with ngcmfa claim for DRS instead.")
     enrauth_parser.add_argument('--tokenfile',
                                 action='store',
                                 help='File to store the credentials (default: .roadtools_auth)',
@@ -493,10 +504,9 @@ def main():
                 prtdata = deviceauth.get_prt_with_password(args.username, args.password)
             if args.refresh_token:
                 prtdata = deviceauth.get_prt_with_refresh_token(args.refresh_token)
-            # if args.username and deviceauth.loadhellokey(args.hello_key):
-            #     prtdata = deviceauth.get_prt_with_hello_key(args.username)
-            # if args.username and args.hello_assertion:
-            #     prtdata = deviceauth.get_prt_with_hello_key(args.username, args.hello_assertion)
+
+            if args.username and deviceauth.loadhellokey(args.hello_key):
+                prtdata = deviceauth.get_prt_with_hello_key(args.username)
             if not prtdata:
                 print('You must specify a username + password or refresh token that can be used to request a PRT')
                 return
@@ -716,11 +726,11 @@ def main():
         replyurl = "ms-appx-web://Microsoft.AAD.BrokerPlugin/DRS"
         url = f'https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=29d9ed98-a469-4536-ade2-f981bc1d605e&redirect_uri=ms-appx-web%3a%2f%2fMicrosoft.AAD.BrokerPlugin%2fDRS&resource=urn%3aaad%3atb%3aupdate%3aprt&add_account=noheadsup&scope=openid{hint}&response_mode=form_post&windows_api_version=2.0&amr_values=ngcmfa'
 
-        # if args.ngcmfa_drs_auth:
-        #     # Get ngcmfa token for device registration service
-        #     auth.set_client_id('dd762716-544d-4aeb-a526-687b73838a22')
-        #     replyurl = "ms-appx-web://Microsoft.AAD.BrokerPlugin/dd762716-544d-4aeb-a526-687b73838a22"
-        #     url = f'https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=dd762716-544d-4aeb-a526-687b73838a22&redirect_uri=ms-appx-web%3a%2f%2fMicrosoft.AAD.BrokerPlugin%2fdd762716-544d-4aeb-a526-687b73838a22&resource=urn%3ams-drs%3aenterpriseregistration.windows.net&add_account=noheadsup&scope=openid{hint}&response_mode=form_post&windows_api_version=2.0&amr_values=ngcmfa'
+        if args.ngcmfa_drs_auth:
+            # Get ngcmfa token for device registration service
+            auth.set_client_id('dd762716-544d-4aeb-a526-687b73838a22')
+            replyurl = "ms-appx-web://Microsoft.AAD.BrokerPlugin/dd762716-544d-4aeb-a526-687b73838a22"
+            url = f'https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=dd762716-544d-4aeb-a526-687b73838a22&redirect_uri=ms-appx-web%3a%2f%2fMicrosoft.AAD.BrokerPlugin%2fdd762716-544d-4aeb-a526-687b73838a22&resource=urn%3ams-drs%3aenterpriseregistration.windows.net&add_account=noheadsup&scope=openid{hint}&response_mode=form_post&windows_api_version=2.0&amr_values=ngcmfa'
 
         selauth = SeleniumAuthentication(auth, deviceauth, replyurl)
         if args.username and args.keepass and (args.keepass_password or 'KPPASS' in os.environ or args.keepass.endswith('.xml')):
@@ -733,16 +743,16 @@ def main():
         selauth.driver = selauth.get_webdriver(service, intercept=True)
         tokenreply = selauth.selenium_enrich_prt(url, otpseed=otpseed)
         # Save tokens
-        # if args.ngcmfa_drs_auth:
-        #     auth.tokendata = auth.tokenreply_to_tokendata(tokenreply)
-        #     auth.outfile = args.tokenfile
-        #     auth.save_tokens(args)
-        # else:
-        if tokenreply['refresh_token']:
-            print('Got refresh token. Can be used to request prt with roadtx prt -r <refreshtoken>')
-            print(tokenreply['refresh_token'])
+        if args.ngcmfa_drs_auth:
+            auth.tokendata = auth.tokenreply_to_tokendata(tokenreply)
+            auth.outfile = args.tokenfile
+            auth.save_tokens(args)
         else:
-            print('No tokendata found. Something probably went wrong')
+            if tokenreply['refresh_token']:
+                print('Got refresh token. Can be used to request prt with roadtx prt -r <refreshtoken>')
+                print(tokenreply['refresh_token'])
+            else:
+                print('No tokendata found. Something probably went wrong')
 
     elif args.command == 'getotp':
         selauth = SeleniumAuthentication(auth, deviceauth, None)
@@ -779,5 +789,43 @@ def main():
         header, body, signature = auth.parse_jwt(tokendata)
         print(json.dumps(header, sort_keys=True, indent=4))
         print(json.dumps(body, sort_keys=True, indent=4))
+    elif args.command == 'winhello':
+        if args.access_token:
+            tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
+        else:
+            try:
+                with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                    tokenobject = json.load(infile)
+                _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+            except FileNotFoundError:
+                print('No auth data found. Ether supply an access token with --access-token or make sure a token is present on disk in .roadtools_auth')
+                return
+        if tokendata['aud'] != 'urn:ms-drs:enterpriseregistration.windows.net':
+            print(f"Wrong token audience, got {tokendata['aud']} but expected: urn:ms-drs:enterpriseregistration.windows.net")
+            print("Make sure to request a token with -r urn:ms-drs:enterpriseregistration.windows.net")
+            return
+        key, pubkeycngblob = deviceauth.create_hello_key(args.key_pem)
+        result = deviceauth.register_winhello_key(pubkeycngblob, tokenobject['accessToken'])
+        print(result)
+
+    elif args.command == 'genhellokey':
+        key, pubkeycngblob = deviceauth.create_hello_key(args.key_pem)
+        if not args.device_id:
+            deviceid = "d22a8b4b-d138-4271-a677-de4208305cb3"
+        else:
+            deviceid = args.device_id
+        data = {
+            "usage": "NGC",
+            "keyIdentifier": deviceauth.get_privkey_kid(key),
+            "keyMaterial": pubkeycngblob.decode('utf-8'),
+            "creationTime": "2022-10-12T18:29:51.3793062Z",
+            "deviceId": deviceid,
+            "customKeyInformation": "AQAAAAACAAAAAAAAAAAA",
+            "fidoAaGuid": None,
+            "fidoAuthenticatorVersion": None,
+            "fidoAttestationCertificates": []
+        }
+        print(json.dumps(data, sort_keys=True, indent=4))
+
 if __name__ == '__main__':
     main()
