@@ -77,6 +77,7 @@ def main():
         'bloodhound': 'Export Azure AD data to a custom BloodHound version',
         'xlsexport': 'Export data to an Excel file',
         'road2timeline': 'Generate a forensic timeline from Azure AD object timestamps',
+        'caopticsimport': 'Imports CAP data from CAOptics to show user MFA status'
         # 'grep': 'Export grep-compatible lists'
     }
 
