@@ -346,6 +346,10 @@ def main():
     browserprtauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
                                        help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
                                        default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+    browserprtauth_parser.add_argument('-t',
+                                       '--tenant',
+                                       action='store',
+                                       help='Tenant ID or domain to auth to')
     browserprtauth_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (default: roadtx.prt)')
     browserprtauth_parser.add_argument('--prt',
                                        action='store',
