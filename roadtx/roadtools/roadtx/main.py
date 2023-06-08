@@ -240,6 +240,9 @@ def main():
     intauth_parser.add_argument('--krbtoken',
                                 action='store',
                                 help='Kerberos auth data from krbsso.py')
+    intauth_parser.add_argument('--estscookie',
+                                action='store',
+                                help='ESTSAUTHPERSISTENT cookie from browser')
     intauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     intauth_parser.add_argument('-c',
                                 '--client',
@@ -620,6 +623,8 @@ def main():
         selauth.driver = selauth.get_webdriver(service, intercept=True)
         if args.krbtoken:
             result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=args.krbtoken)
+        elif args.estscookie:
+            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie)
         else:
             result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code)
         if args.capture_code:

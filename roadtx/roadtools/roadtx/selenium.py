@@ -193,6 +193,26 @@ class SeleniumAuthentication():
         self.driver.request_interceptor = interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
+    def selenium_login_with_estscookie(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, estscookie=None):
+        '''
+        Selenium login with Kerberos auth header injection.
+        '''
+        def interceptor(request):
+            del request.headers['User-Agent']
+            request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71'
+            request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
+            request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
+            request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
+            request.headers['Sec-Ch-Ua-Platform-Version'] = '"10.0.0"'
+            if request.headers['Cookie']:
+                existing = request.headers['Cookie']
+            else:
+                existing = ''
+            request.headers['Cookie'] = f'ESTSAUTHPERSISTENT={estscookie}; ' + existing
+
+        self.driver.request_interceptor = interceptor
+        return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
+
     def selenium_enrich_prt(self, url, otpseed=None):
         '''
         Selenium authentication to add NGC MFA claim to a PRT or token.
