@@ -78,7 +78,7 @@ class SimpleServicePrincipalsSchema(ma.Schema):
     """
     class Meta:
         model = ServicePrincipal
-        fields = ('objectId', 'objectType', 'displayName')
+        fields = ('objectId', 'objectType', 'displayName', 'servicePrincipalType')
 
 class ServicePrincipalsSchema(ma.Schema):
     class Meta:

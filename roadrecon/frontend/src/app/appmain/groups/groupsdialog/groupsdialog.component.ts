@@ -45,8 +45,8 @@ export class GroupsdialogInitComponent implements OnInit {
 })
 export class GroupsdialogComponent {
   public displayedColumns: string[] = ['displayName', 'description']
-  public displayedColumnsUsers: string[] = ['displayName', 'description', 'userType']
-  public displayedColumnsServicePrincipal: string[] = ['displayName']
+  public displayedColumnsUsers: string[] = ['displayName', 'userPrincipalName', 'userType']
+  public displayedColumnsServicePrincipal: string[] = ['displayName', 'servicePrincipalType']
   public displayedColumnsOwners: string[] = ['displayName', 'userPrincipalName']
   public displayedColumnsDevices: string[] = ['displayName', 'deviceModel', 'deviceOSType', 'deviceTrustType'];
 

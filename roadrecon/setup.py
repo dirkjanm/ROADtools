@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(name='roadrecon',
-      version='1.1.0',
-      description='Azure AD recon for red/blue',
+      version='1.1.1',
+      description='Azure AD recon for red and blue',
       author='Dirk-jan Mollema',
       author_email='dirkjan@dirkjanm.io',
       url='https://github.com/dirkjanm/ROADtools/',
