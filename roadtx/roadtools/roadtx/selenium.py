@@ -232,7 +232,7 @@ class SeleniumAuthentication():
             request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
             request.headers['Sec-Ch-Ua-Platform-Version'] = '"10.0.0"'
 
-            if request.url.startswith('https://login.microsoftonline.com'):
+            if request.url.startswith('https://login.microsoftonline.com') and self.deviceauth.prt:
                 if '/authorize' in request.url or '/login' in request.url or '/kmsi' in request.url or '/reprocess' in request.url or '/resume' in request.url:
                     if 'sso_nonce' in request.url:
                         res = urlparse(request.url)

@@ -441,6 +441,7 @@ def main():
                                 help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)',
                                 default='geckodriver')
     enrauth_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (default: roadtx.prt)')
+    enrauth_parser.add_argument('--no-prt', action='store_true', help='Perform the flow without a PRT')
     enrauth_parser.add_argument('--prt',
                                 action='store',
                                 help='Primary Refresh Token')
@@ -463,6 +464,8 @@ def main():
 
     deviceauth = DeviceAuthentication()
     args = parser.parse_args()
+    seleniumproxy = None
+
     if args.command in ('auth', 'gettokens', 'gettoken'):
         auth.parse_args(args)
         res = auth.get_tokens(args)
@@ -612,7 +615,7 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.tenant = args.tenant
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url)
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
         if args.auth_url:
             url = args.auth_url
         else:
@@ -637,7 +640,7 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.tenant = args.tenant
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url)
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
         password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         if args.auth_url:
             url = args.auth_url
@@ -667,7 +670,7 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url)
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
         if args.auth_url:
             url = args.auth_url
         else:
@@ -720,13 +723,14 @@ def main():
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
     elif args.command == 'prtenrich':
-        if args.prt and args.prt_sessionkey:
-            deviceauth.setprt(args.prt, args.prt_sessionkey)
-        elif args.prt_file and deviceauth.loadprt(args.prt_file):
-            pass
-        else:
-            print('You must either supply a PRT and session key on the command line or a file that contains them')
-            return
+        if not args.no_prt:
+            if args.prt and args.prt_sessionkey:
+                deviceauth.setprt(args.prt, args.prt_sessionkey)
+            elif args.prt_file and deviceauth.loadprt(args.prt_file):
+                pass
+            else:
+                print('You must either supply a PRT and session key on the command line or a file that contains them')
+                return
         auth.set_client_id('29d9ed98-a469-4536-ade2-f981bc1d605e')
         if args.username:
             hint = '&login_hint=' + quote_plus(args.username)
@@ -741,7 +745,7 @@ def main():
             replyurl = "ms-appx-web://Microsoft.AAD.BrokerPlugin/dd762716-544d-4aeb-a526-687b73838a22"
             url = f'https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=dd762716-544d-4aeb-a526-687b73838a22&redirect_uri=ms-appx-web%3a%2f%2fMicrosoft.AAD.BrokerPlugin%2fdd762716-544d-4aeb-a526-687b73838a22&resource=urn%3ams-drs%3aenterpriseregistration.windows.net&add_account=noheadsup&scope=openid{hint}&response_mode=form_post&windows_api_version=2.0&amr_values=ngcmfa'
 
-        selauth = SeleniumAuthentication(auth, deviceauth, replyurl)
+        selauth = SeleniumAuthentication(auth, deviceauth, replyurl, proxy=seleniumproxy)
         if args.username and args.keepass and (args.keepass_password or 'KPPASS' in os.environ or args.keepass.endswith('.xml')):
             _, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         else:
