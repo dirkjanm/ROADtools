@@ -5,6 +5,7 @@ from roadtools.roadlib.auth import Authentication, AuthenticationException, get_
 from roadtools.roadlib.deviceauth import DeviceAuthentication
 from roadtools.roadtx.keepass import HackyKeePassFileReader
 from seleniumwire import webdriver as webdriver_wire
+from seleniumwire.thirdparty.mitmproxy.net.http import encoding
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
@@ -15,6 +16,8 @@ import pyotp
 
 class SeleniumAuthentication():
     def __init__(self, auth, deviceauth, redirurl, proxy=None):
+        if proxy and proxy.startswith('http'):
+            proxy = proxy.replace('http://','').replace('https://','')
         self.proxy = proxy
         self.auth = auth
         self.deviceauth = deviceauth
@@ -43,10 +46,11 @@ class SeleniumAuthentication():
                     'http': f'http://{self.proxy}',
                     'https': f'https://{self.proxy}',
                     'no_proxy': 'localhost,127.0.0.1'
-                }
+                },
+                'request_storage': 'memory'
             }
         else:
-            options = {}
+            options = {'request_storage': 'memory'}
         if intercept:
             driver = webdriver_wire.Firefox(service=service, seleniumwire_options=options)
         else:
@@ -240,7 +244,22 @@ class SeleniumAuthentication():
                         cookie = self.auth.create_prt_cookie_kdf_ver_2(self.deviceauth.prt,
                                                                        self.deviceauth.session_key)
                     request.headers['X-Ms-Refreshtokencredential'] = cookie
+
+        def response_interceptor(request, response):
+            '''
+            Intercept response to prevent automatic form submission to a non-handled URL scheme so
+            selenium has time to extract the data
+            '''
+            if request.url.startswith('https://login.microsoftonline.com'):
+                body = encoding.decode(response.body, response.headers.get('Content-Encoding', 'identity'))
+                if b'SwitchToProgressPage();' in body:
+                    body = body.replace(b'SwitchToProgressPage();',b'/*SwitchToProgressPage();*/')
+                    response.body = encoding.encode(body, response.headers.get('Content-Encoding', 'identity'))
+                    del response.headers['Content-Length']
+                    response.headers['Content-Length'] = len(response.body)
+
         self.driver.request_interceptor = interceptor
+        self.driver.response_interceptor = response_interceptor
 
         driver = self.driver
         driver.get(url)
