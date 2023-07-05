@@ -1054,46 +1054,51 @@ class Authentication():
         Get tokens based on the arguments specified.
         Expects args to be generated from get_sub_argparse
         """
-        if self.tokendata:
-            return self.tokendata
-        if self.refresh_token and not self.access_token:
-            if self.refresh_token == 'file':
-                with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
-                    token_data = json.load(infile)
-            else:
-                token_data = {'refreshToken': self.refresh_token}
-            return self.authenticate_with_refresh_native(token_data['refreshToken'])
-        if self.access_token and not self.refresh_token:
-            self.tokendata, _ = self.parse_accesstoken(self.access_token)
-            return self.tokendata
-        if self.username and self.password:
-            return self.authenticate_username_password()
-        if args.as_app and self.password:
-            return self.authenticate_as_app()
-        if args.device_code:
-            return self.authenticate_device_code()
-        if args.prt_init:
-            nonce = self.get_prt_cookie_nonce()
-            if nonce:
-                print(f'Requested nonce from server to use with ROADtoken: {nonce}')
-            return False
-        if args.prt_cookie:
-            derived_key = self.ensure_binary_derivedkey(args.derived_key)
-            context = self.ensure_binary_context(args.prt_context)
-            sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
-            return self.authenticate_with_prt_cookie(args.prt_cookie, context, derived_key, args.prt_verify, sessionkey)
-        if args.prt and args.prt_context and args.derived_key:
-            derived_key = self.ensure_binary_derivedkey(args.derived_key)
-            context = self.ensure_binary_context(args.prt_context)
-            prt = self.ensure_plain_prt(args.prt)
-            return self.authenticate_with_prt(prt, context, derived_key=derived_key)
-        if args.prt and args.prt_sessionkey:
-            prt = self.ensure_plain_prt(args.prt)
-            sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
-            if args.kdf_v1:
-                return self.authenticate_with_prt(prt, None, sessionkey=sessionkey)
-            else:
-                return self.authenticate_with_prt_v2(prt, sessionkey)
+        try:
+            if self.tokendata:
+                return self.tokendata
+            if self.refresh_token and not self.access_token:
+                if self.refresh_token == 'file':
+                    with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
+                        token_data = json.load(infile)
+                else:
+                    token_data = {'refreshToken': self.refresh_token}
+                return self.authenticate_with_refresh_native(token_data['refreshToken'])
+            if self.access_token and not self.refresh_token:
+                self.tokendata, _ = self.parse_accesstoken(self.access_token)
+                return self.tokendata
+            if self.username and self.password:
+                return self.authenticate_username_password()
+            if args.as_app and self.password:
+                return self.authenticate_as_app()
+            if args.device_code:
+                return self.authenticate_device_code()
+            if args.prt_init:
+                nonce = self.get_prt_cookie_nonce()
+                if nonce:
+                    print(f'Requested nonce from server to use with ROADtoken: {nonce}')
+                return False
+            if args.prt_cookie:
+                derived_key = self.ensure_binary_derivedkey(args.derived_key)
+                context = self.ensure_binary_context(args.prt_context)
+                sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
+                return self.authenticate_with_prt_cookie(args.prt_cookie, context, derived_key, args.prt_verify, sessionkey)
+            if args.prt and args.prt_context and args.derived_key:
+                derived_key = self.ensure_binary_derivedkey(args.derived_key)
+                context = self.ensure_binary_context(args.prt_context)
+                prt = self.ensure_plain_prt(args.prt)
+                return self.authenticate_with_prt(prt, context, derived_key=derived_key)
+            if args.prt and args.prt_sessionkey:
+                prt = self.ensure_plain_prt(args.prt)
+                sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
+                if args.kdf_v1:
+                    return self.authenticate_with_prt(prt, None, sessionkey=sessionkey)
+                else:
+                    return self.authenticate_with_prt_v2(prt, sessionkey)
+
+        except adal.adal_error.AdalError as ex:
+            print(ex.error_response['error_description'])
+
         # If we are here, no auth to try
         print('Not enough information was supplied to authenticate')
         return False
