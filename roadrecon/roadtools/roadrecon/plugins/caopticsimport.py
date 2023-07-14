@@ -165,25 +165,24 @@ class CAOpticsImporterPlugin():
             "to the same tenant. Unidentified ID: %s" % id)
             exit(-1)
 
-    def _update_unterm_users(self, default_mfa_status):
-        mfa_status = MFA_CONDITIONAL
+    def _update_unterm_users(self, default_mfa_status):    
         for permutation in self.permutations.values():
-            # print ("Term %s" % permutation)
+            mfa_status = MFA_CONDITIONAL
             if permutation[TERM_INDEX] == 0:
                 # Overrides mfa_status value to disabled if all conditions are unterminated.
                 if len(permutation[CONDITIONS_INDEX]) <= 1:
                     mfa_status = MFA_DISABLED
                 user_id = permutation[SCOPE_INDEX]
                 if user_id == "All" or user_id == "GuestsOrExternalUsers":
-                    break
+                    continue
                 user = self._get_user(user_id)
-                self._check_user_is_none(user, user_id)
+                self._check_user_is_none(user, user_id) 
                 # If there is no MFA CAP by default, this additional step checks if a user
                 # that was set as enabled must be updated to conditioned due to unterm cond.
                 if default_mfa_status == 0:
                     current_mfa = user.strongAuthenticationDetail["CapMfaStatus"]
                     if current_mfa != MFA_ENABLED:
-                        break
+                        continue                 
                 user.strongAuthenticationDetail["CapMfaStatus"] = mfa_status
                 # print("User %s changed to %s" % (user.userPrincipalName,mfa_status))
                 flag_modified(user, "strongAuthenticationDetail")
@@ -199,7 +198,7 @@ class CAOpticsImporterPlugin():
                 # If perm has terminations and conditions
                 user_id = permutation[SCOPE_INDEX]
                 if user_id == "All" or user_id == "GuestsOrExternalUsers":
-                    break
+                    continue
                 user = self._get_user(user_id)
                 self._check_user_is_none(user, user_id)
                 user.strongAuthenticationDetail["CapMfaStatus"] = mfa_status
