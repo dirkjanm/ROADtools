@@ -1098,6 +1098,7 @@ class Authentication():
 
         except adal.adal_error.AdalError as ex:
             print(ex.error_response['error_description'])
+            sys.exit(1)
 
         # If we are here, no auth to try
         print('Not enough information was supplied to authenticate')
