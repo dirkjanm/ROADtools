@@ -114,7 +114,7 @@ class AccessPoliciesPlugin():
         else:
             res = self.session.query(Application).filter(Application.appId == aid).first()
             # if no result, query the ServicePrincipals
-            if len(res) == 0:
+            if res is None or len(res) == 0:
                 return self.session.query(ServicePrincipal).filter(ServicePrincipal.appId == aid).first()
 
     def _get_user(self, uid):
@@ -228,10 +228,11 @@ class AccessPoliciesPlugin():
                 if 'Office365' in clist:
                     ot += 'All Office 365 applications'
                 objects = self._get_application(clist)
-                if len(objects) > 0:
-                    if ctype == 'Applications':
-                        ot += 'Applications: '
-                        ot += ', '.join([escape(uobj.displayName) for uobj in objects])
+                if objects is not None: 
+                    if len(objects) > 0:
+                        if ctype == 'Applications':
+                            ot += 'Applications: '
+                            ot += ', '.join([escape(uobj.displayName) for uobj in objects])
         return ot
 
     def _parse_platform(self, cond):
