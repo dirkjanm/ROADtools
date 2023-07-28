@@ -16,6 +16,9 @@ RR_HELP = 'ROADtools Token eXchange by Dirk-jan Mollema (@_dirkjan) / Outsider S
 def main():
     # Primary argument parser
     parser = argparse.ArgumentParser(add_help=True, description=RR_HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-p', '--proxy', action='store', help="Proxy requests through a proxy (format: proxyip:port). Ignores TLS validation if specified, unless --secure is used.")
+    parser.add_argument('-s', '--secure', action='store_true', help="Enforce certificate validation even if using a proxy")
+
     # Add subparsers for modules
     subparsers = parser.add_subparsers(dest='command')
 
@@ -465,6 +468,14 @@ def main():
     deviceauth = DeviceAuthentication()
     args = parser.parse_args()
     seleniumproxy = None
+
+    if args.proxy:
+        auth.proxies = deviceauth.proxies = {
+            'https': f'http://{args.proxy}'
+        }
+        seleniumproxy = f'http://{args.proxy}'
+        if not args.secure:
+            auth.verify = deviceauth.verify = False
 
     if args.command in ('auth', 'gettokens', 'gettoken'):
         auth.parse_args(args)
