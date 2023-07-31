@@ -78,7 +78,7 @@ class SeleniumAuthentication():
             otpseed = None
         return userpassword, otpseed
 
-    def selenium_login(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False):
+    def selenium_login(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, federated=False):
         '''
         Selenium based login with optional autofill of whatever is provided
         '''
@@ -88,16 +88,24 @@ class SeleniumAuthentication():
             el = WebDriverWait(driver, 3000).until(lambda d: d.find_element(By.ID, "i0116"))
             el.send_keys(identity + Keys.ENTER)
         if password:
-            els = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "i0118"))
-            els.send_keys(password)
+            if federated:
+                els = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "passwordInput"))
+                els.send_keys(password)
+                try:
+                    WebDriverWait(driver, 1).until(lambda d: d.find_element(By.ID, "idonotexist"))
+                except TimeoutException:
+                    pass
+                els.send_keys(Keys.ENTER)
+            else:
+                els = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "i0118"))
 
-            el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "idSIButton9"))
-            try:
-                WebDriverWait(driver, 2).until(lambda d: d.find_element(By.ID, "idonotexist"))
-            except TimeoutException:
-                pass
-            els = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "i0118"))
-            els.send_keys(Keys.ENTER)
+                el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "idSIButton9"))
+                try:
+                    WebDriverWait(driver, 2).until(lambda d: d.find_element(By.ID, "idonotexist"))
+                except TimeoutException:
+                    pass
+                els = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "i0118"))
+                els.send_keys(Keys.ENTER)
 
         # Quick check of mfa not needed
         try:
@@ -199,7 +207,7 @@ class SeleniumAuthentication():
 
     def selenium_login_with_estscookie(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, estscookie=None):
         '''
-        Selenium login with Kerberos auth header injection.
+        Selenium login with ESTSAUTH or ESTSAUTHPERSISTENT cookie injection
         '''
         def interceptor(request):
             del request.headers['User-Agent']

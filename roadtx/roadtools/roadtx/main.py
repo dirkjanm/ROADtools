@@ -285,6 +285,9 @@ def main():
     intauth_parser.add_argument('--capture-code',
                                 action='store_true',
                                 help='Do not attempt to redeem any authentication code but print it instead')
+    intauth_parser.add_argument('--federated',
+                                action='store_true',
+                                help='Fill in password on Federation server login page (assumes AD FS)')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
@@ -330,6 +333,9 @@ def main():
     kdbauth_parser.add_argument('--capture-code',
                                 action='store_true',
                                 help='Do not attempt to redeem any authentication code but print it instead')
+    kdbauth_parser.add_argument('--federated',
+                                action='store_true',
+                                help='Fill in password on Federation server login page (assumes AD FS)')
 
 
     # Interactive auth using Selenium - inject PRT
@@ -642,7 +648,7 @@ def main():
         elif args.estscookie:
             result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie)
         else:
-            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code)
+            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code, federated=args.federated)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
@@ -663,7 +669,7 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service)
-        result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code)
+        result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
