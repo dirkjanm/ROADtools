@@ -23,7 +23,7 @@ ROADrecon is a tool for exploring information in Azure AD from both a Red Team a
 * Provide plugins to query this database and output it to a useful format.
 * Provide an extensive interface built in Angular that queries the offline database directly for its analysis.
 
-ROADrecon uses `async` Python features and is only compatible with Python 3.6-3.8 (development is done with Python 3.8). 
+ROADrecon uses `async` Python features and is only compatible with Python 3.7 and newer (development is done with Python 3.8, tests are run with versions up to Python 3.10). 
 
 ### Installation
 There are multiple ways to install ROADrecon:
@@ -59,6 +59,8 @@ See [this Wiki page](https://github.com/dirkjanm/ROADtools/wiki/Getting-started-
 ## ROADtools Token eXchange (roadtx)
 ![PyPI version](https://img.shields.io/pypi/v/roadtx.svg)
 [![Build Status](https://dev.azure.com/dirkjanm/ROADtools/_apis/build/status/dirkjanm.ROADtools?branchName=master)](https://dev.azure.com/dirkjanm/ROADtools/_build/latest?definitionId=19&branchName=master)
+
+roadtx is a tool for exchanging and using different types of Azure AD issued tokens. It supports many different authentication flows, device registration and PRT related operations. For an overview of the tool, see the [roadtx Wiki](https://github.com/dirkjanm/ROADtools/wiki/ROADtools-Token-eXchange-(roadtx)).
 
 ### Installation
 There are multiple ways to install roadtx. Note that roadtx requires Python 3.7 or newer.
