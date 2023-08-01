@@ -647,6 +647,22 @@ class DeviceAuthentication():
         }
         return self.request_token_with_devicecert_signed_payload(payload)
 
+    def get_prt_with_samltoken(self, samltoken):
+        authlib = Authentication()
+        challenge = authlib.get_srv_challenge()['Nonce']
+        # Construct
+        payload = {
+            "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
+            "request_nonce": challenge,
+            "scope": "openid aza ugs",
+            # Not sure if these matter
+            "group_sids": [],
+            "win_ver": "10.0.19041.868",
+            "grant_type": "urn:ietf:params:oauth:grant-type:saml1_1-bearer",
+            "assertion": base64.b64encode(samltoken.encode('utf-8')).decode('utf-8'),
+        }
+        return self.request_token_with_devicecert_signed_payload(payload)
+
     def get_prt_with_refresh_token(self, refresh_token):
         authlib = Authentication()
         challenge = authlib.get_srv_challenge()['Nonce']

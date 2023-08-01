@@ -130,6 +130,7 @@ class Authentication():
         self.resource_uri = 'https://graph.windows.net/'
         self.tokendata = {}
         self.refresh_token = None
+        self.saml_token = None
         self.access_token = None
         self.proxies = None
         self.verify = True
@@ -143,7 +144,7 @@ class Authentication():
         common one if no tenant was specified
         """
         if self.tenant is not None:
-            return 'https://login.microsoftonline.com/{}'.format(self.tenant)
+            return f'https://login.microsoftonline.com/{self.tenant}'
         return 'https://login.microsoftonline.com/common'
 
     def set_client_id(self, clid):
@@ -358,6 +359,53 @@ class Authentication():
         data = self.decrypt_auth_response(prtdata, sessionkey, asjson=True)
         return data
 
+    def authenticate_with_saml_native(self, saml_token, additionaldata=None, returnreply=False):
+        """
+        Authenticate with a SAML token from the Federation Server
+        Native ROADlib implementation without adal requirement
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:saml1_1-bearer",
+            "assertion": base64.b64encode(saml_token.encode('utf-8')).decode('utf-8'),
+            "resource": self.resource_uri,
+        }
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = requests.post(f"{authority_uri}/oauth2/token", data=data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def authenticate_with_saml_native_v2(self, saml_token, additionaldata=None, returnreply=False):
+        """
+        Authenticate with a SAML token from the Federation Server
+        Native ROADlib implementation without adal requirement
+        This function calls identity platform v2 and thus requires a scope instead of resource
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:saml1_1-bearer",
+            "assertion": base64.b64encode(saml_token.encode('utf-8')).decode('utf-8'),
+            "scope": self.scope,
+        }
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = requests.post(f"{authority_uri}/oauth2/v2.0/token", data=data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
     def get_desktopsso_token(self, username=None, password=None, krbtoken=None):
         '''
         Get desktop SSO token either with plain username and password, or with a Kerberos auth token
@@ -488,7 +536,7 @@ class Authentication():
             payload = {
                 "refresh_token": prt,
                 "is_primary": "true",
-                "iat": '{}'.format(int(time.time()))
+                "iat": str(int(time.time()))
             }
         # Sign with random key just to get jwt body in right encoding
         tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
@@ -855,6 +903,9 @@ class Authentication():
         auth_parser.add_argument('--refresh-token',
                                  action='store',
                                  help='Refresh token')
+        auth_parser.add_argument('--saml-token',
+                                 action='store',
+                                 help='SAML token from Federation Server')
         auth_parser.add_argument('--prt-cookie',
                                  action='store',
                                  help='Primary Refresh Token cookie from ROADtoken (JWT)')
@@ -1001,12 +1052,12 @@ class Authentication():
         return header, enc_key, iv, ciphertext, auth_tag
 
     @staticmethod
-    def parse_jwt(jwt):
+    def parse_jwt(jwtoken):
         """
         Simple JWT parsing function
         returns header and body as dict and signature as bytes
         """
-        dataparts = jwt.split('.')
+        dataparts = jwtoken.split('.')
         header = json.loads(get_data(dataparts[0]))
         body = json.loads(get_data(dataparts[1]))
         signature = get_data(dataparts[2])
@@ -1041,6 +1092,7 @@ class Authentication():
         self.set_client_id(args.client)
         self.access_token = args.access_token
         self.refresh_token = args.refresh_token
+        self.saml_token = args.saml_token
         self.outfile = args.tokenfile
         self.debug = args.debug
         self.set_resource_uri(args.resource)
@@ -1069,6 +1121,16 @@ class Authentication():
                 return self.tokendata
             if self.username and self.password:
                 return self.authenticate_username_password()
+            if self.saml_token:
+                if self.saml_token.lower() == 'stdin':
+                    samltoken = sys.stdin.read()
+                else:
+                    samltoken = self.saml_token
+                if self.scope:
+                    # Use v2 endpoint if we have a scope
+                    return self.authenticate_with_saml_native_v2(samltoken)
+                else:
+                    return self.authenticate_with_saml_native(samltoken)
             if args.as_app and self.password:
                 return self.authenticate_as_app()
             if args.device_code:
@@ -1115,7 +1177,6 @@ class Authentication():
 def main():
     parser = argparse.ArgumentParser(add_help=True, description='ROADtools Authentication utility', formatter_class=argparse.RawDescriptionHelpFormatter)
     auth = Authentication()
-    # auth_parser = subparsers.add_parser('auth', dest='command', help='Authenticate to Azure AD')
     auth.get_sub_argparse(parser)
     if len(sys.argv) < 2:
         parser.print_help()
