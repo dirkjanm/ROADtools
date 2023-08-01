@@ -98,6 +98,7 @@ class SeleniumAuthentication():
                 els.send_keys(Keys.ENTER)
             else:
                 els = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "i0118"))
+                els.send_keys(password)
 
                 el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "idSIButton9"))
                 try:

