@@ -25,6 +25,7 @@ from enum import Enum
 from datetime import datetime, timedelta
 from lxml import etree
 
+from OpenSSL.crypto import X509
 from cryptography import x509
 from cryptography import utils
 from cryptography.hazmat.backends import default_backend
@@ -38,6 +39,7 @@ from cryptography.exceptions import (
 from pyasn1.type.univ import ObjectIdentifier, OctetString
 from pyasn1.codec.der.decoder import decode as der_decode
 from pyasn1.codec.der.encoder import encode
+
 from signxml import XMLSigner
 
 def encode_object_guid(guid):
@@ -382,12 +384,15 @@ class SAMLSigner():
         id_attribute = "AssertionID"
         data = etree.fromstring(saml_string)
 
+        # Certificate should be X509 object from pyOpenSSL, not from cryptography
+        signcert = X509.from_cryptography(self.certificate)
+
         signer = XMLSigner(c14n_algorithm="http://www.w3.org/2001/10/xml-exc-c14n#",
                            signature_algorithm=algorithm,
                            digest_algorithm=digest)
         signed_xml = signer.sign(data,
                                  key=self.privkey,
-                                 cert=[self.certificate],
+                                 cert=[signcert],
                                  reference_uri=assertionid,
                                  id_attribute=id_attribute)
         signed_saml_string = etree.tostring(signed_xml).replace(b'\n', b'')
