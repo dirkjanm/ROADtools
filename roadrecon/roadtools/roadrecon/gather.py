@@ -1,22 +1,31 @@
-import warnings
+import argparse
+import asyncio
 import json
 import os
-import asyncio
-import time
-import argparse
 import sys
+import time
 import traceback
-import requests
+import warnings
+
 import aiohttp
-from sqlalchemy.dialects.postgresql import insert as pginsert
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func, bindparam
-from roadtools.roadlib.metadef.database import User, ServicePrincipal, Application, Group, Device, DirectoryRole, RoleAssignment, ExtensionProperty, Contact, OAuth2PermissionGrant, Policy, RoleDefinition, AppRoleAssignment, TenantDetail, AuthorizationPolicy, DirectorySetting, EligibleRoleAssignment, AdministrativeUnit
-from roadtools.roadlib.metadef.database import lnk_group_member_user, lnk_group_member_group, lnk_group_member_contact, lnk_group_member_device, lnk_group_member_serviceprincipal, lnk_device_owner, lnk_group_owner_user, lnk_group_owner_serviceprincipal, lnk_au_member_user, lnk_au_member_device, lnk_au_member_group
+import requests
+import roadtools.roadlib.metadef.database as database
 #from roadlib.metadef.database import Domain
 from roadtools.roadlib.auth import Authentication
-from roadtools.roadlib.metadef.database import ApplicationRef
-import roadtools.roadlib.metadef.database as database
+from roadtools.roadlib.metadef.database import (
+    AdministrativeUnit, Application, ApplicationRef, AppRoleAssignment,
+    AuthorizationPolicy, Contact, Device, DirectoryRole, DirectorySetting,
+    EligibleRoleAssignment, ExtensionProperty, Group, OAuth2PermissionGrant,
+    Policy, RoleAssignment, RoleDefinition, ServicePrincipal, TenantDetail,
+    User, lnk_au_member_device, lnk_au_member_group, lnk_au_member_user,
+    lnk_device_owner, lnk_group_member_contact, lnk_group_member_device,
+    lnk_group_member_group, lnk_group_member_serviceprincipal,
+    lnk_group_member_user, lnk_group_owner_serviceprincipal,
+    lnk_group_owner_user)
+from sqlalchemy import bindparam, func
+from sqlalchemy.dialects.postgresql import insert as pginsert
+from sqlalchemy.orm import sessionmaker
+
 warnings.simplefilter('ignore')
 token = None
 expiretime = None
@@ -546,6 +555,11 @@ async def run(args):
         'Microsoft.DirectoryServices.User': (User, 'ownerUsers'),
         'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'ownerServicePrincipals'),
     }
+    au_mapping = {
+        'Microsoft.DirectoryServices.User': (User, 'memberUsers'),
+        'Microsoft.DirectoryServices.Group': (Group, 'memberGroups'),
+        'Microsoft.DirectoryServices.Device': (Device, 'memberDevices'),
+    }
     role_mapping = {
         'Microsoft.DirectoryServices.User': (User, 'memberUsers'),
         'Microsoft.DirectoryServices.ServicePrincipal': (ServicePrincipal, 'memberServicePrincipals'),
@@ -588,6 +602,7 @@ async def run(args):
         if totalgroups <= MAX_GROUPS:
             tasks.append(dumper.dump_links('groups', 'members', Group, mapping=group_mapping))
             tasks.append(dumper.dump_links('groups', 'owners', Group, mapping=group_owner_mapping))
+            tasks.append(dumper.dump_links('administrativeUnits', 'members', AdministrativeUnit, mapping=au_mapping))
             tasks.append(dumper.dump_object_expansion('devices', Device, 'registeredOwners', 'owner', User))
         tasks.append(dumper.dump_links('directoryRoles', 'members', DirectoryRole, mapping=role_mapping))
         tasks.append(dumper.dump_linked_objects('servicePrincipals', 'appRoleAssignedTo', ServicePrincipal, AppRoleAssignment, ignore_duplicates=True))
