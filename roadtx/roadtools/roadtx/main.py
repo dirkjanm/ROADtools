@@ -280,8 +280,7 @@ def main():
                                 help='Do not store tokens on disk, pipe to stdout instead')
     intauth_parser.add_argument('-d', '--driver-path',
                                 action='store',
-                                help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)',
-                                default='geckodriver')
+                                help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)')
     intauth_parser.add_argument('-k', '--keep-open',
                                 action='store_true',
                                 help='Do not close the browser window after timeout. Useful if you want to browse online apps with the obtained credentials')
@@ -328,8 +327,7 @@ def main():
                                 help='Do not store tokens on disk, pipe to stdout instead')
     kdbauth_parser.add_argument('-d', '--driver-path',
                                 action='store',
-                                help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)',
-                                default='geckodriver')
+                                help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)')
     kdbauth_parser.add_argument('-k', '--keep-open',
                                 action='store_true',
                                 help='Do not close the browser window after timeout. Useful if you want to browse online apps with the obtained credentials')
@@ -384,8 +382,7 @@ def main():
                                        help='Do not store tokens on disk, pipe to stdout instead')
     browserprtauth_parser.add_argument('-d', '--driver-path',
                                        action='store',
-                                       help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)',
-                                       default='geckodriver')
+                                       help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)')
     browserprtauth_parser.add_argument('-k', '--keep-open',
                                        action='store_true',
                                        help='Do not close the browser window after timeout. Useful if you want to browse online apps with the obtained credentials')
@@ -423,8 +420,7 @@ def main():
                                 help='Tenant ID or domain to auth to')
     injauth_parser.add_argument('-d', '--driver-path',
                                 action='store',
-                                help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)',
-                                default='geckodriver')
+                                help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)')
     injauth_parser.add_argument('-k', '--keep-open',
                                 action='store_true',
                                 help='Do not close the browser window after timeout. Useful if you want to browse online apps with the obtained credentials')
@@ -450,8 +446,7 @@ def main():
     enrauth_parser.add_argument('-kpp', '--keepass-password', action='store', metavar='KPPASS', help='KeePass file password. Can also be provided via KPPASS environment variable.')
     enrauth_parser.add_argument('-d', '--driver-path',
                                 action='store',
-                                help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)',
-                                default='geckodriver')
+                                help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)')
     enrauth_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (default: roadtx.prt)')
     enrauth_parser.add_argument('--no-prt', action='store_true', help='Perform the flow without a PRT')
     enrauth_parser.add_argument('--prt',
