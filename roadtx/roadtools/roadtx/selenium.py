@@ -26,12 +26,14 @@ class SeleniumAuthentication():
 
     def get_service(self, driverpath):
         # Default expects geckodriver to be in path, but if it exists locally we use that
-        if driverpath == 'geckodriver' and os.path.exists(driverpath):
-            driverpath = './geckodriver'
-        # Try to find the driver if a path is given
-        if driverpath != 'geckodriver' and not os.path.exists(driverpath):
-            print('geckodriver not found! Required for selenium operation. Please download from https://github.com/mozilla/geckodriver/releases')
-            return False
+        # newer selenium will auto manage this for us so driverpath is optional now
+        if driverpath:
+            if driverpath == 'geckodriver' and os.path.exists(driverpath):
+                driverpath = './geckodriver'
+            # Try to find the driver if a path is given
+            if driverpath != 'geckodriver' and not os.path.exists(driverpath):
+                print('geckodriver not found! Required for selenium operation. Please download from https://github.com/mozilla/geckodriver/releases')
+                return False
         service = Service(executable_path=driverpath)
         return service
 
