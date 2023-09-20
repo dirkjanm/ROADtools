@@ -1115,7 +1115,7 @@ class Authentication():
                         token_data = json.load(infile)
                 else:
                     token_data = {'refreshToken': self.refresh_token}
-                return self.authenticate_with_refresh_native(token_data['refreshToken'])
+                return self.authenticate_with_refresh_native(token_data['refreshToken'], client_secret=self.password)
             if self.access_token and not self.refresh_token:
                 self.tokendata, _ = self.parse_accesstoken(self.access_token)
                 return self.tokendata
