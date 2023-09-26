@@ -4,6 +4,7 @@ from urllib.parse import urlparse, parse_qs, quote_plus
 from roadtools.roadlib.auth import Authentication, AuthenticationException, get_data, WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES
 from roadtools.roadlib.deviceauth import DeviceAuthentication
 from roadtools.roadtx.keepass import HackyKeePassFileReader
+from seleniumwire.webdriver import FirefoxOptions
 from seleniumwire import webdriver as webdriver_wire
 from seleniumwire.thirdparty.mitmproxy.net.http import encoding
 from selenium import webdriver
@@ -23,6 +24,7 @@ class SeleniumAuthentication():
         self.deviceauth = deviceauth
         self.driver = None
         self.redirurl = redirurl
+        self.headless = False
 
     def get_service(self, driverpath):
         # Default expects geckodriver to be in path, but if it exists locally we use that
@@ -42,7 +44,18 @@ class SeleniumAuthentication():
         Load webdriver based on service, which is either
         from selenium or selenium-wire if interception is requested
         '''
-        if self.proxy:
+        if self.headless and self.proxy:
+            options = {
+                'proxy': {
+                    'http': f'http://{self.proxy}',
+                    'https': f'https://{self.proxy}',
+                    'no_proxy': 'localhost,127.0.0.1'
+                },
+                'request_storage': 'memory'
+            }
+            firefox_options=FirefoxOptions()
+            firefox_options.add_argument("-headless")
+        elif self.proxy:
             options = {
                 'proxy': {
                     'http': f'http://{self.proxy}',
@@ -53,8 +66,12 @@ class SeleniumAuthentication():
             }
         else:
             options = {'request_storage': 'memory'}
-        if intercept:
-            driver = webdriver_wire.Firefox(service=service, seleniumwire_options=options)
+        if intercept and self.headless:
+            firefox_options=FirefoxOptions()
+            firefox_options.add_argument("-headless")
+            driver = webdriver_wire.Firefox(service=service,  options=firefox_options, seleniumwire_options=options)
+        elif intercept:
+            driver = webdriver_wire.Firefox(service=service,  seleniumwire_options=options)
         else:
             driver = webdriver.Firefox(service=service)
         return driver
@@ -274,6 +291,7 @@ class SeleniumAuthentication():
 
         driver = self.driver
         driver.get(url)
+        
         if otpseed:
             try:
                 els = WebDriverWait(driver, 4).until(lambda d: d.find_element(By.CSS_SELECTOR, '[data-value="PhoneAppOTP"]'))
@@ -289,6 +307,7 @@ class SeleniumAuthentication():
             except TimeoutException:
                 # No MFA?
                 pass
+        
         el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='form[name="hiddenform"] input[name="code"]'))
         code = el.get_property("value")
         driver.close()
