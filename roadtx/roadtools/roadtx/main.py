@@ -643,7 +643,11 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.tenant = args.tenant
-        dsso_code = auth.get_desktopsso_token(args.username, args.password, args.krbtoken)
+        if args.krbtoken and args.krbtoken.lower() == 'stdin':
+            krbtoken = sys.stdin.read().strip()
+        else:
+            krbtoken = args.krbtoken
+        dsso_code = auth.get_desktopsso_token(args.username, args.password, krbtoken)
         if dsso_code:
             auth.authenticate_with_desktopsso_token(dsso_code)
             auth.outfile = args.tokenfile
@@ -672,7 +676,11 @@ def main():
             return
         selauth.driver = selauth.get_webdriver(service, intercept=True)
         if args.krbtoken:
-            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=args.krbtoken)
+            if args.krbtoken.lower() == 'stdin':
+                krbtoken = sys.stdin.read().strip()
+            else:
+                krbtoken = args.krbtoken
+            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=krbtoken)
         elif args.estscookie:
             result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie)
         else:
