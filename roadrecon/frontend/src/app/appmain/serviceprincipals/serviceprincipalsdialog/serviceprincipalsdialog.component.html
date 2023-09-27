@@ -9,6 +9,7 @@
         <tr><th>AppId</th><td>{{ sp.appId }}</td></tr>
         <tr><th>Publisher</th><td>{{ sp.publisherName }}</td></tr>
         <tr><th>Status</th><td>{{ sp.accountEnabled? 'Enabled':'Disabled' }}</td></tr>
+        <tr><th>Assignment required</th><td>{{ sp.appRoleAssignmentRequired? 'Yes':'No' }}</td></tr>
         <tr><th>Reply Urls</th><td>
           <mat-list>
             <mat-list-item *ngFor="let url of sp.replyUrls"> {{ url }} </mat-list-item>

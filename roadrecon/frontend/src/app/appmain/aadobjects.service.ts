@@ -146,6 +146,7 @@ export interface ServicePrincipalsItem {
   displayName: string;
   appDisplayName: string;
   appOwnerTenantId: string;
+  appRoleAssignmentRequired: boolean;
   publisherName: string;
   appId: string;
   appMetadata: appMetadata;

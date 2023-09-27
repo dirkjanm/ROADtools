@@ -8,6 +8,7 @@
         <tr><th>ObjectId</th><td>{{ application.objectId }}</td></tr>
         <tr><th>Application ID</th><td>{{ application.appId }}</td></tr>
         <tr><th>Publisher</th><td>{{ application.publisherName }}</td></tr>
+        <tr><th>Homepage</th><td>{{ application.homepage }}</td></tr>
         <tr><th>Service Principal</th><td><a [routerLink]="['/serviceprincipals-by-appid/', application.appId]">{{ application.displayName }}</a></td></tr>
         <tr><th>Reply Urls</th><td>
           <mat-list>
