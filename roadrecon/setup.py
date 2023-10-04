@@ -20,7 +20,7 @@ setup(name='roadrecon',
       package_data={'roadtools.roadrecon.plugins': ['*.yaml']},
       install_requires=[
           'roadlib>=0.17',
-          'flask',
+          'flask<3',
           'sqlalchemy<2',
           'marshmallow',
           'flask-sqlalchemy>=2.5',
