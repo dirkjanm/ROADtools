@@ -337,6 +337,10 @@ def main():
     kdbauth_parser.add_argument('--federated',
                                 action='store_true',
                                 help='Fill in password on Federation server login page (assumes AD FS)')
+    kdbauth_parser.add_argument('--device-code',
+                                action='store',
+                                help='Authenticate with the given device code')
+
 
 
     # Interactive auth using Selenium - inject PRT
@@ -705,7 +709,7 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service)
-        result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated)
+        result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')

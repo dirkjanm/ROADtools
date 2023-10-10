@@ -97,12 +97,19 @@ class SeleniumAuthentication():
             otpseed = None
         return userpassword, otpseed
 
-    def selenium_login(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, federated=False):
+    def selenium_login(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, federated=False, devicecode=None):
         '''
         Selenium based login with optional autofill of whatever is provided
         '''
         driver = self.driver
+        # Change if using device code auth
+        if devicecode:
+            url = 'https://login.microsoftonline.com/common/oauth2/deviceauth'
         driver.get(url)
+        # Enter code first if device code flow
+        if devicecode:
+            el = WebDriverWait(driver, 3000).until(lambda d: d.find_element(By.ID, "otc"))
+            el.send_keys(devicecode + Keys.ENTER)
         if identity and not 'login_hint' in url:
             el = WebDriverWait(driver, 3000).until(lambda d: d.find_element(By.ID, "i0116"))
             el.send_keys(identity + Keys.ENTER)
@@ -157,20 +164,29 @@ class SeleniumAuthentication():
                 # No MFA?
                 pass
 
-        try:
-            WebDriverWait(driver, 120).until(lambda d: '?code=' in d.current_url)
-            res = urlparse(driver.current_url)
-            params = parse_qs(res.query)
-            code = params['code'][0]
-            if not keep:
-                driver.close()
-            if capture:
-                return code
-            return self.auth.authenticate_with_code_native(code, self.redirurl)
-        except TimeoutException:
-            if not keep:
-                driver.close()
-                raise AuthenticationException('Authentication did not complete within time limit')
+        if devicecode:
+            try:
+                els = WebDriverWait(driver, 10).until(lambda d: d.find_element(By.ID, "idSIButton9"))
+                els.click()
+            except TimeoutException:
+                if not keep:
+                    driver.close()
+                    raise AuthenticationException('Could not complete device code auth within the time limit (button not found: idSIButton9)')
+        else:
+            try:
+                WebDriverWait(driver, 120).until(lambda d: '?code=' in d.current_url)
+                res = urlparse(driver.current_url)
+                params = parse_qs(res.query)
+                code = params['code'][0]
+                if not keep:
+                    driver.close()
+                if capture:
+                    return code
+                return self.auth.authenticate_with_code_native(code, self.redirurl)
+            except TimeoutException:
+                if not keep:
+                    driver.close()
+                    raise AuthenticationException('Authentication did not complete within time limit')
         return False
 
     def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None, capture=False):
