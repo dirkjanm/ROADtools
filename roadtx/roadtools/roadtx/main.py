@@ -227,7 +227,9 @@ def main():
 
     # Describe token
     describe_parser = subparsers.add_parser('describe', help='Decode and describe an access token')
-    describe_parser.add_argument('-t', '--token', default="stdin", action='store', metavar='TOKEN', help='Token data to describe. Defaults to reading from stdin')
+    describe_parser.add_argument('-t', '--token', default=None, action='store', metavar='TOKEN', help='Token data to describe. Defaults to reading from stdin')
+    describe_parser.add_argument('-f', '--tokenfile', action='store', help='File to read the token from (default: .roadtools_auth)', default='.roadtools_auth')
+    describe_parser.add_argument('-v', '--verbose', action='store_true', help='Show extra information')
 
 
     # Get OTP
@@ -840,10 +842,24 @@ def main():
         now = str(otp.now())
         print(f'OTP value: {now}')
     elif args.command == 'describe':
-        if args.token == 'stdin':
-            tokendata = sys.stdin.read()
-        else:
+        tokendata = None
+        # Explicitly set token option
+        if args.token is not None:
+            if args.verbose:
+                print("[debug] Reading token value from --token option.")
             tokendata = args.token
+        # Reading from stdin if input is not a TTY
+        elif not sys.stdin.isatty():
+            if args.verbose:
+                print("[debug] Reading token value from stdin.")
+            tokendata = sys.stdin.read()
+        # Describing saved token file args.tokenfile
+        elif os.path.exists(args.tokenfile):
+            if args.verbose:
+                print("[debug] Reading token value from file '%s'." % (args.tokenfile))
+            f = open(args.tokenfile, "r")
+            tokendata = f.read()
+            f.close()
         if tokendata[0] == '{':
             # assume json object
             tokenobject = json.loads(tokendata)
