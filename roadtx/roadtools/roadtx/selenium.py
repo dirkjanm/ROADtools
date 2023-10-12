@@ -12,7 +12,7 @@ from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 import pyotp
 
 class SeleniumAuthentication():
@@ -75,6 +75,16 @@ class SeleniumAuthentication():
         else:
             driver = webdriver.Firefox(service=service)
         return driver
+
+    @staticmethod
+    def wait_till_text(driver, text):
+        try:
+            el = driver.find_element(By.ID, "message")
+            if el:
+                return text in str(el.text)
+        except StaleElementReferenceException:
+            return False
+        return False
 
     def get_keepass_cred(self, identity, filepath, password):
         '''
@@ -168,6 +178,15 @@ class SeleniumAuthentication():
             try:
                 els = WebDriverWait(driver, 10).until(lambda d: d.find_element(By.ID, "idSIButton9"))
                 els.click()
+                try:
+                    els = WebDriverWait(driver, 10).until(lambda d: self.wait_till_text(d, 'You have signed in'))
+                except TimeoutException:
+                    if not keep:
+                        driver.close()
+                        raise AuthenticationException('Could not verify whether device auth succeeded (success text not found)')
+                if not keep:
+                    driver.close()
+                return True
             except TimeoutException:
                 if not keep:
                     driver.close()
