@@ -569,7 +569,17 @@ def main():
                     samltoken = args.saml_token
                 prtdata = deviceauth.get_prt_with_samltoken(samltoken)
             if args.refresh_token:
-                prtdata = deviceauth.get_prt_with_refresh_token(args.refresh_token)
+                if args.refresh_token.lower() == 'file':
+                    with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                        tokenobject = json.load(infile)
+                    try:
+                        refresh_token = tokenobject['refreshToken']
+                    except KeyError:
+                        print('No refresh token found in token file!')
+                        return
+                else:
+                    refresh_token = args.refresh_token
+                prtdata = deviceauth.get_prt_with_refresh_token(refresh_token)
 
             if args.username and deviceauth.loadhellokey(args.hello_key):
                 prtdata = deviceauth.get_prt_with_hello_key(args.username)
