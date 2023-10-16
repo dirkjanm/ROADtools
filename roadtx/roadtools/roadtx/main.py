@@ -511,6 +511,9 @@ def main():
         if not args.secure:
             auth.verify = deviceauth.verify = False
 
+    if args.pfx_pass:
+        args.pfx_pass = args.pfx_pass.encode()
+
     if args.command in ('auth', 'gettokens', 'gettoken'):
         auth.parse_args(args)
         if not args.tokens_stdout:
