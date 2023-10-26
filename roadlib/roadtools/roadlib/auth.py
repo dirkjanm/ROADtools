@@ -902,7 +902,7 @@ class Authentication():
                                  help='Access token (JWT)')
         auth_parser.add_argument('--refresh-token',
                                  action='store',
-                                 help='Refresh token')
+                                 help='Refresh token (or the word "file" to read it from .roadtools_auth)')
         auth_parser.add_argument('--saml-token',
                                  action='store',
                                  help='SAML token from Federation Server')
@@ -933,7 +933,7 @@ class Authentication():
         auth_parser.add_argument('-f',
                                  '--tokenfile',
                                  action='store',
-                                 help='File to store the credentials (default: .roadtools_auth)',
+                                 help='File to save the tokens to (default: .roadtools_auth)',
                                  default='.roadtools_auth')
         auth_parser.add_argument('--tokens-stdout',
                                  action='store_true',
