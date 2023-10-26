@@ -312,14 +312,13 @@ class AccessPoliciesPlugin():
             for icrit in lcond['Exclude']:
                 ot += self._parse_locationcrit(icrit)
         return ot
-    
+
     def _parse_signinrisks(self, cond):
         try:
             srcond = cond['SignInRisks']
         except KeyError:
             return ''
-        
-        print(srcond)
+
         ot = '<strong>Including</strong>: '
         for icrit in srcond['Include']:
             ot += ', '.join([escape(crit) for crit in icrit['SignInRisks']])
@@ -328,7 +327,7 @@ class AccessPoliciesPlugin():
             ot += '\n<br /><strong>Excluding</strong>: '
             for icrit in srcond['Exclude']:
                 ot += ', '.join([escape(crit) for crit in icrit['SignInRisks']])
-        
+
         return ot
 
     def _parse_locationcrit(self, crit):
@@ -413,8 +412,8 @@ class AccessPoliciesPlugin():
                 continue
             parsed = json.loads(pol.policyDetail[0])
             if not parsed.get('Conditions') or not parsed.get('Conditions').get('Locations'):
-                continue    
-            
+                continue
+
             cloc = parsed.get('Conditions').get('Locations')
             incl = cloc.get('Include') or []
             excl = cloc.get('Exclude') or []
@@ -537,18 +536,46 @@ class AccessPoliciesPlugin():
                 print('####################')
                 print(policy.displayName)
                 print(policy.objectId)
-            detail = json.loads(policy.policyDetail[0])
-            if should_print:
-                pp.pprint(detail)
+            detail = None
+            oldpolicy = False
 
-            loc['trusted'] = (detail.get("Categories") and "trusted" in detail.get("Categories")) or False
-            loc['appliestounknowncountry'] = escape(str(detail.get("ApplyToUnknownCountry"))) if detail.get("ApplyToUnknownCountry") is not None else False
-            loc['ipranges'] = "\n<br />".join(self._parse_compressed_cidr(detail))
-            loc['categories'] = escape(", ".join(detail.get("Categories"))) if detail.get("Categories") is not None else ""
-            loc['associated_policies'] = "\n<br />".join(self._parse_associated_polcies(policy.policyIdentifier,loc['trusted'],condition_policy_list))
-            loc['country_codes'] =  escape(", ".join(detail.get("CountryIsoCodes"))) if detail.get("CountryIsoCodes") else None
-            if should_print:
-                print(self._parse_compressed_cidr(detail))
+            for pdetail in policy.policyDetail:
+                detaildata = json.loads(pdetail)
+                if 'KnownNetworkPolicies' in detaildata:
+                    detail = detaildata['KnownNetworkPolicies']
+                    oldpolicy = True
+
+            if not oldpolicy:
+                # New format
+                detail = json.loads(policy.policyDetail[0])
+
+                if should_print:
+                    pp.pprint(detail)
+                if not detail:
+                    continue
+
+                loc['trusted'] = ("trusted" in detail.get("Categories","") if detail.get("Categories") else False)
+                loc['appliestounknowncountry'] = escape(str(detail.get("ApplyToUnknownCountry"))) if detail.get("ApplyToUnknownCountry") is not None else False
+                loc['ipranges'] = "\n<br />".join(self._parse_compressed_cidr(detail))
+                loc['categories'] = escape(", ".join(detail.get("Categories"))) if detail.get("Categories") is not None else ""
+                loc['associated_policies'] = "\n<br />".join(self._parse_associated_polcies(policy.policyIdentifier,loc['trusted'],condition_policy_list))
+                loc['country_codes'] =  escape(", ".join(detail.get("CountryIsoCodes"))) if detail.get("CountryIsoCodes") else None
+                if should_print:
+                    print(self._parse_compressed_cidr(detail))
+            else:
+                # Old format
+                if should_print:
+                    pp.pprint(detail)
+                if not detail:
+                    continue
+
+                loc['name'] = escape(detail.get("NetworkName"))
+                loc['trusted'] = ("trusted" in detail.get("Categories","") if detail.get("Categories") else False)
+                loc['appliestounknowncountry'] = escape(str(detail.get("ApplyToUnknownCountry"))) if detail.get("ApplyToUnknownCountry") is not None else False
+                loc['ipranges'] = "\n<br />".join(detail.get('CidrIpRanges'))
+                loc['categories'] = escape(", ".join(detail.get("Categories"))) if detail.get("Categories") is not None else ""
+                loc['associated_policies'] = "\n<br />".join(self._parse_associated_polcies(detail.get('NetworkId'),loc['trusted'],condition_policy_list))
+                loc['country_codes'] =  escape(", ".join(detail.get("CountryIsoCodes"))) if detail.get("CountryIsoCodes") else None
 
 
             oloc.append(loc)
