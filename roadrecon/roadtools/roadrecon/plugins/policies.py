@@ -30,6 +30,8 @@ import os
 import codecs
 import argparse
 import pprint
+import base64
+import zlib
 from html import escape
 from roadtools.roadlib.metadef.database import ServicePrincipal, User, Policy, Application, Group, DirectoryRole
 import roadtools.roadlib.metadef.database as database
@@ -384,6 +386,33 @@ class AccessPoliciesPlugin():
                 ot += self._parse_appcrit(icrit)
         return ot
 
+
+    def _parse_associated_polcies(self,location_object,is_trusted_location,condition_policy_list):
+        found_pols = []
+
+        for pol in condition_policy_list:
+            if not pol.policyDetail:
+                continue
+            parsed = json.loads(pol.policyDetail[0])
+            if not parsed.get('Conditions') or not parsed.get('Conditions').get('Locations'):
+                continue    
+            
+            cloc = parsed.get('Conditions').get('Locations')
+            incl = cloc.get('Include') or []
+            excl = cloc.get('Exclude') or []
+            for i in incl:
+                if location_object in i.get('Locations') or (is_trusted_location and "AllTrusted" in i.get('Locations')):
+                    found_pols.append(escape(pol.displayName))
+
+            for i in excl:
+                if location_object in i.get('Locations') or (is_trusted_location and "AllTrusted" in i.get('Locations')):
+                    found_pols.append(escape(pol.displayName))
+
+
+
+        return found_pols
+
+
     def _parse_controls(self, controls):
         acontrols = []
         for c in controls:
@@ -423,10 +452,23 @@ class AccessPoliciesPlugin():
         ucond = cond['SessionControls']
         return ', '.join(ucond)
 
+
+    def _parse_compressed_cidr(self,detail):
+        if not 'CompressedCidrIpRanges' in detail:
+            return ''
+        compressed = detail['CompressedCidrIpRanges']
+        b = base64.b64decode(compressed)
+        cstr = zlib.decompress(b, -zlib.MAX_WBITS)
+        decoded_cidrs = escape(cstr.decode()).split(",")
+        return decoded_cidrs
+
+
     def main(self, should_print=False):
         pp = pprint.PrettyPrinter(indent=4)
         ol = []
-        html = '<table>'
+        oloc = []
+        html = '<h1>Policies</h1><table>'
+        condition_policy_list = self.session.query(Policy).filter(Policy.policyType == 18)
         for policy in self.session.query(Policy).filter(Policy.policyType == 18).order_by(Policy.displayName):
             out = {}
             out['name'] = escape(policy.displayName)
@@ -465,6 +507,36 @@ class AccessPoliciesPlugin():
             ol.append(out)
             if should_print:
                 print('####################')
+
+
+
+        for policy in self.session.query(Policy).filter(Policy.policyType == 6).order_by(Policy.displayName):
+            loc = {}
+            loc['name'] = escape(policy.displayName)
+            if should_print:
+                print()
+                print('####################')
+                print(policy.displayName)
+                print(policy.objectId)
+            detail = json.loads(policy.policyDetail[0])
+            if should_print:
+                pp.pprint(detail)
+
+            loc['trusted'] = (detail.get("Categories") and "trusted" in detail.get("Categories")) or False
+            loc['appliestounknowncountry'] = escape(str(detail.get("ApplyToUnknownCountry"))) if detail.get("ApplyToUnknownCountry") is not None else False
+            loc['ipranges'] = "\n<br />".join(self._parse_compressed_cidr(detail))
+            loc['categories'] = escape(", ".join(detail.get("Categories"))) if detail.get("Categories") is not None else ""
+            loc['associated_policies'] = "\n<br />".join(self._parse_associated_polcies(policy.policyIdentifier,loc['trusted'],condition_policy_list))
+            loc['country_codes'] =  escape(", ".join(detail.get("CountryIsoCodes"))) if detail.get("CountryIsoCodes") else None
+            if should_print:
+                print(self._parse_compressed_cidr(detail))
+
+
+            oloc.append(loc)
+
+
+
+
         for out in ol:
             table = '<thead><tr><td colspan="2">{0}</td></tr></thead><tbody>'.format(out['name'])
             table += '<tr><td>Applies to</td><td>{0}</td></tr>'.format(out['who'])
@@ -483,6 +555,28 @@ class AccessPoliciesPlugin():
                 table += '<tr><td>Session controls</td><td>{0}</td></tr>'.format(out['sessioncontrols'])
             table += '</tbody>'
             html += table
+        html += '</table>'
+        if len(oloc) > 0:
+            html += "<h1>Named Locations</h1><table>"
+            for loc in oloc:
+                table = '<thead><tr><td colspan="2">{0}</td></tr></thead><tbody>'.format(loc['name'])
+                table += '<tr><td>Trusted</td><td>{0}</td></tr>'.format(str(loc['trusted']))
+                table += '<tr><td>Apply to unknown country</td><td>{0}</td></tr>'.format(loc['appliestounknowncountry'])
+                table += '<tr><td>IP ranges</td><td>{0}</td></tr>'.format(loc['ipranges'])
+                if(loc['categories']):
+                    table += '<tr><td>Categories</td><td>{0}</td></tr>'.format(loc['categories'])
+
+                if(loc['associated_policies']):
+                    table += '<tr><td>Associated Policies</td><td>{0}</td></tr>'.format(loc['associated_policies'])
+
+                if(loc['country_codes']):
+                    table += '<tr><td>Country ISO Codes</td><td>{0}</td></tr>'.format(loc['country_codes'])
+
+                table += "</tbody>"
+
+                html += table 
+
+            html += "</table>"
         self.write_html(self.file, html)
         print('Results written to {0}'.format(self.file))
 
