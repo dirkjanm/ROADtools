@@ -577,3 +577,7 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+else:
+    # For pytest cases
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.getcwd(), 'roadrecon.db')
+    db = SQLAlchemy(app)

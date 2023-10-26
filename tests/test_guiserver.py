@@ -1,4 +1,7 @@
-from roadtools.roadrecon.server import create_app_test
+from roadtools.roadrecon.server import create_app_test, db
+from sqlalchemy import func
+from roadtools.roadlib.metadef.database import Policy
+
 import pytest
 
 @pytest.fixture
@@ -55,3 +58,9 @@ def test_sp_links_work(client):
         for owner in ddata_json['appRolesAssigned']:
             assert 'principalId' in owner
     assert outlinks > 0
+
+def test_has_policies(app):
+    global db
+    with app.app_context():
+        numpolicies = db.session.query(func.count(Policy.objectId)).where(Policy.policyType == 18).scalar()
+    assert numpolicies > 5
