@@ -312,6 +312,24 @@ class AccessPoliciesPlugin():
             for icrit in lcond['Exclude']:
                 ot += self._parse_locationcrit(icrit)
         return ot
+    
+    def _parse_signinrisks(self, cond):
+        try:
+            srcond = cond['SignInRisks']
+        except KeyError:
+            return ''
+        
+        print(srcond)
+        ot = '<strong>Including</strong>: '
+        for icrit in srcond['Include']:
+            ot += ', '.join([escape(crit) for crit in icrit['SignInRisks']])
+
+        if 'Exclude' in srcond:
+            ot += '\n<br /><strong>Excluding</strong>: '
+            for icrit in srcond['Exclude']:
+                ot += ', '.join([escape(crit) for crit in icrit['SignInRisks']])
+        
+        return ot
 
     def _parse_locationcrit(self, crit):
         ot = ''
@@ -497,6 +515,7 @@ class AccessPoliciesPlugin():
             out['platforms'] = self._parse_platform(conditions)
             out['locations'] = self._parse_locations(conditions)
             out['clients'] = self._parse_clients(conditions)
+            out['signinrisks'] = self._parse_signinrisks(conditions)
             out['sessioncontrols'] = self._parse_sessioncontrols(detail)
             out['devices'] = self._parse_devices(conditions)
 
@@ -549,6 +568,8 @@ class AccessPoliciesPlugin():
                 table += '<tr><td>Using clients</td><td>{0}</td></tr>'.format(out['clients'])
             if out['locations'] != '':
                 table += '<tr><td>At locations</td><td>{0}</td></tr>'.format(out['locations'])
+            if out['signinrisks'] != '':
+                table += '<tr><td>Sign-in risks</td><td>{0}</td></tr>'.format(out['signinrisks'])
             if out['controls'] != '':
                 table += '<tr><td>Controls</td><td>{0}</td></tr>'.format(out['controls'])
             if out['sessioncontrols'] != '':
