@@ -31,13 +31,23 @@
   <mat-card-content>
       <table class="userTable">
         <tr><th>Self-service password reset enabled</th><td>{{ authorizationPolicy.allowedToUseSSPR? 'Yes':'No' }}</td></tr>
-        <tr><th>MSOnline powershell blocked</th><td>{{ authorizationPolicy.blockMsolPowerShell? 'Yes':'No' }}</td></tr>
+        <tr><th>MSOnline PowerShell blocked</th><td>{{ authorizationPolicy.blockMsolPowerShell? 'Yes':'No' }}</td></tr>
         <tr><th>Default user role permissions</th>
           <td>
               <span *ngFor="let setting of authorizationPolicy.defaultUserRolePermissions | keyvalue">{{ setting.key }}: {{ setting.value? 'Yes':'No' }} <br /></span>
           </td>
         </tr>
-        <tr *ngIf="authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole.length > 0"><th>Default user role permissions</th><td>{{ authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole[0] }}</td></tr>
+        <tr><th>Application consent settings</th><td>
+          <div *ngIf="authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole.length > 0; then thenBlock else elseBlock"></div>
+          <ng-template #thenBlock>
+            <div [ngSwitch]="authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole[0]">
+              <span *ngSwitchCase="'ManagePermissionGrantsForSelf.microsoft-user-default-legacy'">Users can consent to apps (insecure old default)</span>
+              <span *ngSwitchCase="'ManagePermissionGrantsForSelf.microsoft-user-default-low'">Users can consent to limited permissions only (default)</span>
+              <span *ngSwitchDefault>Unknown: {{ authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole[0] }}</span>
+            </div>
+          </ng-template>
+          <ng-template #elseBlock>User consent is disabled</ng-template>
+        </td></tr>
         <tr><th>Guest access settings</th><td [ngSwitch]="authorizationPolicy.guestUserRoleId">
           <span *ngSwitchCase="'a0b1b346-4d3e-4e8b-98f8-753987be4970'">Same as member users</span>
           <span *ngSwitchCase="'10dae51f-b6af-4016-8d66-8c2a99b929b3'">Limited access (default)</span>
