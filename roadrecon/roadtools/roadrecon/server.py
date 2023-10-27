@@ -288,7 +288,8 @@ def get_mfa():
     # for approle in per_user:
     #     enabledusers.append(approle.principalId)
 
-    all_mfa = db.session.query(User).all()
+    # Filter out mailbox users by default
+    all_mfa = db.session.query(User).filter(User.cloudMSExchRecipientDisplayType != 0, User.cloudMSExchRecipientDisplayType != 7, User.cloudMSExchRecipientDisplayType != 18).all()
     out = []
     for user in all_mfa:
         mfa_methods = len(user.strongAuthenticationDetail['methods'])
@@ -302,6 +303,7 @@ def get_mfa():
         out.append({
             'objectId': user.objectId,
             'displayName': user.displayName,
+            'userPrincipalName': user.userPrincipalName,
             'mfamethods': mfa_methods,
             'accountEnabled': user.accountEnabled,
             'perusermfa': perusermfa,

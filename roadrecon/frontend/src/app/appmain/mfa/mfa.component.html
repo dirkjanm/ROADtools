@@ -1,6 +1,6 @@
 <div>
    <div class="mat-elevation-z4 pagedescription">
-    This page shows MFA information for all users. The accuracy of this data depends on whether collection was done with a privileged account (Security/Global Reader/Admin) and whether the --mfa flag was specified during data gathering. MFA can be enforced per user or based on conditions via Conditional Access. Per-user MFA can be collected as any user, but uses artifacts that are created when this is assigned, so this may not be fully accurate. Whether a FIDO key is added to an account can also be collected using any user account.
+    This page shows MFA information for all users. The accuracy of this data depends on whether collection was done with a privileged account (Security/Global Reader/Admin) and whether the --mfa flag was specified during data gathering. MFA can be enforced per user or based on conditions via Conditional Access. Per-user MFA can be inferred from the Application Roles page when data collection was done with a limited user, it will only show up as enabled/enforced in this view when collecting data as admin. Whether a FIDO key is added to an account can also be collected using any user account.
   </div>
   <mat-form-field>
     <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
