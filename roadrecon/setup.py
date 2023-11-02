@@ -21,7 +21,7 @@ setup(name='roadrecon',
       install_requires=[
           'roadlib>=0.17',
           'flask<3',
-          'sqlalchemy<2',
+          'sqlalchemy',
           'marshmallow',
           'flask-sqlalchemy>=2.5',
           'flask-marshmallow',

@@ -161,7 +161,7 @@ async def dumpsingle(url, method):
         print(exc)
         return
 
-def commit(engine, dbtype, cache, ignore=False):
+def enginecommit(engine, dbtype, cache, ignore=False):
     global dburl
     if 'postgresql' in dburl and ignore:
         insertst = pginsert(dbtype.__table__)
@@ -169,10 +169,27 @@ def commit(engine, dbtype, cache, ignore=False):
             index_elements=['objectId']
         )
     elif 'sqlite' in dburl and ignore:
-        statement = dbtype.__table__.insert(prefixes=['OR IGNORE'])
+        statement = dbtype.__table__.insert().prefix_with('OR IGNORE')
     else:
         statement = dbtype.__table__.insert()
-    engine.execute(
+    with engine.begin() as conn:
+        conn.execute(
+            statement,
+            cache
+        )
+
+def commit(session, dbtype, cache, ignore=False):
+    global dburl
+    if 'postgresql' in dburl and ignore:
+        insertst = pginsert(dbtype.__table__)
+        statement = insertst.on_conflict_do_nothing(
+            index_elements=['objectId']
+        )
+    elif 'sqlite' in dburl and ignore:
+        statement = dbtype.__table__.insert().prefix_with('OR IGNORE')
+    else:
+        statement = dbtype.__table__.insert()
+    session.execute(
         statement,
         cache
     )
@@ -186,18 +203,19 @@ def commitlink(engine, cachedict, ignore=False):
                 index_elements=['objectId']
             )
         elif 'sqlite' in dburl and ignore:
-            statement = linktable.insert(prefixes=['OR IGNORE'])
+            statement = linktable.insert().prefix_with('OR IGNORE')
         else:
             statement = linktable.insert()
         # print(cache)
-        engine.execute(
-            statement,
-            cache
-        )
+        with engine.begin() as conn:
+            conn.execute(
+                statement,
+                cache
+            )
 
-def commitmfa(engine, dbtype, cache):
+def commitmfa(session, dbtype, cache):
     statement = dbtype.__table__.update().where(dbtype.objectId == bindparam('userid'))
-    engine.execute(
+    session.execute(
         statement,
         cache
     )
@@ -225,10 +243,10 @@ class DataDumper(object):
         async for obj in dumphelper(url, method=method):
             cache.append(obj)
             if len(cache) > 1000:
-                commit(self.engine, dbtype, cache)
+                enginecommit(self.engine, dbtype, cache)
                 del cache[:]
         if len(cache) > 0:
-            commit(self.engine, dbtype, cache)
+            enginecommit(self.engine, dbtype, cache)
 
     async def dump_l_to_db(self, url, method, mapping, linkname, childtbl, parent):
         global groupcounter, totalgroups, devicecounter, totaldevices
@@ -242,7 +260,7 @@ class DataDumper(object):
                 except KeyError:
                     print('Unsupported member type: %s for parent %s' % (objclass, parent.__table__))
                     continue
-            child = self.session.query(childtbl).get(objectid)
+            child = self.session.get(childtbl, objectid)
             if not child:
                 try:
                     parentname = parent.displayName
@@ -394,7 +412,7 @@ class DataDumper(object):
         i = 0
         async for obj in dumphelper(url, method=method):
             if len(obj[expandprop]) > 0:
-                parent = self.session.query(dbtype).get(obj['objectId'])
+                parent = self.session.get(dbtype, obj['objectId'])
                 if not parent:
                     print('Non-existing parent found during expansion %s %s: %s' % (dbtype.__table__, expandprop, obj['objectId']))
                     continue
@@ -406,7 +424,7 @@ class DataDumper(object):
                         except KeyError:
                             print('Unsupported member type: %s' % objclass)
                             continue
-                    child = self.session.query(childtbl).get(epdata['objectId'])
+                    child = self.session.get(childtbl, epdata['objectId'])
                     if not child:
                         print('Non-existing child during expansion %s %s: %s' % (dbtype.__table__, expandprop, epdata['objectId']))
                         continue

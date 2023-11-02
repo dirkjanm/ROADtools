@@ -202,7 +202,7 @@ def get_users():
 
 @app.route("/api/users/<id>", methods=["GET"])
 def user_detail(id):
-    user = db.session.query(User).get(id)
+    user = db.session.get(User,id)
     if not user:
         abort(404)
     return user_schema.jsonify(user)
@@ -216,14 +216,14 @@ def get_devices():
 
 @app.route("/api/devices/<id>", methods=["GET"])
 def device_detail(id):
-    device = db.session.query(Device).get(id)
+    device = db.session.get(Device, id)
     if not device:
         abort(404)
     return device_schema.jsonify(device)
 
 @app.route("/api/users/<id>/groups", methods=["GET"])
 def user_groups(id):
-    user = db.session.query(User).get(id)
+    user = db.session.get(User, id)
     if not user:
         abort(404)
     result = groups_schema.dump(user.memberOf)
@@ -237,7 +237,7 @@ def get_groups():
 
 @app.route("/api/groups/<id>", methods=["GET"])
 def group_detail(id):
-    group = db.session.query(Group).get(id)
+    group = db.session.get(Group, id)
     if not group:
         abort(404)
     return group_schema.jsonify(group)
@@ -250,7 +250,7 @@ def get_administrativeunits():
 
 @app.route("/api/administrativeunits/<id>", methods=["GET"])
 def administrativeunit_detail(id):
-    administrativeunit = db.session.query(AdministrativeUnit).get(id)
+    administrativeunit = db.session.get(AdministrativeUnit, id)
     if not administrativeunit:
         abort(404)
     return administrativeunit_schema.jsonify(administrativeunit)
@@ -262,7 +262,7 @@ def get_sps():
 
 @app.route("/api/serviceprincipals/<id>", methods=["GET"])
 def sp_detail(id):
-    sp = db.session.query(ServicePrincipal).get(id)
+    sp = db.session.get(ServicePrincipal, id)
     if not sp:
         abort(404)
     return serviceprincipal_schema.jsonify(sp)
@@ -316,25 +316,25 @@ def get_mfa():
 
 @app.route("/api/applications/<id>", methods=["GET"])
 def application_detail(id):
-    application = db.session.query(Application).get(id)
+    application = db.session.get(Application, id)
     if not application:
         abort(404)
     return application_schema.jsonify(application)
 
 def resolve_objectid(oid):
-    res = db.session.query(User).get(oid)
+    res = db.session.get(User, oid)
     if res:
         return 'User', users_schema.dump([res])[0]
-    res = db.session.query(ServicePrincipal).get(oid)
+    res = db.session.get(ServicePrincipal, oid)
     if res:
         return 'ServicePrincipal', serviceprincipals_schema.dump([res])[0]
-    res = db.session.query(Group).get(oid)
+    res = db.session.get(Group, oid)
     if res:
         return 'Group', groups_schema.dump([res])[0]
-    res = db.session.query(Device).get(oid)
+    res = db.session.get(Device, oid)
     if res:
         return 'Device', devices_schema.dump([res])[0]
-    res = db.session.query(Application).get(oid)
+    res = db.session.get(Application, oid)
     if res:
         return 'Application', applications_schema.dump([res])[0]
     return 'Unknown', None
@@ -351,21 +351,21 @@ def translate_rolescopes(scopes):
             sid = parts[2]
             if stype == 'administrativeUnits':
                 stype = 'AdministrativeUnit'
-                res = db.session.query(AdministrativeUnit).get(sid)
+                res = db.session.get(AdministrativeUnit, sid)
                 if res:
                     sname = f'AU: {res.displayName}'
                 else:
                     sname = 'Unknown administrative unit'
             elif stype == 'applications':
                 stype = 'Application'
-                res = db.session.query(Application).get(sid)
+                res = db.session.get(Application, sid)
                 if res:
                     sname = f'Application: {res.displayName}'
                 else:
                     sname = 'Unknown application'
             elif stype == 'servicePrincipals':
                 stype = 'ServicePrincipal'
-                res = db.session.query(ServicePrincipal).get(sid)
+                res = db.session.get(ServicePrincipal, sid)
                 if res:
                     sname = f'ServicePrincipal: {res.displayName}'
                 else:
@@ -374,12 +374,12 @@ def translate_rolescopes(scopes):
                 sname = f'Unsupported scope type: {scope}'
         elif len(parts) > 1 and len(parts[1]) > 0:
             sid = parts[1]
-            res = db.session.query(ServicePrincipal).get(sid)
+            res = db.session.get(ServicePrincipal, sid)
             if res:
                 stype = 'ServicePrincipal'
                 sname = f'ServicePrincipal: {res.displayName}'
             else:
-                res = db.session.query(Application).get(sid)
+                res = db.session.get(Application, sid)
                 if res:
                     stype = 'Application'
                     sname = f'Application: {res.displayName}'
@@ -398,13 +398,13 @@ def translate_rolescopes(scopes):
 
 
 def process_approle(approles, ar):
-    rsp = db.session.query(ServicePrincipal).get(ar.resourceId)
+    rsp = db.session.get(ServicePrincipal, ar.resourceId)
     if ar.principalType == 'ServicePrincipal':
-        sp = db.session.query(ServicePrincipal).get(ar.principalId)
+        sp = db.session.get(ServicePrincipal, ar.principalId)
     if ar.principalType == 'User':
-        sp = db.session.query(User).get(ar.principalId)
+        sp = db.session.get(User, ar.principalId)
     if ar.principalType == 'Group':
-        sp = db.session.query(Group).get(ar.principalId)
+        sp = db.session.get(Group, ar.principalId)
     if ar.id == '00000000-0000-0000-0000-000000000000':
         approles.append({'objid':sp.objectId,
                          'ptype':ar.principalType,
@@ -452,17 +452,17 @@ def get_oauth2permissions():
     oauth2permissions = []
     for permgrant in db.session.query(OAuth2PermissionGrant).all():
         grant = {}
-        rsp = db.session.query(ServicePrincipal).get(permgrant.clientId)
+        rsp = db.session.get(ServicePrincipal, permgrant.clientId)
         if permgrant.consentType == 'Principal':
             grant['type'] = 'user'
-            user = db.session.query(User).get(permgrant.principalId)
+            user = db.session.get(User, permgrant.principalId)
             grant['userid'] = user.objectId
             grant['userdisplayname'] = user.displayName
         else:
             grant['type'] = 'all'
             grant['userid'] = None
             grant['userdisplayname'] = None
-        targetapp = db.session.query(ServicePrincipal).get(permgrant.resourceId)
+        targetapp = db.session.get(ServicePrincipal, permgrant.resourceId)
         grant['targetapplication'] = targetapp.displayName
         grant['targetspobjectid'] = targetapp.objectId
         grant['sourceapplication'] = rsp.displayName

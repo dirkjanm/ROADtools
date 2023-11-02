@@ -239,13 +239,13 @@ class ExportToFilePlugin():
         self._apply_style_sheet(sheet, column_width)
         approles = []
         for ar in self.session.query(AppRoleAssignment).all():
-            rsp = self.session.query(ServicePrincipal).get(ar.resourceId)
+            rsp = self.session.get(ServicePrincipal, ar.resourceId)
             if ar.principalType == 'ServicePrincipal':
-                sp = self.session.query(ServicePrincipal).get(ar.principalId)
+                sp = self.session.get(ServicePrincipal, ar.principalId)
             if ar.principalType == 'User':
-                sp = self.session.query(User).get(ar.principalId)
+                sp = self.session.get(User, ar.principalId)
             if ar.principalType == 'Group':
-                sp = self.session.query(Group).get(ar.principalId)
+                sp = self.session.get(Group, ar.principalId)
             if not sp:
                 self._print_msg('Could not resolve service principal for approle {0}'.format(str(ar)))
                 continue
@@ -287,10 +287,10 @@ class ExportToFilePlugin():
         self._apply_style_sheet(sheet, column_width)
         for permgrant in self.session.query(OAuth2PermissionGrant).all():
             grant = {}
-            rsp = self.session.query(ServicePrincipal).get(permgrant.clientId)
+            rsp = self.session.get(ServicePrincipal, permgrant.clientId)
             if permgrant.consentType == 'Principal':
                 grant['type'] = 'user'
-                user = self.session.query(User).get(permgrant.principalId)
+                user = self.session.get(User, permgrant.principalId)
                 grant['userid'] = user.objectId
                 grant['userdisplayname'] = user.displayName
             else:
@@ -298,7 +298,7 @@ class ExportToFilePlugin():
                 grant['userid'] = None
                 grant['userdisplayname'] = None
 
-            targetapp = self.session.query(ServicePrincipal).get(permgrant.resourceId)
+            targetapp = self.session.get(ServicePrincipal, permgrant.resourceId)
             grant['targetapplication'] = targetapp.displayName
             grant['targetspobjectid'] = targetapp.objectId
             grant['sourceapplication'] = rsp.displayName
