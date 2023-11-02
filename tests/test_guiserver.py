@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 import pytest
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def app():
     app = create_app_test()
     return app
