@@ -5,8 +5,7 @@ import json
 import datetime
 import sqlalchemy.types
 from sqlalchemy import Column, Text, Boolean, BigInteger as Integer, create_engine, Table, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker, foreign
+from sqlalchemy.orm import relationship, sessionmaker, foreign, declarative_base
 from sqlalchemy.types import TypeDecorator, TEXT
 Base = declarative_base()
 
