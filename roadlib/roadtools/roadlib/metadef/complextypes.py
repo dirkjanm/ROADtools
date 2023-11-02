@@ -231,6 +231,7 @@ class LicenseUnitsDetail(object):
         'enabled': Edm.Int32,
         'suspended': Edm.Int32,
         'warning': Edm.Int32,
+        'lockedOut': Edm.Int32,
     }
 
 
@@ -507,6 +508,7 @@ class TrustedCertificateSubject(object):
     props = {
         'authorityId': Edm.Guid,
         'subjectName': Edm.String,
+        'revokedCertificateIdentifiers': Collection,
     }
 
 

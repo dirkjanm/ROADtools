@@ -11,6 +11,7 @@ Base = declarative_base()
 
 class JSON(TypeDecorator):
     impl = TEXT
+    cache_ok = True
     def process_bind_param(self, value, dialect):
         if value is not None:
             value = json.dumps(value)
@@ -262,6 +263,7 @@ class User(Base, SerializeMixin):
     msExchMailboxGuid = Column(Text)
     netId = Column(Text)
     onPremisesDistinguishedName = Column(Text)
+    onPremisesObjectIdentifier = Column(Text)
     onPremisesPasswordChangeTimestamp = Column(DateTime)
     onPremisesSecurityIdentifier = Column(Text)
     onPremisesUserPrincipalName = Column(Text)
@@ -761,6 +763,7 @@ class Contact(Base, SerializeMixin):
     mail = Column(Text)
     mailNickname = Column(Text)
     mobile = Column(Text)
+    onPremisesObjectIdentifier = Column(Text)
     physicalDeliveryOfficeName = Column(Text)
     postalCode = Column(Text)
     provisioningErrors = Column(JSON)

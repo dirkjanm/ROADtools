@@ -248,6 +248,7 @@ class Contact(DirectoryObject):
         'mail': Edm.String,
         'mailNickname': Edm.String,
         'mobile': Edm.String,
+        'onPremisesObjectIdentifier': Edm.String,
         'physicalDeliveryOfficeName': Edm.String,
         'postalCode': Edm.String,
         'provisioningErrors': Collection,
@@ -771,17 +772,20 @@ class StubDirectoryObject(DirectoryObject):
 
 class SubscribedSku(object):
     props = {
+        'accountName': Edm.String,
+        'accountId': Edm.Guid,
+        'appliesTo': Edm.String,
         'capabilityStatus': Edm.String,
         'consumedUnits': Edm.Int32,
         'objectId': Edm.String,
-        'prepaidUnits': LicenseUnitsDetail,
         'overageUnits': LicenseUnitsDetail,
-        'trialUnits': LicenseUnitsDetail,
+        'prepaidUnits': LicenseUnitsDetail,
         'selfServiceSignupUnits': LicenseUnitsDetail,
         'servicePlans': Collection,
         'skuId': Edm.Guid,
         'skuPartNumber': Edm.String,
-        'appliesTo': Edm.String,
+        'subscriptionIds': Collection,
+        'trialUnits': LicenseUnitsDetail,
     }
     rels = [
 
@@ -925,6 +929,7 @@ class User(DirectoryObject):
         'msExchMailboxGuid': Edm.Guid,
         'netId': Edm.String,
         'onPremisesDistinguishedName': Edm.String,
+        'onPremisesObjectIdentifier': Edm.String,
         'onPremisesPasswordChangeTimestamp': Edm.DateTime,
         'onPremisesSecurityIdentifier': Edm.String,
         'onPremisesUserPrincipalName': Edm.String,
