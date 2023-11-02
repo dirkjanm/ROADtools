@@ -231,6 +231,11 @@ def main():
     describe_parser.add_argument('-f', '--tokenfile', action='store', help='File to read the token from (default: .roadtools_auth)', default='.roadtools_auth')
     describe_parser.add_argument('-v', '--verbose', action='store_true', help='Show extra information')
 
+    # Find scope
+    getscope_parser = subparsers.add_parser('getscope', aliases=['findscope'], help='Find first-party apps with the right pre-approved scope')
+    getscope_parser.add_argument('-s', '--scope', default=None, action='store', required=True, metavar='SCOPE', help='Desired scope (API URL + scope on that API, for example https://graph.microsoft.com/files.read)')
+    getscope_parser.add_argument('--foci', action='store_true', help='Only list FOCI clients')
+    getscope_parser.add_argument('--csv', action='store_true', help='Output in CSV format')
 
     # Get OTP
     otpparser = subparsers.add_parser('getotp', help='Get OTP code from seed, either supplied or from KeePass file')
@@ -890,6 +895,54 @@ def main():
         header, body, signature = auth.parse_jwt(tokendata)
         print(json.dumps(header, sort_keys=True, indent=4))
         print(json.dumps(body, sort_keys=True, indent=4))
+    elif args.command == 'getscope':
+        # Load scope data
+        current_dir = os.path.abspath(os.path.dirname(__file__))
+        datafile = os.path.join(current_dir, 'data', 'firstpartyscopes.json')
+        with codecs.open(datafile,'r','utf-8') as infile:
+            data = json.load(infile)
+        resource, scope = args.scope.lower().rsplit('/', 1)
+        try:
+            resourceid = data['resourceidentifiers'][resource.lower()]
+        except KeyError:
+            try:
+                resourceid = data['resourceidentifiers'][resource.lower() + '/']
+            except KeyError:
+                print(f'The API {resource} is not a known resource')
+                return
+        # Loop through scopes
+        results = []
+        for appid, app in data['apps'].items():
+            # Skip foci apps
+            if args.foci and not app['foci']:
+                continue
+            try:
+                scopes = app['scopes'][resourceid]
+                if len([s for s in scopes if s.lower() == scope]) == 0:
+                    continue
+            except KeyError:
+                # Not on this app
+                continue
+            results.append((appid, app))
+        appid = 'App (client) ID'
+        name = 'App name'
+        scopes = 'Scope on this resource'
+        if len(results) == 0:
+            print("No apps found!")
+            return
+        if args.csv:
+            print("App ID,App Name,FOCI,Scopes")
+            for appid, app in results:
+                scopes = ' '.join(app['scopes'][resourceid])
+                foci = 'Yes' if app['foci'] else 'No'
+                name = app['name'].replace('"',r'\"')
+                print(f'"{appid}","{name}","{foci}","{scopes}"')
+        else:
+            print(f"{appid:<40} {name:<40} Foci?   {scopes}")
+            for appid, app in results:
+                scopes = ' '.join(app['scopes'][resourceid])
+                foci = 'Yes' if app['foci'] else 'No'
+                print(f"{appid:<40} {app['name']:<40} {foci:<7} {scopes}")
     elif args.command == 'winhello':
         if args.access_token:
             tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
