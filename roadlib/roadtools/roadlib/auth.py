@@ -138,14 +138,14 @@ class Authentication():
         self.debug = False
         self.scope = None
 
-    def get_authority_url(self):
+    def get_authority_url(self, default_tenant='common'):
         """
         Returns the authority URL for the tenant specified, or the
         common one if no tenant was specified
         """
         if self.tenant is not None:
             return f'https://login.microsoftonline.com/{self.tenant}'
-        return 'https://login.microsoftonline.com/common'
+        return f'https://login.microsoftonline.com/{default_tenant}'
 
     def set_client_id(self, clid):
         """
@@ -158,6 +158,17 @@ class Authentication():
         Sets resource URI to use (accepts aliases)
         """
         self.resource_uri = self.lookup_resource_uri(uri)
+
+    def user_discovery(self, username):
+        """
+        Discover whether this is a federated user
+        """
+        # Tenant specific endpoint seems to not work for this?
+        authority_uri = 'https://login.microsoftonline.com/common'
+        user = quote_plus(username)
+        res = requests.get(f"{authority_uri}/UserRealm/{user}?api-version=2.0",  proxies=self.proxies, verify=self.verify)
+        response = res.json()
+        return response
 
     def authenticate_device_code(self):
         """
@@ -181,6 +192,62 @@ class Authentication():
         context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
         self.tokendata = context.acquire_token_with_username_password(self.resource_uri, self.username, self.password, self.client_id)
 
+        return self.tokendata
+
+    def authenticate_username_password_native(self, client_secret=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate using user w/ username + password.
+        This doesn't work for users or tenants that have multi-factor authentication required.
+        Native version without adal
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "password",
+            "resource": self.resource_uri,
+            "username": self.username,
+            "password": self.password
+        }
+        if self.scope:
+            data['scope'] = self.scope
+        if client_secret:
+            data['client_secret'] = client_secret
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = requests.post(f"{authority_uri}/oauth2/token", data=data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def authenticate_username_password_native_v2(self, client_secret=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate using user w/ username + password.
+        This doesn't work for users or tenants that have multi-factor authentication required.
+        Native version without adal, for identity platform v2 endpoint
+        """
+        authority_uri = self.get_authority_url('organizations')
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "password",
+            "scope": self.scope,
+            "username": self.username,
+            "password": self.password
+        }
+        if client_secret:
+            data['client_secret'] = client_secret
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = requests.post(f"{authority_uri}/oauth2/v2.0/token", data=data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
     def authenticate_as_app(self):
@@ -247,12 +314,6 @@ class Authentication():
         access_token = tokenreply['access_token']
         tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
-        try:
-            inputdata = json.loads(base64.b64decode(tokens[1]+('='*(len(tokens[1])%4))))
-            self.tokendata['_clientId'] = self.client_id
-            self.tokendata['tenantId'] = inputdata['tid']
-        except KeyError:
-            pass
         return self.tokendata
 
     def authenticate_with_refresh_native_v2(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
@@ -1115,12 +1176,20 @@ class Authentication():
                         token_data = json.load(infile)
                 else:
                     token_data = {'refreshToken': self.refresh_token}
+                if self.scope:
+                    return self.authenticate_with_refresh_native_v2(token_data['refreshToken'], client_secret=self.password)
                 return self.authenticate_with_refresh_native(token_data['refreshToken'], client_secret=self.password)
             if self.access_token and not self.refresh_token:
                 self.tokendata, _ = self.parse_accesstoken(self.access_token)
                 return self.tokendata
             if self.username and self.password:
-                return self.authenticate_username_password()
+                if self.user_discovery(self.username)['NameSpaceType'] == 'Federated':
+                    # Fall back to adal until we have support for this
+                    return self.authenticate_username_password()
+                # Use native implementation
+                if self.scope:
+                    return self.authenticate_username_password_native_v2()
+                return self.authenticate_username_password_native()
             if self.saml_token:
                 if self.saml_token.lower() == 'stdin':
                     samltoken = sys.stdin.read()
