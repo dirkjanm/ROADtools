@@ -514,7 +514,10 @@ def main():
     if args.command in ('auth', 'gettokens', 'gettoken'):
         auth.parse_args(args)
         if not args.tokens_stdout:
-            print(f'Requesting token for resource {auth.resource_uri}')
+            if args.scope:
+                print(f'Requesting token with scope {auth.scope}')
+            else:
+                print(f'Requesting token for resource {auth.resource_uri}')
         res = auth.get_tokens(args)
         if not res:
             return
