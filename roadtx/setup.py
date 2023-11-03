@@ -16,7 +16,7 @@ setup(name='roadtx',
           'Programming Language :: Python :: 3.10',
       ],
       packages=['roadtools.roadtx'],
-      package_data={'roadtools.roadtx.data': ['*.json']},
+      package_data={'roadtools.roadtx': ['firstpartyscopes.json']},
       install_requires=[
           'roadlib>=0.20',
           'requests',

@@ -18,4 +18,4 @@ geckodriver
 *.log
 .env
 # Include roadtx data file
-!roadtx/roadtools/roadtx/data/*.json
+!roadtx/roadtools/roadtx/*.json

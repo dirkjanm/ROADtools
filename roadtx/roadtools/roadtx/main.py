@@ -898,7 +898,7 @@ def main():
     elif args.command == 'getscope':
         # Load scope data
         current_dir = os.path.abspath(os.path.dirname(__file__))
-        datafile = os.path.join(current_dir, 'data', 'firstpartyscopes.json')
+        datafile = os.path.join(current_dir, 'firstpartyscopes.json')
         with codecs.open(datafile,'r','utf-8') as infile:
             data = json.load(infile)
         resource, scope = args.scope.lower().rsplit('/', 1)
