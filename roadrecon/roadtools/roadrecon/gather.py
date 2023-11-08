@@ -22,7 +22,7 @@ from roadtools.roadlib.metadef.database import (
     lnk_group_member_group, lnk_group_member_serviceprincipal,
     lnk_group_member_user, lnk_group_owner_serviceprincipal,
     lnk_group_owner_user)
-from sqlalchemy import bindparam, func
+from sqlalchemy import bindparam, func, text
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
 
@@ -551,7 +551,7 @@ async def run(args):
         # Delete existing links to make sure we start with clean data
         for table in database.Base.metadata.tables.keys():
             if table.startswith('lnk_'):
-                dbsession.execute("DELETE FROM {0}".format(table))
+                dbsession.execute(text("DELETE FROM {0}".format(table)))
         dbsession.query(ApplicationRef).delete()
         dbsession.query(RoleAssignment).delete()
         dbsession.query(EligibleRoleAssignment).delete()
