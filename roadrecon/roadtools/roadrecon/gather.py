@@ -194,7 +194,7 @@ def commit(session, dbtype, cache, ignore=False):
         cache
     )
 
-def commitlink(engine, cachedict, ignore=False):
+def commitlink(session, cachedict, ignore=False):
     global dburl
     for linktable, cache in cachedict.items():
         if 'postgresql' in dburl and ignore:
@@ -207,11 +207,10 @@ def commitlink(engine, cachedict, ignore=False):
         else:
             statement = linktable.insert()
         # print(cache)
-        with engine.begin() as conn:
-            conn.execute(
-                statement,
-                cache
-            )
+        session.execute(
+            statement,
+            cache
+        )
 
 def commitmfa(session, dbtype, cache):
     statement = dbtype.__table__.update().where(dbtype.objectId == bindparam('userid'))
