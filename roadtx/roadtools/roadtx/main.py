@@ -895,7 +895,7 @@ def main():
         header, body, signature = auth.parse_jwt(tokendata)
         print(json.dumps(header, sort_keys=True, indent=4))
         print(json.dumps(body, sort_keys=True, indent=4))
-    elif args.command == 'getscope':
+    elif args.command in ('getscope', 'findscope'):
         # Load scope data
         current_dir = os.path.abspath(os.path.dirname(__file__))
         datafile = os.path.join(current_dir, 'firstpartyscopes.json')
