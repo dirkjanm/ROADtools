@@ -1144,7 +1144,19 @@ class Authentication():
                     return self.authenticate_with_prt_v2(prt, sessionkey)
 
         except adal.adal_error.AdalError as ex:
-            print(ex.error_response['error_description'])
+            try:
+                print(f"Error during authentication: {ex.error_response['error_description']}")
+            except TypeError:
+                # Not all errors are objects
+                print(str(ex))
+            sys.exit(1)
+        except AuthenticationException as ex:
+            try:
+                error_data = json.loads(str(ex))
+                print(f"Error during authentication: {error_data['error_description']}")
+            except TypeError:
+                # No json
+                print(str(ex))
             sys.exit(1)
 
         # If we are here, no auth to try
