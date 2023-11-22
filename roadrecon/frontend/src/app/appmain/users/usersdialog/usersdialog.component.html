@@ -21,7 +21,7 @@
     <mat-expansion-panel expanded>
       <mat-expansion-panel-header>
         <mat-panel-title>
-          Group memberhips ({{ user.memberOf.length }})
+          Group memberships ({{ user.memberOf.length }})
         </mat-panel-title>
       </mat-expansion-panel-header>
 
@@ -56,7 +56,7 @@
       </table>
     </mat-expansion-panel>
   </mat-tab>
-  <mat-tab label="Owned objects" *ngIf="user.ownedServicePrincipals.length + user.ownedDevices.length + user.ownedApplications.length > 0">
+  <mat-tab label="Owned objects" *ngIf="user.ownedServicePrincipals.length + user.ownedDevices.length + user.ownedApplications.length + user.ownedGroups.length > 0">
     <mat-expansion-panel expanded *ngIf="user.ownedDevices.length > 0">
       <mat-expansion-panel-header>
         <mat-panel-title>
