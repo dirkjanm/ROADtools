@@ -18,95 +18,11 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.kbkdf import CounterLocation, KBKDFHMAC, Mode
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from roadtools.roadlib.constants import WELLKNOWN_RESOURCES, WELLKNOWN_CLIENTS, WELLKNOWN_USER_AGENTS, \
+    DSSO_BODY_KERBEROS, DSSO_BODY_USERPASS
 import requests
 import adal
 import jwt
-
-
-
-WELLKNOWN_RESOURCES = {
-    "msgraph": "https://graph.microsoft.com/",
-    "aadgraph": "https://graph.windows.net/",
-    "devicereg": "urn:ms-drs:enterpriseregistration.windows.net",
-    "drs": "urn:ms-drs:enterpriseregistration.windows.net",
-    "azrm": "https://management.core.windows.net/",
-    "azurerm": "https://management.core.windows.net/",
-}
-
-WELLKNOWN_CLIENTS = {
-    "aadps": "1b730954-1685-4b74-9bfd-dac224a7b894",
-    "azcli": "04b07795-8ddb-461a-bbee-02f9e1bf7b46",
-    "teams": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
-    "msteams": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
-    "azps": "1950a258-227b-4e31-a9cf-717495945fc2",
-    "msedge": "ecd6b820-32c2-49b6-98a6-444530e5a77a",
-    "edge": "ecd6b820-32c2-49b6-98a6-444530e5a77a",
-    "msbroker": "29d9ed98-a469-4536-ade2-f981bc1d605e",
-    "broker": "29d9ed98-a469-4536-ade2-f981bc1d605e"
-}
-
-DSSO_BODY_KERBEROS = '''<?xml version='1.0' encoding='UTF-8'?>
-<s:Envelope
-    xmlns:s='http://www.w3.org/2003/05/soap-envelope'
-    xmlns:wsse='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'
-    xmlns:saml='urn:oasis:names:tc:SAML:1.0:assertion'
-    xmlns:wsp='http://schemas.xmlsoap.org/ws/2004/09/policy'
-    xmlns:wsu='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd'
-    xmlns:wsa='http://www.w3.org/2005/08/addressing'
-    xmlns:wssc='http://schemas.xmlsoap.org/ws/2005/02/sc'
-    xmlns:wst='http://schemas.xmlsoap.org/ws/2005/02/trust'>
-    <s:Header>
-        <wsa:Action s:mustUnderstand='1'>http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</wsa:Action>
-        <wsa:To s:mustUnderstand='1'>https://autologon.microsoftazuread-sso.com/{tenant}/winauth/trust/2005/windowstransport?client-request-id=4190b9ab-205d-4024-8caa-aedb3f79988b</wsa:To>
-        <wsa:MessageID>urn:uuid:36a2e970-3107-4e3f-99dd-569a9588f02c</wsa:MessageID>
-    </s:Header>
-    <s:Body>
-        <wst:RequestSecurityToken Id='RST0'>
-            <wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType>
-            <wsp:AppliesTo>
-                <wsa:EndpointReference>
-                    <wsa:Address>urn:federation:MicrosoftOnline</wsa:Address>
-                </wsa:EndpointReference>
-            </wsp:AppliesTo>
-            <wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType>
-        </wst:RequestSecurityToken>
-    </s:Body>
-</s:Envelope>
-'''
-
-DSSO_BODY_USERPASS = '''<?xml version='1.0' encoding='UTF-8'?>
-<s:Envelope xmlns:s='http://www.w3.org/2003/05/soap-envelope' xmlns:a='http://www.w3.org/2005/08/addressing' xmlns:u='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd'>
-  <s:Header>
-    <a:Action s:mustUnderstand='1'>http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a:Action>
-    <a:MessageID>urn:uuid:a5c80716-16fe-473c-bb5d-be0602f9e7fd</a:MessageID>
-    <a:ReplyTo>
-      <a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address>
-    </a:ReplyTo>
-    <a:To s:mustUnderstand='1'>https://autologon.microsoftazuread-sso.com/{tenant}/winauth/trust/2005/usernamemixed?client-request-id=19ac39db-81d2-4713-8046-b0b7240592be</a:To>
-    <o:Security s:mustUnderstand='1' xmlns:o='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'>
-      <u:Timestamp u:Id='_0'>
-        <u:Created>2020-11-23T14:50:44.068Z</u:Created>
-        <u:Expires>2020-11-23T15:00:44.068Z</u:Expires>
-      </u:Timestamp>
-      <o:UsernameToken u:Id='uuid-3e66cabc-66d3-4447-a1c2-ef7ba45274f7'>
-        <o:Username>{username}</o:Username>
-        <o:Password>{password}</o:Password>
-      </o:UsernameToken>
-    </o:Security>
-  </s:Header>
-  <s:Body>
-    <trust:RequestSecurityToken xmlns:trust='http://schemas.xmlsoap.org/ws/2005/02/trust'>
-      <wsp:AppliesTo xmlns:wsp='http://schemas.xmlsoap.org/ws/2004/09/policy'>
-        <a:EndpointReference>
-          <a:Address>urn:federation:MicrosoftOnline</a:Address>
-        </a:EndpointReference>
-      </wsp:AppliesTo>
-      <trust:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</trust:KeyType>
-      <trust:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</trust:RequestType>
-    </trust:RequestSecurityToken>
-  </s:Body>
-</s:Envelope>
-'''
 
 def get_data(data):
     return base64.urlsafe_b64decode(data+('='*(len(data)%4)))
