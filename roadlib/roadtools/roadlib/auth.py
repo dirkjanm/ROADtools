@@ -9,6 +9,7 @@ import binascii
 import time
 import codecs
 from urllib.parse import urlparse, parse_qs, quote_plus
+from urllib3.util import SKIP_HEADER
 from xml.sax.saxutils import escape as xml_escape
 import xml.etree.ElementTree as ET
 from xml.dom.minidom import parseString
@@ -1090,6 +1091,8 @@ class Authentication():
         """
         Translate user agents aliases
         """
+        if useragent.upper() == 'EMPTY':
+            return SKIP_HEADER
         if useragent is None:
             return useragent
         try:

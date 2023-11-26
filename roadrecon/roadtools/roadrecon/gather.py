@@ -122,6 +122,8 @@ def checktoken():
             auth.client_id = '1b730954-1685-4b74-9bfd-dac224a7b894'
         auth.tenant = token['tenantId']
         auth.tokendata = token
+        if 'useragent' in token:
+            auth.set_user_agent(token['useragent'])
         if 'refreshToken' in token:
             token = auth.authenticate_with_refresh(token)
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
@@ -507,6 +509,14 @@ async def run(args):
     headers = {
         'Authorization': '%s %s' % (token['tokenType'], token['accessToken'])
     }
+    if args.user_agent:
+        # Alias support, get temp auth object
+        auth = Authentication()
+        auth.set_user_agent(args.user_agent)
+        headers['User-Agent'] = auth.user_agent
+        # Store this in the token as well
+        token['useragent'] = auth.user_agent
+
     if not checktoken():
         return
     # Recreate DB
@@ -684,6 +694,8 @@ def getargs(gather_parser):
                                '--tenant',
                                action='store',
                                help='Tenant ID to gather, if this info is not stored in the token')
+    gather_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. By default aiohttp default user agent is used, and python-requests is used for token renewal')
 
 def main(args=None):
     global token, headers, dburl, urlcounter
