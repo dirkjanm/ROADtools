@@ -1091,10 +1091,10 @@ class Authentication():
         """
         Translate user agents aliases
         """
-        if useragent.upper() == 'EMPTY':
-            return SKIP_HEADER
         if useragent is None:
             return useragent
+        if useragent.upper() == 'EMPTY':
+            return SKIP_HEADER
         try:
             resolved = WELLKNOWN_USER_AGENTS[useragent.lower()]
             return resolved
