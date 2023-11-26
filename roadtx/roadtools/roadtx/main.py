@@ -6,7 +6,8 @@ import codecs
 import binascii
 import base64
 from urllib.parse import quote_plus
-from roadtools.roadlib.auth import Authentication, get_data, WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES
+from roadtools.roadlib.auth import Authentication, get_data
+from roadtools.roadlib.constants import WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES, WELLKNOWN_USER_AGENTS
 from roadtools.roadlib.deviceauth import DeviceAuthentication
 from roadtools.roadtx.selenium import SeleniumAuthentication
 from roadtools.roadtx.federation import EncryptedPFX, SAMLSigner, encode_object_guid
@@ -210,6 +211,9 @@ def main():
     desktopsso_parser.add_argument('--tokens-stdout',
                                    action='store_true',
                                    help='Do not store tokens on disk, pipe to stdout instead')
+    desktopsso_parser.add_argument('-ua', '--user-agent', action='store',
+                                   help='Custom user agent to use. By default the user agent from FireFox is used without modification')
+
 
     # List aliases
     subparsers.add_parser('listaliases', help='List aliases that can be used as client ID or resource URL')
@@ -274,6 +278,8 @@ def main():
     intauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
                                 help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
                                 default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+    intauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. By default the user agent from FireFox is used without modification')
     intauth_parser.add_argument('-t',
                                 '--tenant',
                                 action='store',
@@ -321,6 +327,8 @@ def main():
     kdbauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
                                 help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
                                 default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+    kdbauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. By default the user agent from FireFox is used without modification')
     kdbauth_parser.add_argument('-t',
                                 '--tenant',
                                 action='store',
@@ -370,6 +378,8 @@ def main():
     browserprtauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
                                        help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
                                        default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+    browserprtauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                       help='Custom user agent to use. Default: Chrome on Windows user agent')
     browserprtauth_parser.add_argument('-t',
                                        '--tenant',
                                        action='store',
@@ -425,6 +435,8 @@ def main():
     injauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
                                 help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
                                 default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+    injauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Chrome on Windows user agent')
     injauth_parser.add_argument('-t',
                                 '--tenant',
                                 action='store',
@@ -459,6 +471,8 @@ def main():
                                 action='store',
                                 help='Path to geckodriver file on disk (download from: https://github.com/mozilla/geckodriver/releases)')
     enrauth_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (default: roadtx.prt)')
+    enrauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Chrome on Windows user agent')
     enrauth_parser.add_argument('--no-prt', action='store_true', help='Perform the flow without a PRT')
     enrauth_parser.add_argument('--prt',
                                 action='store',
@@ -666,6 +680,7 @@ def main():
     elif args.command == 'desktopsso':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
         if args.krbtoken and args.krbtoken.lower() == 'stdin':
             krbtoken = sys.stdin.read().strip()
@@ -680,16 +695,24 @@ def main():
         print('Well-known clients. Can be used as alias with -c or --client')
         print()
         for alias, clientid in WELLKNOWN_CLIENTS.items():
-            print(f"{alias} - {clientid}")
+            print(f"{alias:<10} - {clientid}")
         print()
         print('Well-known resources. Can be used as alias with -r or --resource')
         print()
         for alias, resourceurl in WELLKNOWN_RESOURCES.items():
-            print(f"{alias} - {resourceurl}")
+            print(f"{alias:<10} - {resourceurl}")
+        print()
+        print('Well-known user agents. Can be used as alias with -ua or --user-agent')
+        print()
+        for alias, useragent in WELLKNOWN_USER_AGENTS.items():
+            print(f"{alias:<15} - {useragent}")
     elif args.command == 'interactiveauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        # Intercept if custom UA is set
+        custom_ua = args.user_agent is not None
         selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
         if args.auth_url:
             url = args.auth_url
@@ -707,6 +730,8 @@ def main():
             result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=krbtoken)
         elif args.estscookie:
             result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie)
+        elif custom_ua:
+            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, capture=args.capture_code, federated=args.federated)
         else:
             result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code, federated=args.federated)
         if args.capture_code:
@@ -718,7 +743,10 @@ def main():
     elif args.command == 'keepassauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        # Intercept if custom UA is set
+        custom_ua = args.user_agent is not None
         selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
         password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         if args.auth_url:
@@ -729,7 +757,10 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service)
-        result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
+        if custom_ua:
+            result = selauth.selenium_login_with_custom_useragent(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
+        else:
+            result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
@@ -739,6 +770,7 @@ def main():
     elif args.command == 'browserprtauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
@@ -770,6 +802,7 @@ def main():
     elif args.command == 'browserprtinject':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
@@ -811,6 +844,7 @@ def main():
                 print('You must either supply a PRT and session key on the command line or a file that contains them')
                 return
         auth.set_client_id('29d9ed98-a469-4536-ade2-f981bc1d605e')
+        auth.set_user_agent(args.user_agent)
         if args.username:
             hint = '&login_hint=' + quote_plus(args.username)
         else:

@@ -1,5 +1,6 @@
 import os
 import sys
+import requests
 from urllib.parse import urlparse, parse_qs, quote_plus
 from roadtools.roadlib.auth import Authentication, AuthenticationException, get_data, WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES
 from roadtools.roadlib.deviceauth import DeviceAuthentication
@@ -208,17 +209,31 @@ class SeleniumAuthentication():
                     raise AuthenticationException('Authentication did not complete within time limit')
         return False
 
+    def selenium_login_with_custom_useragent(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, federated=False, devicecode=None):
+        '''
+        Wrapper for plain login with custom user agent (requires interception to change)
+        '''
+        def interceptor(request):
+            del request.headers['User-Agent']
+            request.headers['User-Agent'] = self.auth.user_agent
+        self.driver.request_interceptor = interceptor
+        return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
+
+
     def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None, capture=False):
         '''
         Selenium login with PRT injection.
         '''
         def interceptor(request):
             del request.headers['User-Agent']
-            request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71'
-            request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
-            request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
-            request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
-            request.headers['Sec-Ch-Ua-Platform-Version'] = '"10.0.0"'
+            if self.auth.user_agent:
+                request.headers['User-Agent'] = self.auth.user_agent
+            else:
+                request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71'
+                request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
+                request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
+                request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
+                request.headers['Sec-Ch-Ua-Platform-Version'] = '"10.0.0"'
 
             if request.url.startswith('https://login.microsoftonline.com/'):
                 if '/authorize' in request.url or '/login' in request.url or '/kmsi' in request.url or '/reprocess' in request.url or '/resume' in request.url:
@@ -245,7 +260,10 @@ class SeleniumAuthentication():
         '''
         def interceptor(request):
             del request.headers['User-Agent']
-            request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71'
+            if self.auth.user_agent:
+                request.headers['User-Agent'] = self.auth.user_agent
+            else:
+                request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71'
             request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
             request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
             request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
@@ -266,7 +284,10 @@ class SeleniumAuthentication():
         '''
         def interceptor(request):
             del request.headers['User-Agent']
-            request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71'
+            if self.auth.user_agent:
+                request.headers['User-Agent'] = self.auth.user_agent
+            else:
+                request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.71'
             request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
             request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
             request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
@@ -289,7 +310,10 @@ class SeleniumAuthentication():
         '''
         def interceptor(request):
             del request.headers['User-Agent']
-            request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; WebView/3.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19044'
+            if self.auth.user_agent:
+                request.headers['User-Agent'] = self.auth.user_agent
+            else:
+                request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; WebView/3.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19044'
             request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
             request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
             request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
