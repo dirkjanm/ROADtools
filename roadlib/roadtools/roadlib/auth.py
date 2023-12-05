@@ -469,6 +469,50 @@ class Authentication():
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
+    def get_bulk_enrollment_token(self, access_token):
+        body = {
+            "pid": str(uuid.uuid4()),
+            "name": "bulktoken",
+            "exp": (datetime.datetime.now() + datetime.timedelta(days=90)).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        url = 'https://login.microsoftonline.com/webapp/bulkaadjtoken/begin'
+        res = self.requests_post(url, json=body, headers=headers)
+        data = res.json()
+        state = data.get('state')
+        if not state:
+            print(f'No state returned. Server said: {data}')
+            return False
+
+        if state == 'CompleteError':
+            print(f'Error occurred: {data["resultData"]}')
+            return False
+
+        flowtoken = data.get('flowToken')
+        if not flowtoken:
+            print(f'Error. No flow token found. Data: {data}')
+            return False
+        print('Got flow token, polling for token creation')
+        url = 'https://login.microsoftonline.com/webapp/bulkaadjtoken/poll'
+        while True:
+            res = self.requests_get(url, params={'flowtoken':flowtoken}, headers=headers)
+            data = res.json()
+            state = data.get('state')
+            if not state:
+                print(f'No state returned. Server said: {data}')
+                return False
+            if state == 'CompleteError':
+                print(f'Error occurred: {data["resultData"]}')
+                return False
+            if state == 'CompleteSuccess':
+                tokenresult = json.loads(data['resultData'])
+                # The function below needs one so lets supply it
+                tokenresult['access_token'] = tokenresult['id_token']
+                self.tokendata = self.tokenreply_to_tokendata(tokenresult, client_id='b90d5b8f-5503-4153-b545-b31cecfaece2')
+                return self.tokendata
+            time.sleep(1.0)
 
     def build_auth_url(self, redirurl, response_type, scope=None, state=None):
         '''
@@ -986,8 +1030,8 @@ class Authentication():
             'accessToken': token,
             'tokenType': 'Bearer',
             'expiresOn': datetime.datetime.fromtimestamp(tokendata['exp']).strftime('%Y-%m-%d %H:%M:%S'),
-            'tenantId': tokendata['tid'],
-            '_clientId': tokendata['appid']
+            'tenantId': tokendata.get('tid'),
+            '_clientId': tokendata.get('appid')
         }
         return tokenobject, tokendata
 

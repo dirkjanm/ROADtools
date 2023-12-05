@@ -181,6 +181,27 @@ def main():
                                  action='store',
                                  help="Code to auth with that you got from Azure AD")
 
+    # Bulk enrollment token
+    bulkenrollment_parser = subparsers.add_parser('bulkenrollmenttoken', help='Request / use bulk enrollment tokens')
+    bulkenrollment_parser.add_argument('--access-token', action='store', help='Access token for the device registration service. If not specified, taken from .roadtools_auth or file specified with --tokenfile')
+    bulkenrollment_parser.add_argument('-a',
+                                       '--action',
+                                       action='store',
+                                       choices=['request', 'use'],
+                                       default='request',
+                                       help='Action to perform (default: request)')
+    bulkenrollment_parser.add_argument('--bulktokenfile',
+                                       action='store',
+                                       default='.bulktoken',
+                                       help='File to save / load bulk enrollment token from (default: .bulktoken)')
+    bulkenrollment_parser.add_argument('--tokenfile',
+                                       action='store',
+                                       default='.roadtools_auth',
+                                       help='File to save / load the access token for device registration service to / from')
+    bulkenrollment_parser.add_argument('--tokens-stdout',
+                                       action='store_true',
+                                       help='Do not store tokens on disk, pipe to stdout instead')
+
     # Desktop SSO auth
     desktopsso_parser = subparsers.add_parser('desktopsso', help='Desktop SSO authentication - either with plaintext creds or Kerberos auth')
     clienthelptext = 'Client ID (application ID) to use when authenticating. Accepts aliases (list with roadtx listaliases)'
@@ -1014,6 +1035,42 @@ def main():
             "fidoAttestationCertificates": []
         }
         print(json.dumps(data, sort_keys=True, indent=4))
+    elif args.command == 'bulkenrollmenttoken':
+        if args.action == 'request':
+            if args.access_token:
+                tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
+            else:
+                try:
+                    with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
+                        tokenobject = json.load(infile)
+                    _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+                except FileNotFoundError:
+                    print('No auth data found. Ether supply an access token with --access-token or make sure a token is present on disk in .roadtools_auth')
+                    return
+            if tokendata['aud'] != 'urn:ms-drs:enterpriseregistration.windows.net':
+                print(f"Wrong token audience, got {tokendata['aud']} but expected: urn:ms-drs:enterpriseregistration.windows.net")
+                print("Make sure to request a token with -r urn:ms-drs:enterpriseregistration.windows.net")
+                return
+            result = auth.get_bulk_enrollment_token(access_token=tokenobject['accessToken'])
+            if result:
+                auth.outfile = args.bulktokenfile
+                auth.save_tokens(args)
+        else:
+            # Use token
+            auth.set_client_id('b90d5b8f-5503-4153-b545-b31cecfaece2')
+            auth.set_resource_uri('drs')
+            try:
+                with codecs.open(args.bulktokenfile, 'r', 'utf-8') as infile:
+                    tokenobject = json.load(infile)
+                _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+            except FileNotFoundError:
+                print('No auth data found. Make sure the bulk enrollment token is present on disk in the file specified in --bulktokenfile')
+                return
+            result = auth.authenticate_with_refresh_native(tokenobject['refreshToken'])
+            if result:
+                auth.outfile = args.tokenfile
+                auth.save_tokens(args)
+
     elif args.command == 'decryptadfskey':
         rawblob = base64.b64decode(args.encryptedpfx)
         rawkey = binascii.unhexlify(args.key.replace('-',''))
