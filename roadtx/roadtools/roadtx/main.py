@@ -536,6 +536,15 @@ def main():
     samltoken_parser.add_argument('-m', '--mfa', action='store_true', help='Include MFA claim in token')
     samltoken_parser.add_argument('--upn', action='store', required=True, help='userPrincipalName of user to spoof')
 
+    # PRT cookie creations
+    prtcookie_parser = subparsers.add_parser('prtcookie', help='Create a PRT cookie from a PRT for external usage')
+    prtcookie_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (default: roadtx.prt)')
+    prtcookie_parser.add_argument('--prt',
+                                  action='store',
+                                  help='Primary Refresh Token')
+    prtcookie_parser.add_argument('--prt-sessionkey',
+                                  action='store',
+                                  help='Primary Refresh Token session key (as hex key)')
 
     if len(sys.argv) < 2:
         parser.print_help()
@@ -1101,6 +1110,20 @@ def main():
         template, assertionid = signer.format_template(uid, args.upn, args.issuer, args.mfa)
         signed = signer.sign_xml(template, assertionid)
         print(signed.decode('utf-8'))
+    elif args.command == 'prtcookie':
+        if args.prt and args.prt_sessionkey:
+            deviceauth.setprt(args.prt, args.prt_sessionkey)
+        elif args.prt_file and deviceauth.loadprt(args.prt_file):
+            pass
+        else:
+            print('You must either supply a PRT and session key on the command line or a file that contains them')
+            return
+        challenge = auth.get_srv_challenge()['Nonce']
+        cookie = auth.create_prt_cookie_kdf_ver_2(deviceauth.prt, deviceauth.session_key, challenge)
+        print(f"PRT cookie: {cookie}")
+        print("Can be used in external browsers using the x-ms-RefreshTokenCredential header or cookie. Note that a PRT cookie is only valid for 5 minutes.")
+
+
 
 
 
