@@ -475,6 +475,9 @@ def main():
     injauth_parser.add_argument('--prt-sessionkey',
                                 action='store',
                                 help='Primary Refresh Token session key (as hex key)')
+    injauth_parser.add_argument('--prt-cookie',
+                                action='store',
+                                help='Primary Refresh Token cookie from ROADtoken (JWT)')
     injauth_parser.add_argument('--tokenfile',
                                 action='store',
                                 help='File to store the credentials (default: .roadtools_auth)',
@@ -827,6 +830,8 @@ def main():
         auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
+        elif args.prt_cookie:
+            pass
         elif args.prt_file and deviceauth.loadprt(args.prt_file):
             pass
         else:
@@ -851,7 +856,7 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service, intercept=True)
-        if not selauth.selenium_login_with_prt(url, identity=args.username, password=password, otpseed=otpseed, keep=args.keep_open):
+        if not selauth.selenium_login_with_prt(url, identity=args.username, prtcookie=args.prt_cookie, password=password, otpseed=otpseed, keep=args.keep_open):
             return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
