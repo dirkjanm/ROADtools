@@ -384,7 +384,7 @@ class DeviceAuthentication():
                     "Type" : "pkcs10",
                     "Data" : certbytes.decode('utf-8')
                 },
-                "OSVersion" : "12.2.0",
+                "OSVersion" : os_version,
                 "TargetDomain" : "iminyour.cloud",
                 "AikCertificate" : "",
                 "DeviceType" : "MacOS",
@@ -400,10 +400,10 @@ class DeviceAuthentication():
                     "Data": certbytes.decode('utf-8'),
                     "Type": "pkcs10"
                 },
-                "DeviceDisplayName": "samsungSM-G988N",
+                "DeviceDisplayName": device_name,
                 "DeviceType": "Android",
-                "JoinType": 4,
-                "OSVersion": "9",
+                "JoinType": jointype,
+                "OSVersion": os_version,
                 "TargetDomain": "6287f28f-4f7f-4322-9651-a8697d8fe1bc",
                 "TransportKey": base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
             }
