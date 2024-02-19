@@ -34,7 +34,7 @@ class DeviceAuthentication():
     Device authentication for ROADtools. Handles device registration,
     PRT request/renew and token request using WAM emulation.
     """
-    def __init__(self):
+    def __init__(self, auth=None):
         # Cryptography certificate object
         self.certificate = None
         # Cryptography private key object
@@ -58,6 +58,11 @@ class DeviceAuthentication():
         self.proxies = {}
         # Verify TLS certs
         self.verify = True
+
+        if auth:
+            self.auth = auth
+        else:
+            self.auth = Authentication()
 
     def loadcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
         """
@@ -233,7 +238,7 @@ class DeviceAuthentication():
         return reqjwt
 
     def get_prt_with_hello_key(self, username, assertion=None):
-        authlib = Authentication()
+        authlib = self.auth
         challenge = authlib.get_srv_challenge()['Nonce']
         if not assertion:
             assertion = self.create_hello_prt_assertion(username)
@@ -323,7 +328,7 @@ class DeviceAuthentication():
 
     def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None, deviceticket=None):
         """
-        Registers a device in Azure AD. Requires an access token to the device registration service.
+        Registers or joins a device in Azure AD. Requires an access token to the device registration service.
         """
         # Fill in names if not supplied
         if not device_name:
@@ -339,7 +344,12 @@ class DeviceAuthentication():
             device_type = "Windows"
 
         if not os_version:
-            os_version = "10.0.19041.928"
+            if device_type.lower() == "windows":
+                os_version = "10.0.19041.928"
+            elif device_type.lower() == "macos":
+                os_version = "12.2.0"
+            elif device_type.lower() == "android":
+                os_version = "13.0"
 
         # Generate our key
         key = rsa.generate_private_key(
@@ -369,18 +379,33 @@ class DeviceAuthentication():
 
         if device_type.lower() == 'macos':
             data = {
-              "DeviceDisplayName" : device_name,
-              "CertificateRequest" : {
-                "Type" : "pkcs10",
-                "Data" : certbytes.decode('utf-8')
-              },
-              "OSVersion" : "12.2.0",
-              "TargetDomain" : "iminyour.cloud",
-              "AikCertificate" : "",
-              "DeviceType" : "MacOS",
-              "TransportKey" : base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
-              "JoinType" : jointype,
-              "AttestationData" : ""
+                "DeviceDisplayName" : device_name,
+                "CertificateRequest" : {
+                    "Type" : "pkcs10",
+                    "Data" : certbytes.decode('utf-8')
+                },
+                "OSVersion" : "12.2.0",
+                "TargetDomain" : "iminyour.cloud",
+                "AikCertificate" : "",
+                "DeviceType" : "MacOS",
+                "TransportKey" : base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
+                "JoinType" : jointype,
+                "AttestationData" : ""
+            }
+        elif device_type.lower() == 'android':
+            data = {
+                "Attributes": {},
+                "CertificateRequest":
+                {
+                    "Data": certbytes.decode('utf-8'),
+                    "Type": "pkcs10"
+                },
+                "DeviceDisplayName": "samsungSM-G988N",
+                "DeviceType": "Android",
+                "JoinType": 4,
+                "OSVersion": "9",
+                "TargetDomain": "6287f28f-4f7f-4322-9651-a8697d8fe1bc",
+                "TransportKey": base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
             }
         else:
             data = {
@@ -412,7 +437,7 @@ class DeviceAuthentication():
         }
 
         print('Registering device')
-        res = requests.post('https://enterpriseregistration.windows.net/EnrollmentServer/device/?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post('https://enterpriseregistration.windows.net/EnrollmentServer/device/?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -548,25 +573,43 @@ class DeviceAuthentication():
         print('Device was deleted in Azure AD')
         return True
 
-    def request_token_with_devicecert_signed_payload(self, payload):
+    def request_token_with_devicecert_signed_payload(self, payload, use_v3=False):
         """
         Wrap the request payload in a JWT and sign this using the device cert / key
         """
         certder = self.certificate.public_bytes(serialization.Encoding.DER)
         certbytes = base64.b64encode(certder)
-        headers = {
-          "x5c": certbytes.decode('utf-8'),
-          "kdf_ver": 2
-        }
-        reqjwt = jwt.encode(payload, algorithm='RS256', key=self.keydata, headers=headers)
-        prt_request_data = {
-            'windows_api_version':'2.2',
-            'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'request':reqjwt,
-            'client_info':'1',
-            'tgt':True
-        }
-        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=prt_request_data, proxies=self.proxies, verify=self.verify)
+        if not use_v3:
+            # Windows API flow - uses identity platform v1 endpoint
+            headers = {
+              "x5c": certbytes.decode('utf-8'),
+              "kdf_ver": 2
+            }
+            reqjwt = jwt.encode(payload, algorithm='RS256', key=self.keydata, headers=headers)
+            prt_request_data = {
+                'windows_api_version':'2.2',
+                'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'request':reqjwt,
+                'client_info':'1',
+                'tgt':True
+            }
+            url = 'https://login.microsoftonline.com/common/oauth2/token'
+        else:
+            # PRT Protocol version 3 flow, uses identity platform v2
+            headers = {
+              "x5c": certbytes.decode('utf-8'),
+            }
+            reqjwt = jwt.encode(payload, algorithm='RS256', key=self.keydata, headers=headers)
+            prt_request_data = {
+                'prt_protocol_version':'3.0',
+                'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'request':reqjwt,
+                'client_info':'1'
+            }
+            url = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+
+        res = self.auth.requests_post(url, data=prt_request_data, proxies=self.proxies, verify=self.verify)
+
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         prtdata = res.json()
@@ -628,7 +671,45 @@ class DeviceAuthentication():
         }
         if reqtgt:
             token_request_data['tgt'] = True
-        res = requests.post('https://login.microsoftonline.com/common/oauth2/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        responsedata = res.text
+        return responsedata
+
+    def request_token_with_sessionkey_signed_payload_prtprotocolv3(self, payload, reqtgt=True):
+        """
+        Request a token (access / refresh / PRT) using a payload signed
+        with the PRT session key. Uses PRT Protocol version 3
+        """
+        authlib = Authentication()
+        context = os.urandom(24)
+        headers = {
+            'ctx': base64.b64encode(context).decode('utf-8'),
+            'kdf_ver': 2
+        }
+
+        # Sign with random key just to get jwt body in right encoding
+        tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
+        jbody = tempjwt.split('.')[1]
+        jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
+
+        # Now calculate the derived key based on random context plus jwt body
+        _, derived_key = authlib.calculate_derived_key_v2(self.session_key, context, jwtbody)
+
+        # Now calculate the derived key based on random context plus jwt body
+        # _, derived_key = authlib.calculate_derived_key(self.session_key, context)
+        reqjwt = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
+
+        token_request_data = {
+            'prt_protocol_version':'3.0',
+            'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'request':reqjwt,
+            'client_info':'1'
+        }
+        if reqtgt:
+            token_request_data['tgt'] = True
+        res = self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/v2.0/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         responsedata = res.text

@@ -18,7 +18,7 @@ setup(name='roadtx',
       packages=['roadtools.roadtx'],
       package_data={'roadtools.roadtx': ['firstpartyscopes.json']},
       install_requires=[
-          'roadlib>=0.22',
+          'roadlib>=0.23',
           'requests',
           'selenium',
           'selenium-wire',

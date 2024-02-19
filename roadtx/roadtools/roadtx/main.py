@@ -124,6 +124,9 @@ def main():
     prtauth_parser.add_argument('--tokens-stdout',
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
+    prtauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
+
 
     # Application auth
     # appauth_parser = subparsers.add_parser('appauth', help='Authenticate as an application')
@@ -551,7 +554,7 @@ def main():
         sys.exit(1)
         return
 
-    deviceauth = DeviceAuthentication()
+    deviceauth = DeviceAuthentication(auth)
     args = parser.parse_args()
     seleniumproxy = None
 
@@ -653,6 +656,7 @@ def main():
             prtdata = deviceauth.renew_prt()
             deviceauth.saveprt(prtdata, args.prt_file)
     elif args.command == 'prtauth':
+        auth.set_user_agent(args.user_agent)
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_file and deviceauth.loadprt(args.prt_file):
