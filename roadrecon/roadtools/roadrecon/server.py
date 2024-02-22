@@ -7,7 +7,7 @@ from marshmallow import fields
 from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
 import os
 import argparse
-from sqlalchemy import func
+from sqlalchemy import func, and_, or_, select
 import mimetypes
 
 app = Flask(__name__)
@@ -288,10 +288,19 @@ def get_mfa():
     # for approle in per_user:
     #     enabledusers.append(approle.principalId)
 
-    # Filter out mailbox users by default
-    all_mfa = db.session.query(User).filter(User.cloudMSExchRecipientDisplayType != 0, User.cloudMSExchRecipientDisplayType != 7, User.cloudMSExchRecipientDisplayType != 18).all()
+    # Filter out mailbox-only users by default
+    all_mfa = db.session.execute(select(User).where(
+        or_(User.cloudMSExchRecipientDisplayType is None,
+            and_(
+                User.cloudMSExchRecipientDisplayType != 0,
+                User.cloudMSExchRecipientDisplayType != 7,
+                User.cloudMSExchRecipientDisplayType != 18
+            )
+        )
+    ))
     out = []
-    for user in all_mfa:
+    #pyLint: disable-next=E1133
+    for user, in all_mfa:
         mfa_methods = len(user.strongAuthenticationDetail['methods'])
         methods = [method['methodType'] for method in user.strongAuthenticationDetail['methods']]
         has_app = 'PhoneAppOTP' in methods or 'PhoneAppNotification' in methods
