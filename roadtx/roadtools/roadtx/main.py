@@ -166,6 +166,10 @@ def main():
                                  action='store',
                                  help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
                                  default='https://graph.windows.net')
+    codeauth_parser.add_argument('-s',
+                                 '--scope',
+                                 action='store',
+                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     codeauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
                                  help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
                                  default="https://login.microsoftonline.com/common/oauth2/nativeclient")
@@ -711,7 +715,12 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.tenant = args.tenant
-        auth.authenticate_with_code_native(args.code, args.redirect_url, client_secret=args.password)
+        if args.scope:
+            # Switch to identity platform v2 and use scope instead of resource
+            auth.scope = args.scope
+            auth.authenticate_with_code_native_v2(args.code, args.redirect_url, client_secret=args.password)
+        else:
+            auth.authenticate_with_code_native(args.code, args.redirect_url, client_secret=args.password)
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
     elif args.command == 'desktopsso':
