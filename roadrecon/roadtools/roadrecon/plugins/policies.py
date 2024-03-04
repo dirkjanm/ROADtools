@@ -403,6 +403,16 @@ class AccessPoliciesPlugin():
                 ot += self._parse_appcrit(icrit)
         return ot
 
+    def _parse_authflows(self, cond):
+        if not 'AuthFlows' in cond:
+            return ''
+        ucond = cond['AuthFlows']
+        ot = '<strong>Flows included</strong>: '
+
+        for icrit in ucond['Include']:
+            for _, clist in icrit.items():
+                ot += escape(', '.join(clist))
+        return ot
 
     def _parse_associated_polcies(self,location_object,is_trusted_location,condition_policy_list):
         found_pols = []
@@ -454,14 +464,18 @@ class AccessPoliciesPlugin():
         ot = '<strong>Including</strong>: '
 
         for icrit in ucond['Include']:
-            ot += ', '.join([escape(crit) for crit in icrit['ClientTypes']])
+            ot += ', '.join(list({escape(self._translate_clienttype(crit)) for crit in icrit['ClientTypes']}))
 
-        if 'Exclude' in ucond:
-            ot += '\n<br /><strong>Excluding</strong>: '
-
-            for icrit in ucond['Exclude']:
-                ot += ', '.join([escape(crit) for crit in icrit['ClientTypes']])
         return ot
+
+    def _translate_clienttype(self, client):
+        if client in ['EasSupported', 'EasUnsupported']:
+            return 'Exchange ActiveSync'
+        if client in ['OtherLegacy', 'LegacySmtp', 'LegacyPop', 'LegacyImap', 'LegacyMapi', 'LegacyOffice']:
+            return 'Legacy Clients'
+        if client == 'Native':
+            return 'Mobile and Desktop clients'
+        return client
 
     def _parse_sessioncontrols(self, cond):
         if not 'SessionControls' in cond:
@@ -511,6 +525,7 @@ class AccessPoliciesPlugin():
                 continue
             out['who'] = self._parse_who(conditions)
             out['applications'] = self._parse_application(conditions)
+            out['authflows'] = self._parse_authflows(conditions)
             out['platforms'] = self._parse_platform(conditions)
             out['locations'] = self._parse_locations(conditions)
             out['clients'] = self._parse_clients(conditions)
@@ -597,6 +612,8 @@ class AccessPoliciesPlugin():
                 table += '<tr><td>At locations</td><td>{0}</td></tr>'.format(out['locations'])
             if out['signinrisks'] != '':
                 table += '<tr><td>Sign-in risks</td><td>{0}</td></tr>'.format(out['signinrisks'])
+            if out['authflows'] != '':
+                table += '<tr><td>Authentication flows</td><td>{0}</td></tr>'.format(out['authflows'])
             if out['controls'] != '':
                 table += '<tr><td>Controls</td><td>{0}</td></tr>'.format(out['controls'])
             if out['sessioncontrols'] != '':
