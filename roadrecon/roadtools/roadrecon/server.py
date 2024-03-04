@@ -572,6 +572,11 @@ def main(args=None):
         parser.add_argument('--profile',
                             action='store_true',
                             help='Enable flask profiler')
+        parser.add_argument('--port',
+                            type=int,
+                            action='store',
+                            help='HTTP Server port (default=5000)',
+                            default=5000)
         args = parser.parse_args()
     if not ':/' in args.database:
         if args.database[0] != '/':
@@ -584,7 +589,7 @@ def main(args=None):
     if args.profile:
         from werkzeug.middleware.profiler import ProfilerMiddleware
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5])
-    app.run(debug=args.debug)
+    app.run(debug=args.debug, port=args.port)
 
 if __name__ == '__main__':
     main()
