@@ -615,6 +615,7 @@ async def run(args):
 
     tasks = []
     dumper.session = dbsession
+    # pylint: disable=not-callable
     totalgroups = dbsession.query(func.count(Group.objectId)).scalar()
     totaldevices = dbsession.query(func.count(Device.objectId)).scalar()
     if totalgroups > MAX_GROUPS:

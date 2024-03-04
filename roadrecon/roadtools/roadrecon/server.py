@@ -299,8 +299,7 @@ def get_mfa():
         )
     ))
     out = []
-    #pyLint: disable-next=E1133
-    for user, in all_mfa:
+    for user, in all_mfa: # pylint: disable=E1133
         mfa_methods = len(user.strongAuthenticationDetail['methods'])
         methods = [method['methodType'] for method in user.strongAuthenticationDetail['methods']]
         has_app = 'PhoneAppOTP' in methods or 'PhoneAppNotification' in methods
@@ -537,6 +536,7 @@ def get_authpolicies():
 
 @app.route("/api/stats", methods=["GET"])
 def get_stats():
+    # pylint: disable=not-callable
     stats = {
         'countUsers': db.session.query(func.count(User.objectId)).scalar(),
         'countGroups': db.session.query(func.count(Group.objectId)).scalar(),

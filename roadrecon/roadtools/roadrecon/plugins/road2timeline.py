@@ -198,8 +198,8 @@ def main(args: Optional[argparse.Namespace] = None) -> Path:
 
     # Do some reflection to grab the tables
     # and their respective column types
-    db_metadata = sqlalchemy.MetaData(bind=engine, schema="main")
-    db_metadata.reflect()
+    db_metadata = sqlalchemy.MetaData(schema="main")
+    db_metadata.reflect(bind=engine)
 
     if not HAS_RTT_MODULES:
         print('Error importing required modules for road2timeline. Make sure pyyaml, numpy and pandas are installed.')
