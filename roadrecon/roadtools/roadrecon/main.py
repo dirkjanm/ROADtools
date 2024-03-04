@@ -65,6 +65,11 @@ def main():
     gui_parser.add_argument('--profile',
                             action='store_true',
                             help='Enable flask profiler')
+    gui_parser.add_argument('--port',
+                            type=int,
+                            action='store',
+                            help='HTTP Server port (default=5000)',
+                            default=5000)
 
     # Construct plugins module options
     plugin_parser = subparsers.add_parser('plugin', help='Run a ROADrecon plugin')
