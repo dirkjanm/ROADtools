@@ -40,11 +40,16 @@
         <tr><th>Application consent settings</th><td>
           <div *ngIf="authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole.length > 0; then thenBlock else elseBlock"></div>
           <ng-template #thenBlock>
-            <div [ngSwitch]="authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole[0]">
-              <span *ngSwitchCase="'ManagePermissionGrantsForSelf.microsoft-user-default-legacy'">Users can consent to apps (insecure old default)</span>
-              <span *ngSwitchCase="'ManagePermissionGrantsForSelf.microsoft-user-default-low'">Users can consent to limited permissions only (default)</span>
-              <span *ngSwitchDefault>Unknown: {{ authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole[0] }}</span>
+            <div *ngFor="let policy of authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole">
+              <div [ngSwitch]="policy">
+                <span *ngSwitchCase="'ManagePermissionGrantsForSelf.microsoft-user-default-legacy'">Users can consent to applications (insecure old default)</span>
+                <span *ngSwitchCase="'ManagePermissionGrantsForSelf.microsoft-user-default-low'">Users can consent to limited permissions only (default)</span>
+                <span *ngSwitchCase="'ManagePermissionGrantsForOwnedResource.microsoft-dynamically-managed-permissions-for-chat'">Resource specific consent for chats: Managed by Microsoft</span>
+                <span *ngSwitchCase="'ManagePermissionGrantsForOwnedResource.microsoft-dynamically-managed-permissions-for-team'">Resource specific consent for Teams: Managed by Microsoft</span>
+                <span *ngSwitchDefault>Unknown: {{ policy }}</span>
+              </div>
             </div>
+            <span *ngIf="!hasSelfConsentPolicy">User self-consent is disabled</span>
           </ng-template>
           <ng-template #elseBlock>User consent is disabled</ng-template>
         </td></tr>

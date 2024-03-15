@@ -12,6 +12,7 @@ export class IndexComponent implements OnInit {
   public tenantdetails: TenantDetail;
   public tenantstats: TenantStats;
   public authorizationPolicy: AuthorizationPolicy;
+  public hasSelfConsentPolicy: boolean = false;
   public displayedColumns: string[] = ['name', 'type', 'capabilities', 'properties']
   constructor(private service: DatabaseService, public dialog: MatDialog) {  }
 
@@ -21,6 +22,12 @@ export class IndexComponent implements OnInit {
     this.service.getAuthorizationPolicies().subscribe((data: AuthorizationPolicy[]) => {
       if(data.length > 0){
         this.authorizationPolicy = data[0];
+        data[0].permissionGrantPolicyIdsAssignedToDefaultUserRole.forEach((value: string) => {
+          // Check this explicitly because of the new elements here
+          if (value.indexOf("ManagePermissionGrantsForSelf") != -1){
+            this.hasSelfConsentPolicy = true;
+          }
+        });
       }
     });
   }

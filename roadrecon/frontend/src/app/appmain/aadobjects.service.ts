@@ -230,7 +230,7 @@ export interface AuthorizationPolicy {
     description: string;
     enabledPreviewFeatures: object;
     guestUserRoleId: string;
-    permissionGrantPolicyIdsAssignedToDefaultUserRole: object[];
+    permissionGrantPolicyIdsAssignedToDefaultUserRole: string[];
 }
 
 @Injectable({
