@@ -44,6 +44,8 @@ def main():
     device_parser.add_argument('--device-type', action='store', help='Device OS type (default: Windows)')
     device_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
     device_parser.add_argument('--deviceticket', action='store', help='Device MSA ticket to match with existing device')
+    device_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Dsreg/10.0')
 
     # Construct hybrid device module
     hdevice_parser = subparsers.add_parser('hybriddevice', help='Join an on-prem device to Azure AD')
@@ -57,6 +59,8 @@ def main():
     hdevice_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
     hdevice_parser.add_argument('--sid', action='store', required=True, help='Device SID in AD')
     hdevice_parser.add_argument('-t', '--tenant', action='store', required=True, help='Tenant ID where device exists')
+    hdevice_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Dsreg/10.0')
 
     # Construct PRT module
     prt_parser = subparsers.add_parser('prt', help='PRT request/renewal module')
@@ -558,8 +562,9 @@ def main():
         sys.exit(1)
         return
 
-    deviceauth = DeviceAuthentication(auth)
     args = parser.parse_args()
+    deviceauth = DeviceAuthentication(auth)
+    deviceauth.parse_args(args)
     seleniumproxy = None
 
     if args.proxy:
@@ -601,7 +606,7 @@ def main():
                 jointype = 0
             else:
                 jointype = 4
-            deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version, deviceticket=args.deviceticket)
+            deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem)
         elif args.action == 'delete':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem):
                 return
@@ -609,7 +614,7 @@ def main():
     elif args.command == 'hybriddevice':
         if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
             return
-        deviceauth.register_hybrid_device(args.sid, args.tenant, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version)
+        deviceauth.register_hybrid_device(args.sid, args.tenant, certout=args.cert_pem, privout=args.key_pem)
     elif args.command == 'prt':
         if args.action == 'request':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
