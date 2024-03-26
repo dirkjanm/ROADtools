@@ -65,21 +65,28 @@ class DeviceAuthentication():
             self.auth = Authentication()
 
     def parse_args(self, args):
-        self.os_version = args.os_version
-        self.deviceticket = args.deviceticket
-        self.device_name = args.name
-        self.device_type = args.device_type
-        self.user_agent = args.user_agent
-        self.certout = args.cert_pem
-        self.privout = args.key_pem
+        if hasattr(args,"os_version"):
+            self.os_version = args.os_version
+        if hasattr(args,"deviceticket"):
+            self.deviceticket = args.deviceticket
+        if hasattr(args,"name"):
+            self.device_name = args.name
+        if hasattr(args,"device_type"):
+            self.device_type = args.device_type
+        if hasattr(args,"user_agent"):
+            self.user_agent = args.user_agent
+        if hasattr(args,"cert_pem"):
+            self.certout = args.cert_pem
+        if hasattr(args,"key_pem"):
+            self.privout = args.key_pem
 
-        if not self.user_agent:
+        if not hasattr(self,"user_agent") or self.user_agent is None:
             self.user_agent = "Dsreg/10.0"
 
-        if not self.device_type:
+        if not hasattr(self,"device_type") or self.device_type is None:
             self.device_type = "Windows"
 
-        if not self.os_version:
+        if not hasattr(self,"os_version") or self.os_version is None:
             if self.device_type.lower() == "windows":
                 self.os_version = "10.0.19041.928"
             elif self.device_type.lower() == "macos":
@@ -87,7 +94,7 @@ class DeviceAuthentication():
             elif self.device_type.lower() == "android":
                 self.os_version = "13.0"
 
-        if not self.device_name:
+        if not hasattr(self,"device_name") or self.device_name is None:
             self.device_name = 'DESKTOP-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
     def loadcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
