@@ -75,13 +75,16 @@ class DeviceAuthentication():
             self.device_type = args.device_type
         if hasattr(args,"user_agent"):
             self.user_agent = args.user_agent
+            self.auth.user_agent = args.user_agent
         if hasattr(args,"cert_pem"):
             self.certout = args.cert_pem
         if hasattr(args,"key_pem"):
             self.privout = args.key_pem
+        if hasattr(args,"device_user_agent"):
+            self.device_user_agent = args.device_user_agent
 
-        if not hasattr(self,"user_agent") or self.user_agent is None:
-            self.user_agent = "Dsreg/10.0"
+        if not hasattr(self,"device_user_agent") or self.device_user_agent is None:
+            self.device_user_agent = "Dsreg/10.0"
 
         if not hasattr(self,"device_type") or self.device_type is None:
             self.device_type = "Windows"
@@ -295,7 +298,7 @@ class DeviceAuthentication():
         headers = {
             'Authorization': f'Bearer {access_token}',
             'Content-Type': 'application/json',
-            'User-Agent': f'{self.user_agent} (Windows {self.os_version})',
+            'User-Agent': f'{self.device_user_agent} (Windows {self.os_version})',
             'Accept': 'application/json',
         }
         data = {
@@ -543,7 +546,7 @@ class DeviceAuthentication():
         }
 
         headers = {
-            'User-Agent': f'{self.user_agent} ({self.device_type} {self.os_version})',
+            'User-Agent': f'{self.device_user_agent} ({self.device_type} {self.os_version})',
             'Content-Type': 'application/json'
         }
         # Extract device ID from certificate

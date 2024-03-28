@@ -44,8 +44,10 @@ def main():
     device_parser.add_argument('--device-type', action='store', help='Device OS type (default: Windows)')
     device_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
     device_parser.add_argument('--deviceticket', action='store', help='Device MSA ticket to match with existing device')
+    device_parser.add_argument('-dua', '--device-user-agent', action='store',
+                                help='Custom device user agent to use. Default: Dsreg/10.0')
     device_parser.add_argument('-ua', '--user-agent', action='store',
-                                help='Custom user agent to use. Default: Dsreg/10.0')
+                                help='Custom request user agent to use. Default: Python requests user agent')
 
     # Construct hybrid device module
     hdevice_parser = subparsers.add_parser('hybriddevice', help='Join an on-prem device to Azure AD')
@@ -59,8 +61,10 @@ def main():
     hdevice_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
     hdevice_parser.add_argument('--sid', action='store', required=True, help='Device SID in AD')
     hdevice_parser.add_argument('-t', '--tenant', action='store', required=True, help='Tenant ID where device exists')
+    hdevice_parser.add_argument('-dua', '--device-user-agent', action='store',
+                                help='Custom device user agent to use. Default: Dsreg/10.0')
     hdevice_parser.add_argument('-ua', '--user-agent', action='store',
-                                help='Custom user agent to use. Default: Dsreg/10.0')
+                                help='Custom user agent to use. Default: Python requests user agent')
 
     # Construct PRT module
     prt_parser = subparsers.add_parser('prt', help='PRT request/renewal module')
