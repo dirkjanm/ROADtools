@@ -71,6 +71,8 @@ class DeviceAuthentication():
             self.deviceticket = args.deviceticket
         if hasattr(args,"name"):
             self.device_name = args.name
+        if hasattr(args,"domain"):
+            self.domain = args.domain
         if hasattr(args,"device_type"):
             self.device_type = args.device_type
         if hasattr(args,"user_agent"):
@@ -88,6 +90,9 @@ class DeviceAuthentication():
 
         if not hasattr(self,"device_type") or self.device_type is None:
             self.device_type = "Windows"
+
+        if not hasattr(self,"domain") or self.domain is None:
+            self.domain = "iminyour.cloud"
 
         if not hasattr(self,"os_version") or self.os_version is None:
             if self.device_type.lower() == "windows":
@@ -407,7 +412,7 @@ class DeviceAuthentication():
                     "Data" : certbytes.decode('utf-8')
                 },
                 "OSVersion" : self.os_version,
-                "TargetDomain" : "iminyour.cloud",
+                "TargetDomain" : self.domain,
                 "AikCertificate" : "",
                 "DeviceType" : "MacOS",
                 "TransportKey" : base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
@@ -438,7 +443,7 @@ class DeviceAuthentication():
                     },
                 "TransportKey": pubkeycngblob.decode('utf-8'),
                 # Can likely be edited to anything, are not validated afaik
-                "TargetDomain": "iminyour.cloud",
+                "TargetDomain": self.domain,
                 "DeviceType": self.device_type,
                 "OSVersion": self.os_version,
                 "DeviceDisplayName": self.device_name,
@@ -525,7 +530,7 @@ class DeviceAuthentication():
             "ServerAdJoinData":
             {
                 "TransportKey": pubkeycngblob.decode('utf-8'),
-                "TargetDomain": "iminyour.cloud",
+                "TargetDomain": self.domain,
                 "DeviceType": self.device_type,
                 "OSVersion": self.os_version,
                 "DeviceDisplayName": self.device_name,
