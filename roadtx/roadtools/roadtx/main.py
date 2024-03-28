@@ -964,13 +964,16 @@ def main():
             if args.verbose:
                 print("[debug] Reading token value from stdin.")
             tokendata = sys.stdin.read()
-        # Describing saved token file args.tokenfile
-        elif os.path.exists(args.tokenfile):
-            if args.verbose:
-                print("[debug] Reading token value from file '%s'." % (args.tokenfile))
-            f = open(args.tokenfile, "r")
-            tokendata = f.read()
-            f.close()
+        # Maybe some of the above had already tokendata set. But in Docker isatty is false.. so check if tokendata is None at this point
+        # Otherwise read it from default file
+        if not tokendata or tokendata == "":
+            # Describing saved token file args.tokenfile
+            if os.path.exists(args.tokenfile):
+                if args.verbose:
+                    print("[debug] Reading token value from file '%s'." % (args.tokenfile))
+                f = open(args.tokenfile, "r")
+                tokendata = f.read()
+                f.close()
         if tokendata[0] == '{':
             # assume json object
             tokenobject = json.loads(tokendata)
