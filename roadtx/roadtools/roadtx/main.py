@@ -197,6 +197,8 @@ def main():
     codeauth_parser.add_argument('code',
                                  action='store',
                                  help="Code to auth with that you got from Azure AD")
+    codeauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
 
     # Bulk enrollment token
     bulkenrollment_parser = subparsers.add_parser('bulkenrollmenttoken', help='Request / use bulk enrollment tokens')
@@ -725,6 +727,7 @@ def main():
     elif args.command == 'codeauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
         if args.scope:
             # Switch to identity platform v2 and use scope instead of resource
