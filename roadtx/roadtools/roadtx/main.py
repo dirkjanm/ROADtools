@@ -5,6 +5,7 @@ import json
 import codecs
 import binascii
 import base64
+import time
 from urllib.parse import quote_plus
 from roadtools.roadlib.auth import Authentication, get_data
 from roadtools.roadlib.constants import WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES, WELLKNOWN_USER_AGENTS
@@ -32,11 +33,11 @@ def main():
     # Construct device module
     device_parser = subparsers.add_parser('device', help='Register or join devices to Azure AD')
     device_parser.add_argument('-a',
-                                '--action',
-                                action='store',
-                                choices=['join','register','delete'],
-                                default='join',
-                                help='Action to perform (default: join)')
+                               '--action',
+                               action='store',
+                               choices=['join','register','delete'],
+                               default='join',
+                               help='Action to perform (default: join)')
     device_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', help='Certificate file to save device cert to (default: <devicename>.pem)')
     device_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for certificate (default: <devicename>.key)')
     device_parser.add_argument('-n', '--name', action='store', help='Device display name (default: DESKTOP-<RANDOM>)')
@@ -126,6 +127,10 @@ def main():
                                 help='Do not store tokens on disk, pipe to stdout instead')
     prtauth_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. Default: Python requests user agent')
+    prtauth_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='Tenant ID or domain to auth to')
 
 
     # Application auth
@@ -661,6 +666,8 @@ def main():
             deviceauth.saveprt(prtdata, args.prt_file)
     elif args.command == 'prtauth':
         auth.set_user_agent(args.user_agent)
+        if args.tenant:
+            auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_file and deviceauth.loadprt(args.prt_file):
@@ -802,7 +809,7 @@ def main():
         service = selauth.get_service(args.driver_path)
         if not service:
             return
-        selauth.driver = selauth.get_webdriver(service)
+        selauth.driver = selauth.get_webdriver(service, intercept=custom_ua)
         if custom_ua:
             result = selauth.selenium_login_with_custom_useragent(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
         else:
@@ -831,20 +838,33 @@ def main():
         if args.auth_url:
             url = args.auth_url
         else:
+            if not args.tokens_stdout:
+                if args.scope:
+                    print(f'Running in token request mode - Requesting token with scope {auth.scope}\nIf you want a browser window instead, use the -url parameter to start browsing.')
+                else:
+                    print(f'Running in token request mode - Requesting token for {auth.resource_uri}\nIf you want a browser window instead, use the -url parameter to start browsing.')
             url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service, intercept=True)
         result = selauth.selenium_login_with_prt(url, keep=args.keep_open, prtcookie=args.prt_cookie, capture=args.capture_code)
-        if not result:
+        if not result and not args.keep_open:
             return
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
+            if not args.keep_open:
+                return
+        else:
+            auth.outfile = args.tokenfile
+            auth.save_tokens(args)
+        if args.keep_open:
+            try:
+                time.sleep(99999)
+            except KeyboardInterrupt:
+                return
             return
-        auth.outfile = args.tokenfile
-        auth.save_tokens(args)
     elif args.command == 'browserprtinject':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
@@ -983,7 +1003,12 @@ def main():
         datafile = os.path.join(current_dir, 'firstpartyscopes.json')
         with codecs.open(datafile,'r','utf-8') as infile:
             data = json.load(infile)
-        resource, scope = args.scope.lower().rsplit('/', 1)
+        try:
+            resource, scope = args.scope.lower().rsplit('/', 1)
+        except ValueError:
+            print("No resource (API) specified in scope, defaulting to Microsoft Graph")
+            resource = "https://graph.microsoft.com"
+            scope = args.scope
         try:
             resourceid = data['resourceidentifiers'][resource.lower()]
         except KeyError:

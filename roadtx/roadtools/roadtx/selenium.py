@@ -56,6 +56,8 @@ class SeleniumAuthentication():
             }
             firefox_options=FirefoxOptions()
             firefox_options.add_argument("-headless")
+            # Force intercept to add proxy
+            intercept = True
         elif self.proxy:
             options = {
                 'proxy': {
@@ -65,6 +67,8 @@ class SeleniumAuthentication():
                 },
                 'request_storage': 'memory'
             }
+            # Force intercept to add proxy
+            intercept = True
         else:
             options = {'request_storage': 'memory'}
         if intercept and self.headless:
@@ -194,7 +198,7 @@ class SeleniumAuthentication():
                     raise AuthenticationException('Could not complete device code auth within the time limit (button not found: idSIButton9)')
         else:
             try:
-                WebDriverWait(driver, 120).until(lambda d: '?code=' in d.current_url)
+                WebDriverWait(driver, 1200).until(lambda d: '?code=' in d.current_url)
                 res = urlparse(driver.current_url)
                 params = parse_qs(res.query)
                 code = params['code'][0]
