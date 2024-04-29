@@ -6,6 +6,7 @@ import codecs
 import binascii
 import base64
 import time
+from collections import defaultdict
 from urllib.parse import quote_plus
 from roadtools.roadlib.auth import Authentication, get_data
 from roadtools.roadlib.constants import WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES, WELLKNOWN_USER_AGENTS
@@ -270,7 +271,7 @@ def main():
 
     # Find scope
     getscope_parser = subparsers.add_parser('getscope', aliases=['findscope'], help='Find first-party apps with the right pre-approved scope')
-    getscope_parser.add_argument('-s', '--scope', default=None, action='store', required=True, metavar='SCOPE', help='Desired scope (API URL + scope on that API, for example https://graph.microsoft.com/files.read)')
+    getscope_parser.add_argument('-s', '--scope', default=None, action='store', required=False, metavar='SCOPE', help='Desired scope (API URL + scope on that API, for example https://graph.microsoft.com/files.read). If omitted, all known scopes will be listed.')
     getscope_parser.add_argument('--foci', action='store_true', help='Only list FOCI clients')
     getscope_parser.add_argument('--csv', action='store_true', help='Output in CSV format')
 
@@ -1003,12 +1004,39 @@ def main():
         datafile = os.path.join(current_dir, 'firstpartyscopes.json')
         with codecs.open(datafile,'r','utf-8') as infile:
             data = json.load(infile)
+
+        if not args.scope:
+            results = set()
+
+            app_resource_ids = defaultdict(set)
+            for resource, app_id in data['resourceidentifiers'].items():
+                app_resource_ids[app_id].add(resource)
+
+            for app in data['apps'].values():
+                if args.foci and not app['foci']:
+                    continue
+
+                for app_id, scopes in app['scopes'].items():
+                    for resource in app_resource_ids.get(app_id, [f'https://{app_id}']):
+                        resource = resource.rstrip('/')
+                        for scope in map(str.lower, scopes):
+                            results.add(f'{resource}/{scope}')
+
+            if args.csv:
+                print('"scope"')
+
+            for scope in sorted(results):
+                print(f'"{scope}"' if args.csv else scope)
+
+            return
+
         try:
             resource, scope = args.scope.lower().rsplit('/', 1)
         except ValueError:
             print("No resource (API) specified in scope, defaulting to Microsoft Graph")
             resource = "https://graph.microsoft.com"
             scope = args.scope
+
         try:
             resourceid = data['resourceidentifiers'][resource.lower()]
         except KeyError:
@@ -1017,6 +1045,7 @@ def main():
             except KeyError:
                 print(f'The API {resource} is not a known resource')
                 return
+
         # Loop through scopes
         results = []
         for appid, app in data['apps'].items():
@@ -1160,10 +1189,6 @@ def main():
         cookie = auth.create_prt_cookie_kdf_ver_2(deviceauth.prt, deviceauth.session_key, challenge)
         print(f"PRT cookie: {cookie}")
         print("Can be used in external browsers using the x-ms-RefreshTokenCredential header or cookie. Note that a PRT cookie is only valid for 5 minutes.")
-
-
-
-
 
 if __name__ == '__main__':
     main()
