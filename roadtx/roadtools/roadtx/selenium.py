@@ -13,8 +13,26 @@ from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.common import exceptions
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 import pyotp
+
+# Decorator for selenium functions
+def selenium_wrap(func):
+    def wrapped(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except exceptions.NoSuchWindowException as exc:
+            if 'Browsing context has been discarded' in str(exc):
+                print('Browser window was closed by the user')
+                return False
+            raise exc
+        except exceptions.WebDriverException as exc:
+            if 'Failed to decode response from marionette' in str(exc):
+                print('Browser window closed by the user')
+                return False
+            raise exc
+    return wrapped
 
 class SeleniumAuthentication():
     def __init__(self, auth, deviceauth, redirurl, proxy=None):
@@ -112,6 +130,7 @@ class SeleniumAuthentication():
             otpseed = None
         return userpassword, otpseed
 
+    @selenium_wrap
     def selenium_login(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, federated=False, devicecode=None):
         '''
         Selenium based login with optional autofill of whatever is provided
@@ -223,7 +242,6 @@ class SeleniumAuthentication():
         self.driver.request_interceptor = interceptor
         return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
 
-
     def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None, capture=False):
         '''
         Selenium login with PRT injection.
@@ -305,6 +323,7 @@ class SeleniumAuthentication():
         self.driver.request_interceptor = interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
+    @selenium_wrap
     def selenium_enrich_prt(self, url, otpseed=None):
         '''
         Selenium authentication to add NGC MFA claim to a PRT or token.
@@ -318,10 +337,10 @@ class SeleniumAuthentication():
                 request.headers['User-Agent'] = self.auth.user_agent
             else:
                 request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; WebView/3.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19044'
-            request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
-            request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
-            request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
-            request.headers['Sec-Ch-Ua-Platform-Version'] = '"10.0.0"'
+                request.headers['Sec-Ch-Ua'] = '" Not;A Brand";v="99", "Microsoft Edge";v="103", "Chromium";v="103"'
+                request.headers['Sec-Ch-Ua-Mobile'] =  '?0'
+                request.headers['Sec-Ch-Ua-Platform'] =  '"Windows"'
+                request.headers['Sec-Ch-Ua-Platform-Version'] = '"10.0.0"'
 
             if request.url.startswith('https://login.microsoftonline.com') and self.deviceauth.prt:
                 if '/authorize' in request.url or '/login' in request.url or '/kmsi' in request.url or '/reprocess' in request.url or '/resume' in request.url:
@@ -375,3 +394,68 @@ class SeleniumAuthentication():
         code = el.get_property("value")
         driver.close()
         return self.auth.authenticate_with_code_encrypted(code, self.deviceauth.session_key, self.redirurl)
+
+    @selenium_wrap
+    def selenium_login_owatoken(self, owatoken):
+        def interceptor(request):
+            if request.url == 'https://outlook.office.com/owa/?init':
+                # Replace with owa request
+                req_url = "https://outlook.office.com:443/owa/"
+                req_cookies = {
+                    "ClientId": "AF0E07DCF04B42D3A1F0BA42E387B211",
+                    "OIDC": "1",
+                    "OpenIdConnect.nonce.v3.LTNEDyBePk9sAdZIbnys6v-YAcgFNTLDF9tdXKxWVp8":
+                    "638357308291354513.0509bcb8-3602-48c0-be52-fd59799eca11",
+                    "X-OWA-RedirectHistory": "ArLym14BkQ97-Jbm2wg"
+                }
+                req_headers = {
+                    "Cache-Control": "max-age=0",
+                    "Upgrade-Insecure-Requests": "1",
+                    "Origin": "https://login.microsoftonline.com",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                    "Sec-Fetch-Site": "cross-site",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Dest": "document",
+                    "Referer": "https://login.microsoftonline.com/",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Priority": "u=0, i"
+                }
+                if self.auth.user_agent:
+                    req_headers['User-Agent'] = self.auth.user_agent
+                else:
+                    req_headers['User-Agent'] = request.headers['User-Agent']
+                req_data = {
+                    "code": "ohnoesthisisempty",
+                    "id_token": owatoken,
+                    "Astate": "DctBFoAgCABRrNdxSBBJOI6abVt2_Vj82U0CgD1sIVEE2iUm2oSsOItWZTlJyccchnJRwWqTcCwt-NzqzX3NzpziPfL79fwD",
+                    "session_state": "56f4cbb9-6cc9-4150-a4b3-5b2865f916c9",
+                    "correlation_id": "2c13357a-eab7-97ed-bd48-8b50a6979bfc"
+                }
+                res = requests.post(req_url, allow_redirects=False, headers=req_headers, cookies=req_cookies, data=req_data, timeout=30.0)
+                request.create_response(
+                    status_code=res.status_code,
+                    headers=dict(res.headers),
+                    body=res.content
+                )
+        def resp_interceptor(request, response):
+            if request.url == 'https://outlook.office.com/owa/':
+                if response.headers.get('X-Ms-Diagnostics') and response.headers.get('Location','').startswith('https://login.microsoftonline.com'):
+                    diag = response.headers.get('X-Ms-Diagnostics')
+                    print(f'Error during auth: {diag}')
+                    del response.headers['Location']
+                    body = '<html><body><div name="youshouldquit">An error occurred (see command line)</div></body></html>'
+                    response.body = encoding.encode(body, response.headers.get('Content-Encoding', 'identity'))
+                    del response.headers['Content-Length']
+                    response.headers['Content-Length'] = len(response.body)
+
+
+        self.driver.request_interceptor = interceptor
+        self.driver.response_interceptor = resp_interceptor
+
+        driver = self.driver
+        driver.get("https://outlook.office.com/owa/?init")
+        el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='div[name="youshouldquit"]'))
+        driver.close()
+
