@@ -178,6 +178,8 @@ class SeleniumAuthentication():
                 driver.close()
             if capture:
                 return code
+            if self.auth.scope:
+                return self.auth.authenticate_with_code_native_v2(code, self.redirurl)
             return self.auth.authenticate_with_code_native(code, self.redirurl)
         except TimeoutException:
             pass
@@ -225,6 +227,8 @@ class SeleniumAuthentication():
                     driver.close()
                 if capture:
                     return code
+                if self.auth.scope:
+                    return self.auth.authenticate_with_code_native_v2(code, self.redirurl)
                 return self.auth.authenticate_with_code_native(code, self.redirurl)
             except TimeoutException:
                 if not keep:

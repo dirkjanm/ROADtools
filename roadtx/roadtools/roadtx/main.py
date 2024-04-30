@@ -190,6 +190,9 @@ def main():
     codeauth_parser.add_argument('--tokens-stdout',
                                  action='store_true',
                                  help='Do not store tokens on disk, pipe to stdout instead')
+    codeauth_parser.add_argument('--cae',
+                                 action='store_true',
+                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
     codeauth_parser.add_argument('code',
                                  action='store',
                                  help="Code to auth with that you got from Azure AD")
@@ -337,6 +340,9 @@ def main():
     intauth_parser.add_argument('--federated',
                                 action='store_true',
                                 help='Fill in password on Federation server login page (assumes AD FS)')
+    intauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
@@ -389,6 +395,9 @@ def main():
     kdbauth_parser.add_argument('--device-code',
                                 action='store',
                                 help='Authenticate with the given device code')
+    kdbauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
 
 
 
@@ -444,6 +453,9 @@ def main():
     browserprtauth_parser.add_argument('--capture-code',
                                        action='store_true',
                                        help='Do not attempt to redeem any authentication code but print it instead')
+    browserprtauth_parser.add_argument('--cae',
+                                       action='store_true',
+                                       help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
 
     # Interactive auth using Selenium - inject PRT to other user
     injauth_parser = subparsers.add_parser('browserprtinject', help='Selenium based auth with automatic PRT injection. Can be used with other users to add device state to session')
@@ -498,6 +510,9 @@ def main():
     injauth_parser.add_argument('--tokens-stdout',
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
+    injauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
 
     # Interactive auth using Selenium - enrich PRT
     enrauth_parser = subparsers.add_parser('prtenrich', help='Interactive authentication to add MFA claim to a PRT')
@@ -723,6 +738,8 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.tenant = args.tenant
+        if args.cae:
+            auth.use_cae = args.cae
         if args.scope:
             # Switch to identity platform v2 and use scope instead of resource
             auth.scope = args.scope
@@ -765,6 +782,7 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        auth.use_cae = args.cae
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
         selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
@@ -799,6 +817,7 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        auth.use_cae = args.cae
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
         selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
@@ -826,6 +845,8 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        auth.use_cae = args.cae
+        auth.scope = args.scope
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_cookie:
@@ -871,6 +892,7 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        auth.use_cae = args.cae
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_cookie:
@@ -1024,6 +1046,8 @@ def main():
 
             if args.csv:
                 print('"scope"')
+            else:
+                print("Listing all possible scopes")
 
             for scope in sorted(results):
                 print(f'"{scope}"' if args.csv else scope)
