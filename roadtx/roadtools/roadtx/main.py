@@ -31,6 +31,40 @@ def main():
     auth_parser = subparsers.add_parser('gettokens', aliases=['auth','gettoken'], help='Authenticate to Azure AD and get access/refresh tokens. Supports various authentication methods.')
     auth.get_sub_argparse(auth_parser, for_rr=False)
 
+    # Refresh token helper
+    rttsauth_parser = subparsers.add_parser('refreshtokento', help='Use cached refresh token to switch between resources or clients')
+    clienthelptext = 'Client ID (application ID) to use when authenticating. Accepts aliases (list with roadtx listaliases). Read from token file if not supplied'
+    rttsauth_parser.add_argument('-c',
+                                 '--client',
+                                 action='store',
+                                 help=clienthelptext)
+    rttsauth_parser.add_argument('-r',
+                                 '--resource',
+                                 action='store',
+                                 help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
+                                 default='https://graph.windows.net')
+    rttsauth_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password secret of the application if not a public app')
+    rttsauth_parser.add_argument('-s',
+                                 '--scope',
+                                 action='store',
+                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
+    rttsauth_parser.add_argument('-t',
+                                 '--tenant',
+                                 action='store',
+                                 help='Tenant ID or domain to auth to')
+    rttsauth_parser.add_argument('--tokenfile',
+                                 action='store',
+                                 help='File to read and store the tokens from/to (default: .roadtools_auth)',
+                                 default='.roadtools_auth')
+    rttsauth_parser.add_argument('--tokens-stdout',
+                                 action='store_true',
+                                 help='Do not store tokens on disk, pipe to stdout instead')
+    rttsauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                 help='Custom user agent to use. Default: Python requests user agent')
+    rttsauth_parser.add_argument('--cae',
+                                 action='store_true',
+                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+
     # Construct device module
     device_parser = subparsers.add_parser('device', help='Register or join devices to Azure AD')
     device_parser.add_argument('-a',
@@ -134,29 +168,51 @@ def main():
                                 help='Tenant ID or domain to auth to')
 
 
+    prtauth_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version v3')
+
     # Application auth
-    # appauth_parser = subparsers.add_parser('appauth', help='Authenticate as an application')
-    # helptext = 'Client ID (application ID) to use when authenticating.'
-    # appauth_parser.add_argument('-c',
-    #                             '--client',
-    #                             action='store',
-    #                             help=helptext,
-    #                             default='1b730954-1685-4b74-9bfd-dac224a7b894')
-    # appauth_parser.add_argument('-r',
-    #                             '--resource',
-    #                             action='store',
-    #                             help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
-    #                             default='https://graph.windows.net')
-    # appauth_parser.add_argument('-s',
-    #                             '--scope',
-    #                             action='store',
-    #                             help='Token scope. Either a full URL or alias (msgraph, aadgraph, devicereg) to use the default.')
-    # appauth_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password secret of the appliction')
-    # appauth_parser.add_argument('-t',
-    #                             '--tenant',
-    #                             action='store',
-    #                             help='Tenant ID or domain to auth to',
-    #                             required=True)
+    appauth_parser = subparsers.add_parser('appauth', help='Authenticate as an application')
+    helptext = 'Client ID (application ID) to use when authenticating.'
+    appauth_parser.add_argument('-c',
+                                '--client',
+                                action='store',
+                                help=helptext,
+                                default='1b730954-1685-4b74-9bfd-dac224a7b894')
+    appauth_parser.add_argument('-p',
+                                '--password',
+                                action='store',
+                                help="Client secret or password credential for the application, if not using certificates")
+    appauth_parser.add_argument('-r',
+                                '--resource',
+                                action='store',
+                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
+                                default='https://graph.windows.net')
+    appauth_parser.add_argument('-s',
+                                '--scope',
+                                action='store',
+                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
+    appauth_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='Tenant ID or domain to auth to',
+                                required=True)
+    appauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with Application certificate')
+    appauth_parser.add_argument('--key-pem', action='store', metavar='file', help='Private key file for Application')
+    appauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Application cert and key as PFX file')
+    appauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    appauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    appauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    appauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
+    appauth_parser.add_argument('--tokenfile',
+                                action='store',
+                                help='File to store the credentials (default: .roadtools_auth)',
+                                default='.roadtools_auth')
+    appauth_parser.add_argument('--tokens-stdout',
+                                action='store_true',
+                                help='Do not store tokens on disk, pipe to stdout instead')
 
     # Code grant flow auth
     codeauth_parser = subparsers.add_parser('codeauth', help='Code grant flow - exchange code for auth tokens')
@@ -166,7 +222,7 @@ def main():
                                  action='store',
                                  help=clienthelptext,
                                  default='1b730954-1685-4b74-9bfd-dac224a7b894')
-    codeauth_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password secret of the appliction if not a public app')
+    codeauth_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password secret of the application if not a public app')
     codeauth_parser.add_argument('-r',
                                  '--resource',
                                  action='store',
@@ -601,6 +657,58 @@ def main():
         res = auth.get_tokens(args)
         if not res:
             return
+        auth.save_tokens(args)
+    elif args.command == 'refreshtokento':
+        try:
+            with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                tokenobject = json.load(infile)
+            _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+        except FileNotFoundError:
+            print('This command requires the .roadtools_auth file, which was not found. Use the gettokens command to supply a refresh token manually.')
+            return
+        auth.set_client_id(tokenobject['_clientId'])
+        auth.set_resource_uri(args.resource)
+        auth.outfile = args.tokenfile
+        # Tenant from arguments or from tokenfile
+        if args.tenant:
+            auth.tenant = args.tenant
+        elif 'tenantId' in tokenobject:
+            auth.tenant = tokenobject['tenantId']
+        if args.cae:
+            auth.use_cae = args.cae
+        if not args.tokens_stdout:
+            if args.scope:
+                print(f'Requesting token with scope {args.scope}')
+            else:
+                print(f'Requesting token for resource {auth.resource_uri}')
+        if args.scope:
+            auth.scope = args.scope
+            auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password)
+        else:
+            auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password)
+        auth.save_tokens(args)
+    elif args.command == 'appauth':
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        auth.scope = args.scope
+        auth.use_cae = args.cae
+        auth.tenant = args.tenant
+        auth.outfile = args.tokenfile
+        if args.password:
+            # Password based flow
+            if args.scope:
+                auth.authenticate_as_app_native_v2(client_secret=args.password)
+            else:
+                auth.authenticate_as_app_native(client_secret=args.password)
+        else:
+            if not auth.loadappcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+                return
+            if args.scope:
+                assertion = auth.generate_app_assertion(use_v2=True)
+                auth.authenticate_as_app_native_v2(assertion=assertion)
+            else:
+                assertion = auth.generate_app_assertion(use_v2=False)
+                auth.authenticate_as_app_native(assertion=assertion)
         auth.save_tokens(args)
     elif args.command == 'device':
         if args.action in ('register', 'join'):
