@@ -55,6 +55,7 @@ class Authentication():
         self.debug = False
         self.scope = None
         self.user_agent = None
+        self.use_cae = False
 
     def get_authority_url(self, default_tenant='common'):
         """
@@ -168,6 +169,8 @@ class Authentication():
             data['client_secret'] = client_secret
         if additionaldata:
             data = {**data, **additionaldata}
+        if self.use_cae:
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -258,6 +261,8 @@ class Authentication():
         }
         if client_secret:
             data['client_secret'] = client_secret
+        if self.use_cae:
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
@@ -315,6 +320,8 @@ class Authentication():
             data['client_secret'] = client_secret
         if additionaldata:
             data = {**data, **additionaldata}
+        if self.use_cae:
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         if pkce_secret:
             raise NotImplementedError
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
@@ -383,6 +390,8 @@ class Authentication():
             "assertion": base64.b64encode(saml_token.encode('utf-8')).decode('utf-8'),
             "scope": self.scope,
         }
+        if self.use_cae:
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
@@ -528,6 +537,9 @@ class Authentication():
         else:
             tenant = self.tenant
         if scope:
+            # Add CAE support parameters
+            if self.use_cae:
+                urlt_v2 = urlt_v2 + '&claims={0}'.format(quote_plus('{"access_token":{"xms_cc":{"values":["cp1"]}}}'))
             # v2
             return urlt_v2.format(
                 quote_plus(self.client_id),
@@ -975,6 +987,9 @@ class Authentication():
                                  '--user-agent',
                                  action='store',
                                  help='User agent or UA alias to use when requesting tokens (default: python-requests/version)')
+        auth_parser.add_argument('--cae',
+                                 action='store_true',
+                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
         auth_parser.add_argument('-f',
                                  '--tokenfile',
                                  action='store',
@@ -1182,6 +1197,7 @@ class Authentication():
         self.set_resource_uri(args.resource)
         self.scope = args.scope
         self.set_user_agent(args.user_agent)
+        self.use_cae = args.cae
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
