@@ -19,6 +19,8 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.kbkdf import CounterLocation, KBKDFHMAC, Mode
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography import x509
 from roadtools.roadlib.constants import WELLKNOWN_RESOURCES, WELLKNOWN_CLIENTS, WELLKNOWN_USER_AGENTS, \
     DSSO_BODY_KERBEROS, DSSO_BODY_USERPASS
 import requests
@@ -56,6 +58,11 @@ class Authentication():
         self.scope = None
         self.user_agent = None
         self.use_cae = False
+
+        # For cert based app auth
+        self.appprivkey = None
+        self.appcertificate = None
+        self.appkeydata = None
 
     def get_authority_url(self, default_tenant='common'):
         """
@@ -97,6 +104,36 @@ class Authentication():
         res = self.requests_get(f"{authority_uri}/UserRealm/{user}?api-version=2.0")
         response = res.json()
         return response
+
+    def loadappcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
+        """
+        Load a certificate from disk for usage with application auth
+        """
+        if pemfile and privkeyfile:
+            with open(pemfile, "rb") as certf:
+                self.appcertificate = x509.load_pem_x509_certificate(certf.read())
+            with open(privkeyfile, "rb") as keyf:
+                self.appkeydata = keyf.read()
+                self.appprivkey = serialization.load_pem_private_key(self.appkeydata, password=None)
+            return True
+        if pfxfile or pfxbase64:
+            if pfxfile:
+                with open(pfxfile, 'rb') as pfxf:
+                    pfxdata = pfxf.read()
+            if pfxbase64:
+                pfxdata = base64.b64decode(pfxbase64)
+            if isinstance(pfxpass, str):
+                pfxpass = pfxpass.encode()
+            self.appprivkey, self.appcertificate, _ = pkcs12.load_key_and_certificates(pfxdata, pfxpass)
+            # PyJWT needs the key as PEM data anyway, so encode it
+            self.appkeydata = self.appprivkey.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
+            return True
+        print('You must specify either a PEM certificate file and private key file or a pfx file with the device keypair.')
+        return False
 
     def authenticate_device_code(self):
         """
@@ -189,6 +226,96 @@ class Authentication():
         context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
         self.tokendata = context.acquire_token_with_client_credentials(self.resource_uri, self.client_id, self.password)
         return self.tokendata
+
+    def authenticate_as_app_native(self, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate with an APP id + secret
+        Native ROADlib implementation
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "client_credentials",
+            "resource": self.resource_uri,
+        }
+        if assertion:
+            data['client_assertion_type'] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+            data['client_assertion'] = assertion
+        else:
+            if client_secret:
+                data['client_secret'] = client_secret
+            else:
+                data['client_secret'] = self.password
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = self.requests_post(f"{authority_uri}/oauth2/token", data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        access_token = tokenreply['access_token']
+        tokens = access_token.split('.')
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def authenticate_as_app_native_v2(self, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate with an APP id + secret (password credentials assigned to serviceprinicpal)
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "client_credentials",
+            "scope": self.scope,
+        }
+        if assertion:
+            data['client_assertion_type'] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+            data['client_assertion'] = assertion
+        else:
+            if client_secret:
+                data['client_secret'] = client_secret
+            else:
+                data['client_secret'] = self.password
+        if additionaldata:
+            data = {**data, **additionaldata}
+        if self.use_cae:
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
+        res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        access_token = tokenreply['access_token']
+        tokens = access_token.split('.')
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def generate_app_assertion(self, use_v2=True):
+        data = self.appcertificate.public_bytes(
+            serialization.Encoding.DER
+        )
+        digest = hashes.Hash(hashes.SHA1())
+        digest.update(data)
+        thumbprint = digest.finalize()
+        headers = {
+            "x5t": base64.urlsafe_b64encode(thumbprint).decode('utf-8'),
+        }
+        if use_v2:
+            suffix = '/oauth2/v2.0/token'
+        else:
+            suffix = '/oauth2/token'
+        payload = {
+            "aud": self.get_authority_url() + suffix,
+            "iat": str(int(time.time())),
+            "nbf": str(int(time.time())),
+            "exp": str(int(time.time())+(300)),
+            "iss": self.client_id,
+            "jti": str(uuid.uuid4()),
+            "sub": self.client_id,
+        }
+        return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
     def authenticate_with_code(self, code, redirurl, client_secret=None):
         """
@@ -1241,7 +1368,10 @@ class Authentication():
                 else:
                     return self.authenticate_with_saml_native(samltoken)
             if args.as_app and self.password:
-                return self.authenticate_as_app()
+                if self.scope:
+                    return self.authenticate_as_app_native_v2()
+                else:
+                    return self.authenticate_as_app_native()
             if args.device_code:
                 return self.authenticate_device_code()
             if args.prt_init:
