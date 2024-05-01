@@ -918,8 +918,9 @@ def main():
             if result:
                 print(f'Captured auth code: {result}')
             return
-        auth.outfile = args.tokenfile
-        auth.save_tokens(args)
+        elif result:
+            auth.outfile = args.tokenfile
+            auth.save_tokens(args)
     elif args.command == 'keepassauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
