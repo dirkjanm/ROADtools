@@ -166,6 +166,9 @@ def main():
                                 '--tenant',
                                 action='store',
                                 help='Tenant ID or domain to auth to')
+    prtauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens')
 
 
     prtauth_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version v3')
@@ -790,6 +793,7 @@ def main():
             deviceauth.saveprt(prtdata, args.prt_file)
     elif args.command == 'prtauth':
         auth.set_user_agent(args.user_agent)
+        auth.use_cae = args.cae
         if args.tenant:
             auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:

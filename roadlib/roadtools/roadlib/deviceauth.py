@@ -648,7 +648,7 @@ class DeviceAuthentication():
         Request a token (access / refresh / PRT) using a payload signed
         with the PRT session key.
         """
-        authlib = Authentication()
+        authority_uri = self.auth.get_authority_url()
         context = os.urandom(24)
         headers = {
             'ctx': base64.b64encode(context).decode('utf-8'), #.rstrip('=')
@@ -660,7 +660,7 @@ class DeviceAuthentication():
         jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
 
         # Now calculate the derived key based on random context plus jwt body
-        _, derived_key = authlib.calculate_derived_key_v2(self.session_key, context, jwtbody)
+        _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)
         reqjwt = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
 
         token_request_data = {
@@ -669,9 +669,11 @@ class DeviceAuthentication():
             'request':reqjwt,
             'client_info':'1'
         }
+        if self.auth.use_cae:
+            prt_request_data['claims'] = '{"access_token":{"xms_cc":{"values":["CP1"]}}}'
         if reqtgt:
             token_request_data['tgt'] = True
-        res = self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post(f'{authority_uri}/oauth2/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         responsedata = res.text
@@ -682,7 +684,6 @@ class DeviceAuthentication():
         Request a token (access / refresh / PRT) using a payload signed
         with the PRT session key. Uses PRT Protocol version 3
         """
-        authlib = Authentication()
         context = os.urandom(24)
         headers = {
             'ctx': base64.b64encode(context).decode('utf-8'),
@@ -695,7 +696,7 @@ class DeviceAuthentication():
         jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
 
         # Now calculate the derived key based on random context plus jwt body
-        _, derived_key = authlib.calculate_derived_key_v2(self.session_key, context, jwtbody)
+        _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)
 
         # Now calculate the derived key based on random context plus jwt body
         # _, derived_key = authlib.calculate_derived_key(self.session_key, context)
