@@ -895,6 +895,8 @@ def main():
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
         auth.use_cae = args.cae
+        if args.scope:
+            auth.scope = args.scope
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
         selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
