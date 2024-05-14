@@ -228,6 +228,7 @@ class DeviceAuthentication():
           "aud": "common",
           "iat": now-3600,
           "exp": now+3600,
+          "request_nonce": self.auth.get_srv_challenge()['Nonce'],
           "scope": "openid aza ugs"
         }
         headers = {
