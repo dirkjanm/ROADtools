@@ -671,12 +671,15 @@ def main():
             return
         auth.set_client_id(tokenobject['_clientId'])
         auth.set_resource_uri(args.resource)
+        auth.set_user_agent(args.user_agent)
         auth.outfile = args.tokenfile
         # Tenant from arguments or from tokenfile
         if args.tenant:
             auth.tenant = args.tenant
         elif 'tenantId' in tokenobject:
             auth.tenant = tokenobject['tenantId']
+        if args.client:
+            auth.set_client_id(args.client)
         if args.cae:
             auth.use_cae = args.cae
         if not args.tokens_stdout:
