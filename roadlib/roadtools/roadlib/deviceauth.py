@@ -574,12 +574,13 @@ class DeviceAuthentication():
         print('Device was deleted in Azure AD')
         return True
 
-    def request_token_with_devicecert_signed_payload(self, payload, use_v3=False):
+    def request_token_with_devicecert_signed_payload(self, payload, use_v3=False, reqclientinfo=True, reqtgt=True, returnreply=False):
         """
         Wrap the request payload in a JWT and sign this using the device cert / key
         """
         certder = self.certificate.public_bytes(serialization.Encoding.DER)
         certbytes = base64.b64encode(certder)
+        authority_uri = self.auth.get_authority_url()
         if not use_v3:
             # Windows API flow - uses identity platform v1 endpoint
             headers = {
@@ -591,10 +592,12 @@ class DeviceAuthentication():
                 'windows_api_version':'2.2',
                 'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer',
                 'request':reqjwt,
-                'client_info':'1',
-                'tgt':True
             }
-            url = 'https://login.microsoftonline.com/common/oauth2/token'
+            if reqclientinfo:
+                prt_request_data['client_info'] = '1'
+            if reqtgt:
+                prt_request_data['tgt'] = True
+            url = f'{authority_uri}/oauth2/token'
         else:
             # PRT Protocol version 3 flow, uses identity platform v2
             headers = {
@@ -605,15 +608,21 @@ class DeviceAuthentication():
                 'prt_protocol_version':'3.0',
                 'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer',
                 'request':reqjwt,
-                'client_info':'1'
             }
-            url = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+            if reqclientinfo:
+                prt_request_data['client_info'] = '1'
+            url = f'{authority_uri}/oauth2/v2.0/token'
 
         res = self.auth.requests_post(url, data=prt_request_data, proxies=self.proxies, verify=self.verify)
 
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         prtdata = res.json()
+
+        # Return the reply if wanted, needed for non-prt flows using similar requests
+        if returnreply:
+            return prtdata
+
         # Encrypted session key that we need to unwrap
         sessionkey_jwe = prtdata['session_key_jwe']
         uwk = self.decrypt_jwe_with_transport_key(sessionkey_jwe)
@@ -795,16 +804,18 @@ class DeviceAuthentication():
         challenge = authlib.get_srv_challenge()['Nonce']
         client = authlib.lookup_client_id(client_id).lower()
         payload = {
-          "win_ver": "10.0.19041.1620",
-          "scope": "openid",
-          "resource": authlib.lookup_resource_uri(resource),
-          "request_nonce": challenge,
-          "refresh_token": self.prt,
-          "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client}",
-          "iss": "aad:brokerplugin",
-          "grant_type": "refresh_token",
-          "client_id": f"{client}",
-          "aud": "login.microsoftonline.com"
+            "win_ver": "10.0.19041.1620",
+            "scope": "openid",
+            "resource": authlib.lookup_resource_uri(resource),
+            "request_nonce": challenge,
+            "refresh_token": self.prt,
+            "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client}",
+            "iss": "aad:brokerplugin",
+            "grant_type": "refresh_token",
+            "client_id": client,
+            "aud": "login.microsoftonline.com",
+            "iat": str(int(time.time())),
+            "exp": str(int(time.time())+(3600)),
         }
         # Request a new PRT, otherwise normal refresh token will be issued
         if renew_prt:
