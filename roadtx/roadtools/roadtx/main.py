@@ -333,7 +333,8 @@ def main():
 
     # Find scope
     getscope_parser = subparsers.add_parser('getscope', aliases=['findscope'], help='Find first-party apps with the right pre-approved scope')
-    getscope_parser.add_argument('-s', '--scope', default=None, action='store', required=False, metavar='SCOPE', help='Desired scope (API URL + scope on that API, for example https://graph.microsoft.com/files.read). If omitted, all known scopes will be listed.')
+    getscope_parser.add_argument('-s', '--scope', default=None, action='store', required=False, metavar='SCOPE', help='Desired scope (API URL + scope on that API, for example https://graph.microsoft.com/files.read).')
+    getscope_parser.add_argument('-a', '--all', action='store_true', help='List all scopes instead')
     getscope_parser.add_argument('--foci', action='store_true', help='Only list FOCI clients')
     getscope_parser.add_argument('--csv', action='store_true', help='Output in CSV format')
 
@@ -1083,7 +1084,7 @@ def main():
             auth.outfile = args.tokenfile
             auth.save_tokens(args)
         else:
-            if tokenreply['refresh_token']:
+            if tokenreply and tokenreply['refresh_token']:
                 print('Got refresh token. Can be used to request prt with roadtx prt -r <refreshtoken>')
                 print(tokenreply['refresh_token'])
             else:
@@ -1144,8 +1145,12 @@ def main():
         datafile = os.path.join(current_dir, 'firstpartyscopes.json')
         with codecs.open(datafile,'r','utf-8') as infile:
             data = json.load(infile)
+        if not args.scope and not args.all:
+            getscope_parser.print_help()
+            return
 
-        if not args.scope:
+        if args.all:
+            # Print all scopes
             results = set()
 
             app_resource_ids = defaultdict(set)
