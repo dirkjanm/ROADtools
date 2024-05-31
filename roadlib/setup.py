@@ -1,6 +1,6 @@
 from setuptools import setup, find_namespace_packages
 setup(name='roadlib',
-      version='0.24.1',
+      version='0.25.0',
       description='ROADtools common components library',
       author='Dirk-jan Mollema',
       author_email='dirkjan@outsidersecurity.nl',

@@ -32,6 +32,9 @@ def selenium_wrap(func):
                 print('Browser window closed by the user')
                 return False
             raise exc
+        except KeyboardInterrupt:
+            print('Authentication was cancelled (KeyboardInterrupt raised)')
+            return False
     return wrapped
 
 class SeleniumAuthentication():
