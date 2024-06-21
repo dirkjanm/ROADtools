@@ -372,12 +372,12 @@ class DeviceAuthentication():
         """
         Registers or joins a device in Azure AD. Requires an access token to the device registration service.
         """
-        # For backward compatiblity "overwrite" already set arguments if they are provided
+        # For backward compatiblity fill arguments that are not provided from properties
         device_type = device_type or self.device_type
         device_name = device_name or self.device_name
         os_version = os_version or self.os_version
         deviceticket = deviceticket or self.deviceticket
-        
+
         # Fill in names if not supplied
         if not certout:
             certout = device_name.lower() + '.pem'
@@ -491,7 +491,7 @@ class DeviceAuthentication():
         Register hybrid device. Requires existing key/cert to be already loaded and the SID to be specified.
         Device should be synced to AAD already, otherwise this will fail.
         '''
-        # For backward compatiblity "overwrite" already set arguments if they are provided
+        # For backward compatiblity fill arguments that are not provided from properties
         device_type = device_type or self.device_type
         device_name = device_name or self.device_name
         os_version = os_version or self.os_version
