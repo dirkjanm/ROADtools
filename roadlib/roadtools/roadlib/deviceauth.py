@@ -368,16 +368,22 @@ class DeviceAuthentication():
             }
         return json.dumps(jwk, separators=(',', ':'))
 
-    def register_device(self, access_token, jointype=0, certout=None, privout=None):
+    def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None, deviceticket=None):
         """
         Registers or joins a device in Azure AD. Requires an access token to the device registration service.
         """
+        # For backward compatiblity "overwrite" already set arguments if they are provided
+        device_type = device_type or self.device_type
+        device_name = device_name or self.device_name
+        os_version = os_version or self.os_version
+        deviceticket = deviceticket or self.deviceticket
+        
         # Fill in names if not supplied
         if not certout:
-            certout = self.device_name.lower() + '.pem'
+            certout = device_name.lower() + '.pem'
 
         if not privout:
-            privout = self.device_name.lower() + '.key'
+            privout = device_name.lower() + '.key'
 
         # Generate our key
         key = rsa.generate_private_key(
@@ -405,14 +411,14 @@ class DeviceAuthentication():
         pubkeycngblob = base64.b64encode(self.create_pubkey_blob_from_key(key))
 
 
-        if self.device_type.lower() == 'macos':
+        if device_type.lower() == 'macos':
             data = {
-                "DeviceDisplayName" : self.device_name,
+                "DeviceDisplayName" : device_name,
                 "CertificateRequest" : {
                     "Type" : "pkcs10",
                     "Data" : certbytes.decode('utf-8')
                 },
-                "OSVersion" : self.os_version,
+                "OSVersion" : os_version,
                 "TargetDomain" : self.domain,
                 "AikCertificate" : "",
                 "DeviceType" : "MacOS",
@@ -420,7 +426,7 @@ class DeviceAuthentication():
                 "JoinType" : jointype,
                 "AttestationData" : ""
             }
-        elif self.device_type.lower() == 'android':
+        elif device_type.lower() == 'android':
             data = {
                 "Attributes": {},
                 "CertificateRequest":
@@ -428,10 +434,10 @@ class DeviceAuthentication():
                     "Data": certbytes.decode('utf-8'),
                     "Type": "pkcs10"
                 },
-                "DeviceDisplayName": self.device_name,
+                "DeviceDisplayName": device_name,
                 "DeviceType": "Android",
                 "JoinType": jointype,
-                "OSVersion": self.os_version,
+                "OSVersion": os_version,
                 "TargetDomain": "6287f28f-4f7f-4322-9651-a8697d8fe1bc",
                 "TransportKey": base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
             }
@@ -445,9 +451,9 @@ class DeviceAuthentication():
                 "TransportKey": pubkeycngblob.decode('utf-8'),
                 # Can likely be edited to anything, are not validated afaik
                 "TargetDomain": self.domain,
-                "DeviceType": self.device_type,
-                "OSVersion": self.os_version,
-                "DeviceDisplayName": self.device_name,
+                "DeviceType": device_type,
+                "OSVersion": os_version,
+                "DeviceDisplayName": device_name,
                 "JoinType": jointype,
                 "attributes": {
                     "ReuseDevice": "true",
@@ -455,8 +461,8 @@ class DeviceAuthentication():
                 }
             }
             # Add device ticket if requested
-            if self.deviceticket:
-                data['attributes']['MSA-DDID'] = base64.b64encode(self.deviceticket.encode('utf-8')).decode('utf-8')
+            if deviceticket:
+                data['attributes']['MSA-DDID'] = base64.b64encode(deviceticket.encode('utf-8')).decode('utf-8')
 
 
         headers = {
@@ -480,15 +486,19 @@ class DeviceAuthentication():
         print(f'Saved device certificate to {certout}')
         return True
 
-    def register_hybrid_device(self, objectsid, tenantid, certout=None, privout=None):
+    def register_hybrid_device(self, objectsid, tenantid, certout=None, privout=None, device_type=None, device_name=None, os_version=None):
         '''
         Register hybrid device. Requires existing key/cert to be already loaded and the SID to be specified.
         Device should be synced to AAD already, otherwise this will fail.
         '''
+        # For backward compatiblity "overwrite" already set arguments if they are provided
+        device_type = device_type or self.device_type
+        device_name = device_name or self.device_name
+        os_version = os_version or self.os_version
+
         # Fill in names if not supplied
-        
-        certout = self.device_name.lower() + '_aad.pem'
-        privout = self.device_name.lower() + '_aad.key'
+        certout = device_name.lower() + '_aad.pem'
+        privout = device_name.lower() + '_aad.key'
 
         # Generate our new shiny key
         key = rsa.generate_private_key(
@@ -532,9 +542,9 @@ class DeviceAuthentication():
             {
                 "TransportKey": pubkeycngblob.decode('utf-8'),
                 "TargetDomain": self.domain,
-                "DeviceType": self.device_type,
-                "OSVersion": self.os_version,
-                "DeviceDisplayName": self.device_name,
+                "DeviceType": device_type,
+                "OSVersion": os_version,
+                "DeviceDisplayName": device_name,
                 "TargetDomainId": f"{tenantid}",
                 "ClientIdentity":
                 {
@@ -552,7 +562,7 @@ class DeviceAuthentication():
         }
 
         headers = {
-            'User-Agent': f'{self.device_user_agent} ({self.device_type} {self.os_version})',
+            'User-Agent': f'{self.device_user_agent} ({device_type} {os_version})',
             'Content-Type': 'application/json'
         }
         # Extract device ID from certificate
