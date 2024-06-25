@@ -313,9 +313,28 @@ class Authentication():
             "exp": str(int(time.time())+(300)),
             "iss": self.client_id,
             "jti": str(uuid.uuid4()),
-            "sub": self.client_id,
+            "sub": self.client_id
         }
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
+
+    def generate_federated_assertion(self, appkeypem, kid, iss, sub, aud='api://AzureADTokenExchange'):
+        """
+        Generate a federated assertion for the specified key ID, issuer, subject and audience.
+        Appkeypem should be a PEM encoded private key (as bytes)
+        """
+        headers = {
+            'kid':kid
+        }
+        payload = {
+            "aud": aud,
+            "iat": str(int(time.time())),
+            "nbf": str(int(time.time())),
+            "exp": str(int(time.time())+(300)),
+            "iss": iss,
+            "jti": str(uuid.uuid4()),
+            "sub": sub
+        }
+        return jwt.encode(payload, algorithm='RS256', key=appkeypem, headers=headers)
 
     def authenticate_with_code(self, code, redirurl, client_secret=None):
         """
@@ -797,24 +816,30 @@ class Authentication():
             if asjson:
                 return json.loads(responsedata)
             return responsedata
-        dataparts = responsedata.split('.')
+        # Encrypted Key doesn't appear to be used, instead the key is the decrypted ciphertext
+        #pylint: disable=unused-variable
+        headerdata, enckey, iv, ciphertext, authtag = responsedata.split('.')
 
-        headers = json.loads(get_data(dataparts[0]))
+        headers = json.loads(get_data(headerdata))
         _, derived_key = self.calculate_derived_key(sessionkey, base64.b64decode(headers['ctx']))
-        data = dataparts[3]
-        iv = dataparts[2]
-        authtag = dataparts[4]
+
+        return self.decrypt_auth_response_derivedkey(headerdata, ciphertext, iv, authtag, derived_key, asjson)
+
+    def decrypt_auth_response_derivedkey(self, headerdata, ciphertext, iv, authtag, derived_key, asjson=False):
+        """
+        Decrypt an encrypted authentication response, using the derived key
+        """
         if len(get_data(iv)) == 12:
             # This appears to be actual AES GCM
             aesgcm = AESGCM(derived_key)
             # JWE header is used as additional data
             # Totally legit source: https://github.com/AzureAD/microsoft-authentication-library-common-for-objc/compare/dev...kedicl/swift/addframework#diff-ec15357c1b0dba2f2304f64750e5126ec910156f09c0f75eba0bb22cb83ada6dR46
             # Also hinted at in RFC examples https://www.rfc-editor.org/rfc/rfc7516.txt
-            depadded_data = aesgcm.decrypt(get_data(iv), get_data(data) + get_data(authtag), dataparts[0].encode('utf-8'))
+            depadded_data = aesgcm.decrypt(get_data(iv), get_data(ciphertext) + get_data(authtag), headerdata.encode('utf-8'))
         else:
             cipher = Cipher(algorithms.AES(derived_key), modes.CBC(get_data(iv)))
             decryptor = cipher.decryptor()
-            decrypted_data = decryptor.update(get_data(data)) + decryptor.finalize()
+            decrypted_data = decryptor.update(get_data(ciphertext)) + decryptor.finalize()
             unpadder = padding.PKCS7(128).unpadder()
             depadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
         if asjson:
@@ -1142,8 +1167,16 @@ class Authentication():
     def ensure_binary_sessionkey(sessionkey):
         if not sessionkey:
             return None
-        if len(sessionkey) == 44:
-            keybytes = base64.b64decode(sessionkey)
+        # See if this is a base64 string that should be padded
+        padding_needed = len(sessionkey)%4
+        if padding_needed:
+            esklen = len(sessionkey+('='*(4-padding_needed)))
+        else:
+            esklen = len(sessionkey)
+        if esklen == 44:
+            # Base64 encoded session key
+            # get_data handles both web encoded and regular encoded data
+            keybytes = get_data(sessionkey)
         else:
             sessionkey = sessionkey.replace(' ','')
             keybytes = binascii.unhexlify(sessionkey)
