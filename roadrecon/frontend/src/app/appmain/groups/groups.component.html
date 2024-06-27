@@ -1,6 +1,6 @@
 <div class="mat-elevation-z8">
     <mat-form-field>
-    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+    <input matInput [formControl]="filterControl" placeholder="Filter">
   </mat-form-field>
   <table mat-table class="full-width-table" matSort aria-label="Elements">
     <ng-container matColumnDef="displayName">
