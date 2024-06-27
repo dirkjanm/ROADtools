@@ -25,7 +25,7 @@ export class UsersComponent implements AfterViewInit, OnInit {
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();
-    this.service.getUsers().subscribe((data: UsersItem[]) => this.dataSource.data = data);
+    this.loadData();
     this.localSt.observe('mfa')
       .subscribe((value) => {
         this.updateMfaColumn(value);
@@ -49,11 +49,25 @@ export class UsersComponent implements AfterViewInit, OnInit {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
     this.table.dataSource = this.dataSource;
+
+    this.sort.sortChange.subscribe(() => {
+      this.paginator.pageIndex = 0; // Reset to first page on sort change
+      this.loadData();
+    });
+
+    this.paginator.page.subscribe(() => {
+      this.loadData();
+    });
   }
 
   applyFilter(filterValue: string) {
     filterValue = filterValue.trim(); // Remove whitespace
     filterValue = filterValue.toLowerCase(); // Datasource defaults to lowercase matches
     this.dataSource.filter = filterValue;
+  }
+
+  loadData() {
+    this.service.getUsers(this.paginator?.pageIndex, this.paginator?.pageSize, this.sort?.active, this.sort?.direction)
+      .subscribe((data: UsersItem[]) => this.dataSource.data = data);
   }
 }

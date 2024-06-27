@@ -4,7 +4,7 @@ import { MatSort } from '@angular/material/sort';
 import { map } from 'rxjs/operators';
 import { Observable, of as observableOf, merge } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { UsersItem, UsersService } from '../aadobjects.service'
+import { UsersItem, UsersService } from '../aadobjects.service';
 
 /**
  * Data source for the Users view. This class should
@@ -28,7 +28,7 @@ export class UsersDataSource extends DataSource<UsersItem> {
   connect(): Observable<UsersItem[]> {
     // Combine everything that affects the rendered data into one update
     // stream for the data-table to consume.
-    this.service.getUsers().subscribe((data: UsersItem[]) => this.data = data);
+    this.service.getUsers(this.paginator.page, this.paginator.pageSize).subscribe((data: UsersItem[]) => this.data = data);
     const dataMutations = [
       observableOf(this.data),
       this.paginator.page,

@@ -157,7 +157,10 @@ lnk_au_member_device = Table('lnk_au_member_device', Base.metadata,
     Column('Device', Text, ForeignKey('Devices.objectId'))
 )
 
-class AppRoleAssignment(Base, SerializeMixin):
+class ModelBase(Base, SerializeMixin):
+    __abstract__ = True
+
+class AppRoleAssignment(ModelBase):
     __tablename__ = "AppRoleAssignments"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -171,7 +174,7 @@ class AppRoleAssignment(Base, SerializeMixin):
     resourceId = Column(Text)
 
 
-class OAuth2PermissionGrant(Base, SerializeMixin):
+class OAuth2PermissionGrant(ModelBase):
     __tablename__ = "OAuth2PermissionGrants"
     clientId = Column(Text)
     consentType = Column(Text)
@@ -183,7 +186,7 @@ class OAuth2PermissionGrant(Base, SerializeMixin):
     startTime = Column(DateTime)
 
 
-class User(Base, SerializeMixin):
+class User(ModelBase):
     __tablename__ = "Users"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -335,7 +338,7 @@ class User(Base, SerializeMixin):
         back_populates="memberUsers")
 
 
-class ServicePrincipal(Base, SerializeMixin):
+class ServicePrincipal(ModelBase):
     __tablename__ = "ServicePrincipals"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -422,7 +425,7 @@ class ServicePrincipal(Base, SerializeMixin):
         primaryjoin=objectId == foreign(AppRoleAssignment.principalId))
 
 
-class Group(Base, SerializeMixin):
+class Group(ModelBase):
     __tablename__ = "Groups"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -514,7 +517,7 @@ class Group(Base, SerializeMixin):
         back_populates="memberGroups")
 
 
-class Application(Base, SerializeMixin):
+class Application(ModelBase):
     __tablename__ = "Applications"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -573,7 +576,7 @@ class Application(Base, SerializeMixin):
         back_populates="ownedApplications")
 
 
-class Device(Base, SerializeMixin):
+class Device(ModelBase):
     __tablename__ = "Devices"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -634,7 +637,7 @@ class Device(Base, SerializeMixin):
         back_populates="memberDevices")
 
 
-class DirectoryRole(Base, SerializeMixin):
+class DirectoryRole(ModelBase):
     __tablename__ = "DirectoryRoles"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -658,7 +661,7 @@ class DirectoryRole(Base, SerializeMixin):
         back_populates="memberOfRole")
 
 
-class TenantDetail(Base, SerializeMixin):
+class TenantDetail(ModelBase):
     __tablename__ = "TenantDetails"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -696,7 +699,7 @@ class TenantDetail(Base, SerializeMixin):
     windowsCredentialsEncryptionCertificate = Column(Text)
 
 
-class ApplicationRef(Base, SerializeMixin):
+class ApplicationRef(ModelBase):
     __tablename__ = "ApplicationRefs"
     appCategory = Column(Text)
     appContextId = Column(Text)
@@ -724,7 +727,7 @@ class ApplicationRef(Base, SerializeMixin):
     verifiedPublisher = Column(JSON)
 
 
-class ExtensionProperty(Base, SerializeMixin):
+class ExtensionProperty(ModelBase):
     __tablename__ = "ExtensionPropertys"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -736,7 +739,7 @@ class ExtensionProperty(Base, SerializeMixin):
     targetObjects = Column(JSON)
 
 
-class Contact(Base, SerializeMixin):
+class Contact(ModelBase):
     __tablename__ = "Contacts"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -778,7 +781,7 @@ class Contact(Base, SerializeMixin):
         back_populates="memberContacts")
 
 
-class Policy(Base, SerializeMixin):
+class Policy(ModelBase):
     __tablename__ = "Policys"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -791,7 +794,7 @@ class Policy(Base, SerializeMixin):
     tenantDefaultPolicy = Column(Integer)
 
 
-class RoleDefinition(Base, SerializeMixin):
+class RoleDefinition(ModelBase):
     __tablename__ = "RoleDefinitions"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)
@@ -811,7 +814,7 @@ class RoleDefinition(Base, SerializeMixin):
         back_populates="roleDefinition")
 
 
-class RoleAssignment(Base, SerializeMixin):
+class RoleAssignment(ModelBase):
     __tablename__ = "RoleAssignments"
     id = Column(Text, primary_key=True)
     principalId = Column(Text)
@@ -821,7 +824,7 @@ class RoleAssignment(Base, SerializeMixin):
         back_populates="assignments")
 
 
-class EligibleRoleAssignment(Base, SerializeMixin):
+class EligibleRoleAssignment(ModelBase):
     __tablename__ = "EligibleRoleAssignments"
     id = Column(Text, primary_key=True)
     principalId = Column(Text)
@@ -831,7 +834,7 @@ class EligibleRoleAssignment(Base, SerializeMixin):
         back_populates="eligibleAssignments")
 
 
-class AuthorizationPolicy(Base, SerializeMixin):
+class AuthorizationPolicy(ModelBase):
     __tablename__ = "AuthorizationPolicys"
     id = Column(Text, primary_key=True)
     allowInvitesFrom = Column(Text)
@@ -847,7 +850,7 @@ class AuthorizationPolicy(Base, SerializeMixin):
     permissionGrantPolicyIdsAssignedToDefaultUserRole = Column(JSON)
 
 
-class DirectorySetting(Base, SerializeMixin):
+class DirectorySetting(ModelBase):
     __tablename__ = "DirectorySettings"
     id = Column(Text, primary_key=True)
     displayName = Column(Text)
@@ -855,7 +858,7 @@ class DirectorySetting(Base, SerializeMixin):
     values = Column(JSON)
 
 
-class AdministrativeUnit(Base, SerializeMixin):
+class AdministrativeUnit(ModelBase):
     __tablename__ = "AdministrativeUnits"
     objectType = Column(Text)
     objectId = Column(Text, primary_key=True)

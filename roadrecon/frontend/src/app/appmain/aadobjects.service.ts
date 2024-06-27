@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment'
+import { environment } from '../../environments/environment';
 import {
   Router, Resolve,
   RouterStateSnapshot,
@@ -8,6 +8,7 @@ import {
 }                                 from '@angular/router';
 import { Observable, of, EMPTY }  from 'rxjs';
 import { mergeMap, take }         from 'rxjs/operators';
+import {SortDirection} from '@angular/material/sort';
 
 export interface GroupsItem {
   displayName: string;
@@ -242,15 +243,31 @@ export interface AuthorizationPolicy {
     permissionGrantPolicyIdsAssignedToDefaultUserRole: string[];
 }
 
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+  sortField: string;
+  sortDirection: SortDirection;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class DatabaseService {
+  defaultPage = 1;
+  defaultPageSize = 50;
 
   constructor(private http: HttpClient) { }
 
-  public getUsers():  Observable<UsersItem[]> {
-      return this.http.get<UsersItem[]>(environment.apibase + 'users');
+  public getUsers(pagination?: PaginationParams): Observable<UsersItem[]> {
+      return this.http.get<UsersItem[]>(environment.apibase + 'users', {
+        params: {
+          page: pagination.page || this.defaultPage,
+          per_page: pagination.pageSize || this.defaultPageSize,
+          sort: pagination.sortField,
+          direction: pagination.sortDirection
+        }
+      });
   }
 
   public getUser(id):  Observable<UsersItem> {

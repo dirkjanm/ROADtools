@@ -1,20 +1,24 @@
+from typing import Optional, TypeVar, Type
+
 from flask import Flask, request, jsonify, abort, send_from_directory, redirect, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from marshmallow_sqlalchemy import ModelConverter
 from marshmallow import fields
-from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
+from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, \
+    TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, \
+    RoleDefinition, ModelBase
 import os
 import argparse
-from sqlalchemy import func, and_, or_, select
+from sqlalchemy import func, and_, or_, select, desc, asc
 import mimetypes
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # This will get initialized later on
-db = None
+db: Optional[SQLAlchemy] = None
 ma = Marshmallow(app)
 
 mimetypes.add_type('application/javascript', '.js')
@@ -200,8 +204,9 @@ def get_gui(path):
 
 @app.route("/api/users", methods=["GET"])
 def get_users():
-    all_users = db.session.query(User).all()
-    result = users_schema.dump(all_users)
+    order_by = get_sort(User, default_field="userPrincipalName")
+    users = db.paginate(db.session.query(User).order_by(order_by))
+    result = users_schema.dump(users)
     return jsonify(result)
 
 
@@ -214,8 +219,9 @@ def user_detail(id):
 
 @app.route("/api/devices", methods=["GET"])
 def get_devices():
-    all_devices = db.session.query(Device).all()
-    result = devices_schema.dump(all_devices)
+    order_by = get_sort(Device, default_field="displayName")
+    devices = db.paginate(db.session.query(Device).order_by(order_by))
+    result = devices_schema.dump(devices)
     return jsonify(result)
 
 
@@ -236,8 +242,8 @@ def user_groups(id):
 
 @app.route("/api/groups", methods=["GET"])
 def get_groups():
-    all_groups = db.session.query(Group).all()
-    result = groups_schema.dump(all_groups)
+    groups = db.paginate(db.session.query(Group))
+    result = groups_schema.dump(groups)
     return jsonify(result)
 
 @app.route("/api/groups/<id>", methods=["GET"])
@@ -249,8 +255,8 @@ def group_detail(id):
 
 @app.route("/api/administrativeunits", methods=["GET"])
 def get_administrativeunits():
-    all_administrativeunits = db.session.query(AdministrativeUnit).all()
-    result = administrativeunits_schema.dump(all_administrativeunits)
+    units = db.paginate(db.session.query(AdministrativeUnit))
+    result = administrativeunits_schema.dump(units)
     return jsonify(result)
 
 @app.route("/api/administrativeunits/<id>", methods=["GET"])
@@ -262,8 +268,8 @@ def administrativeunit_detail(id):
 
 @app.route("/api/serviceprincipals", methods=["GET"])
 def get_sps():
-    all_sps = db.session.query(ServicePrincipal).all()
-    return serviceprincipals_schema.jsonify(all_sps)
+    sps = db.paginate(db.session.query(ServicePrincipal))
+    return serviceprincipals_schema.jsonify(sps)
 
 @app.route("/api/serviceprincipals/<id>", methods=["GET"])
 def sp_detail(id):
@@ -281,8 +287,8 @@ def sp_detail_by_appid(id):
 
 @app.route("/api/applications", methods=["GET"])
 def get_applications():
-    all_applications = db.session.query(Application).all()
-    result = applications_schema.dump(all_applications)
+    applications = db.paginate(db.session.query(Application))
+    result = applications_schema.dump(applications)
     return jsonify(result)
 
 @app.route("/api/mfa", methods=["GET"])
@@ -443,7 +449,7 @@ def process_approle(approles, ar):
 @app.route("/api/approles", methods=["GET"])
 def get_approles():
     approles = []
-    for ar in db.session.query(AppRoleAssignment).all():
+    for ar in db.paginate(db.session.query(AppRoleAssignment)):
         process_approle(approles, ar)
     return jsonify(approles)
 
@@ -464,7 +470,7 @@ def get_approles_by_principal(pid):
 @app.route("/api/oauth2permissions", methods=["GET"])
 def get_oauth2permissions():
     oauth2permissions = []
-    for permgrant in db.session.query(OAuth2PermissionGrant).all():
+    for permgrant in db.paginate(db.session.query(OAuth2PermissionGrant)):
         grant = {}
         rsp = db.session.get(ServicePrincipal, permgrant.clientId)
         if permgrant.consentType == 'Principal':
@@ -489,7 +495,7 @@ def get_oauth2permissions():
 @app.route("/api/roledefinitions", methods=["GET"])
 def get_allroles():
     allroles = []
-    for role in db.session.query(RoleDefinition).all():
+    for role in db.paginate(db.session.query(RoleDefinition)):
         roleobj = {
             'objectId': role.objectId,
             'displayName': role.displayName,
@@ -527,7 +533,7 @@ def get_allroles():
 
 @app.route("/api/directoryroles", methods=["GET"])
 def get_dirroles():
-    drs = db.session.query(DirectoryRole).all()
+    drs = db.paginate(db.session.query(DirectoryRole))
     return directoryroles_schema.jsonify(drs)
 
 @app.route("/api/tenantdetails", methods=["GET"])
@@ -542,7 +548,7 @@ def get_directorysettings():
 
 @app.route("/api/authorizationpolicies", methods=["GET"])
 def get_authpolicies():
-    drs = db.session.query(AuthorizationPolicy).all()
+    drs = db.paginate(db.session.query(AuthorizationPolicy))
     return authorizationpolicy_schema.jsonify(drs)
 
 @app.route("/api/stats", methods=["GET"])
@@ -557,6 +563,23 @@ def get_stats():
         'countAdministrativeUnits': db.session.query(func.count(AdministrativeUnit.objectId)).scalar(),
     }
     return jsonify(stats)
+
+M = TypeVar('M', bound=ModelBase)
+def get_sort(model: Type[M], default_field: str):
+    order_by = default_field
+
+    sort = request.args.get("sort")
+    if sort and sort in model.__table__.columns.keys():
+        order_by = sort
+
+    direction = request.args.get("direction")
+    if direction:
+        if direction == "desc":
+            order_by = desc(order_by)
+        elif direction == "asc":
+            order_by = asc(order_by)
+
+    return order_by
 
 def create_app_test():
     '''
