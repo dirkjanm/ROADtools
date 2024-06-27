@@ -1,9 +1,11 @@
-from typing import Optional, TypeVar, Type
+import sqlite3
+from typing import Optional, TypeVar, Type, List
 
 from flask import Flask, request, jsonify, abort, send_from_directory, redirect, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
+from flask_sqlalchemy.pagination import Pagination
 from marshmallow_sqlalchemy import ModelConverter
 from marshmallow import fields
 from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, \
@@ -11,8 +13,12 @@ from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole,
     RoleDefinition, ModelBase
 import os
 import argparse
-from sqlalchemy import func, and_, or_, select, desc, asc
+from sqlalchemy import func, and_, or_, select, desc, asc, Column
 import mimetypes
+
+from sqlalchemy.dialects import sqlite
+from sqlalchemy.orm import InstrumentedAttribute, Query
+from sqlalchemy.sql.elements import SQLCoreOperations
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -204,8 +210,11 @@ def get_gui(path):
 
 @app.route("/api/users", methods=["GET"])
 def get_users():
-    order_by = get_sort(User, default_field="userPrincipalName")
-    users = db.paginate(db.session.query(User).order_by(order_by))
+    users = paginated_query(
+        User,
+        default_sort_field="userPrincipalName",
+        searchable_columns=[User.displayName, User.mail, User.mobile, User.userPrincipalName]
+    )
     result = users_schema.dump(users)
     return jsonify(result)
 
@@ -219,8 +228,15 @@ def user_detail(id):
 
 @app.route("/api/devices", methods=["GET"])
 def get_devices():
-    order_by = get_sort(Device, default_field="displayName")
-    devices = db.paginate(db.session.query(Device).order_by(order_by))
+    devices = paginated_query(
+        Device,
+        default_sort_field="displayName",
+        searchable_columns=[
+            Device.displayName, Device.deviceId, Device.objectId,
+            Device.deviceManufacturer, Device.deviceModel, Device.deviceOSType,
+            Device.deviceOSVersion, Device.deviceTrustType,
+        ]
+    )
     result = devices_schema.dump(devices)
     return jsonify(result)
 
@@ -242,7 +258,13 @@ def user_groups(id):
 
 @app.route("/api/groups", methods=["GET"])
 def get_groups():
-    groups = db.paginate(db.session.query(Group))
+    groups = paginated_query(
+        Group,
+        default_sort_field="displayName",
+        searchable_columns=[
+            Group.displayName, Group.description, Group.groupTypes, Group.mail,
+        ]
+    )
     result = groups_schema.dump(groups)
     return jsonify(result)
 
@@ -565,7 +587,27 @@ def get_stats():
     return jsonify(stats)
 
 M = TypeVar('M', bound=ModelBase)
-def get_sort(model: Type[M], default_field: str):
+
+def paginated_query(model: Type[M], default_sort_field: str, searchable_columns: List[InstrumentedAttribute]) -> Pagination:
+    query = db.session.query(model)
+    query = apply_contains(query, *searchable_columns)
+    order_by = build_order_by(model, default_field=default_sort_field)
+    query = query.order_by(order_by)
+
+    # print(query.statement.compile(dialect=sqlite.dialect(), compile_kwargs={"literal_binds": True}))
+
+    return db.paginate(query)
+
+def apply_contains(query: Query, *columns: InstrumentedAttribute) -> Query:
+    criteria = request.args.get("contains")
+    if not criteria:
+        return query
+
+    return query.where(or_(
+        *[col.contains(criteria) for col in columns]
+    ))
+
+def build_order_by(model: Type[M], default_field: str):
     order_by = default_field
 
     sort = request.args.get("sort")
