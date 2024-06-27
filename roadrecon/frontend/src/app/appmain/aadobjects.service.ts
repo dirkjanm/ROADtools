@@ -175,6 +175,14 @@ export interface TenantDetail {
 
 }
 
+export interface DirectorySetting {
+  displayName: string;
+  id: string;
+  templateId: string;
+  values: { name: string, value: string }[];
+
+}
+
 export interface TenantStats {
   countUsers: number;
   countGroups: number;
@@ -306,6 +314,10 @@ export class DatabaseService {
 
   public getTenantDetail():  Observable<TenantDetail> {
       return this.http.get<TenantDetail>(environment.apibase + 'tenantdetails');
+  }
+  
+  public getDirectorySetting():  Observable<DirectorySetting> {
+      return this.http.get<DirectorySetting>(environment.apibase + 'directorysettings');
   }
 
   public getAuthorizationPolicies(): Observable<AuthorizationPolicy[]> {
