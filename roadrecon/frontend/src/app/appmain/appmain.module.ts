@@ -37,7 +37,7 @@ import { DevicesdialogComponent } from './devices/devicesdialog/devicesdialog.co
 import { JsonFormatDirective } from './json-format.directive';
 import { ConfigComponent } from './config/config.component';
 import { NgxWebstorageModule } from 'ngx-webstorage';
-import { FormsModule }   from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { MfaComponent } from './mfa/mfa.component';
 import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permissions.component';
 
@@ -85,7 +85,8 @@ import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permission
     MatButtonModule,
     MatTooltipModule,
     MatSlideToggleModule,
-    NgxWebstorageModule.forRoot({'prefix':'RT'}),
+    NgxWebstorageModule.forRoot({'prefix': 'RT'}),
+    ReactiveFormsModule,
   ],
   exports: [
     UsersComponent,
