@@ -157,6 +157,10 @@ class TenantDetailSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = TenantDetail
 
+class DirectorySettingSchema(RTModelSchema):
+    class Meta(RTModelSchema.Meta):
+        model = DirectorySetting
+
 class AuthorizationPolicySchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = AuthorizationPolicy
@@ -167,6 +171,7 @@ device_schema = DeviceSchema()
 group_schema = GroupSchema()
 application_schema = ApplicationSchema()
 td_schema = TenantDetailSchema()
+ds_schema = DirectorySettingSchema()
 serviceprincipal_schema = ServicePrincipalSchema()
 administrativeunit_schema = AdministrativeUnitSchema()
 authorizationpolicy_schema = AuthorizationPolicySchema(many=True)
@@ -528,6 +533,11 @@ def get_dirroles():
 def get_tenantdetails():
     drs = db.session.query(TenantDetail).first()
     return td_schema.jsonify(drs)
+
+@app.route("/api/directorysettings", methods=["GET"])
+def get_directorysettings():
+    drs = db.session.query(DirectorySetting).first()
+    return ds_schema.jsonify(drs)
 
 @app.route("/api/authorizationpolicies", methods=["GET"])
 def get_authpolicies():
