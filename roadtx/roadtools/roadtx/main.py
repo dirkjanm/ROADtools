@@ -917,13 +917,13 @@ def main():
                 krbtoken = sys.stdin.read().strip()
             else:
                 krbtoken = args.krbtoken
-            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=krbtoken)
+            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=krbtoken, keep=args.keep_open)
         elif args.estscookie:
-            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie)
+            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie, keep=args.keep_open)
         elif custom_ua:
-            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, capture=args.capture_code, federated=args.federated)
+            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         else:
-            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code, federated=args.federated)
+            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
