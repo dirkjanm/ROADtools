@@ -180,12 +180,11 @@ def main():
 
     # Application auth
     appauth_parser = subparsers.add_parser('appauth', help='Authenticate as an application')
-    helptext = 'Client ID (application ID) to use when authenticating.'
     appauth_parser.add_argument('-c',
                                 '--client',
                                 action='store',
-                                help=helptext,
-                                default='1b730954-1685-4b74-9bfd-dac224a7b894')
+                                help='Client ID (application ID) to use when authenticating.',
+                                required=True)
     appauth_parser.add_argument('-p',
                                 '--password',
                                 action='store',
@@ -219,6 +218,62 @@ def main():
                                 help='File to store the credentials (default: .roadtools_auth)',
                                 default='.roadtools_auth')
     appauth_parser.add_argument('--tokens-stdout',
+                                action='store_true',
+                                help='Do not store tokens on disk, pipe to stdout instead')
+
+    # Federated application auth
+    fedauth_parser = subparsers.add_parser('federatedappauth', help='Authenticate as an application with federated credentials')
+    fedauth_parser.add_argument('-c',
+                                '--client',
+                                action='store',
+                                help='Client ID (application ID) to use when authenticating.',
+                                required=True)
+    fedauth_parser.add_argument('-r',
+                                '--resource',
+                                action='store',
+                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
+                                default='https://graph.windows.net')
+    fedauth_parser.add_argument('-s',
+                                '--scope',
+                                action='store',
+                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
+    fedauth_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='Tenant ID or domain to auth to',
+                                required=True)
+    fedauth_parser.add_argument('--subject',
+                                action='store',
+                                help='Authentication subject as configured in federated credential',
+                                required=True)
+    fedauth_parser.add_argument('--audience',
+                                action='store',
+                                help='Audience of the federated assertion (default: api://AzureADTokenExchange)',
+                                default='api://AzureADTokenExchange')
+    fedauth_parser.add_argument('-i',
+                                '--issuer',
+                                action='store',
+                                help='Issuer as configured in federated credential',
+                                required=True)
+    fedauth_parser.add_argument('-k',
+                                '--kid',
+                                action='store',
+                                help='Key ID configured (default: SHA1 thumbprint of certificate, if provided)')
+    fedauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with Application certificate')
+    fedauth_parser.add_argument('--key-pem', action='store', metavar='file', help='Private key file for Application')
+    fedauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Application cert and key as PFX file')
+    fedauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    fedauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    fedauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    fedauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
+    fedauth_parser.add_argument('--tokenfile',
+                                action='store',
+                                help='File to store the credentials (default: .roadtools_auth)',
+                                default='.roadtools_auth')
+    fedauth_parser.add_argument('--tokens-stdout',
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
@@ -706,6 +761,11 @@ def main():
         auth.use_cae = args.cae
         auth.tenant = args.tenant
         auth.outfile = args.tokenfile
+        if not args.tokens_stdout:
+            if args.scope:
+                print(f'Requesting token with scope {auth.scope}')
+            else:
+                print(f'Requesting token for resource {auth.resource_uri}')
         if args.password:
             # Password based flow
             if args.scope:
@@ -721,6 +781,26 @@ def main():
             else:
                 assertion = auth.generate_app_assertion(use_v2=False)
                 auth.authenticate_as_app_native(assertion=assertion)
+        auth.save_tokens(args)
+    elif args.command == 'federatedappauth':
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        auth.scope = args.scope
+        auth.use_cae = args.cae
+        auth.tenant = args.tenant
+        auth.outfile = args.tokenfile
+        if not args.tokens_stdout:
+            if args.scope:
+                print(f'Requesting token with scope {auth.scope}')
+            else:
+                print(f'Requesting token for resource {auth.resource_uri}')
+        if not auth.loadappcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+            return
+        assertion = auth.generate_federated_assertion(iss=args.issuer, sub=args.subject, kid=args.kid, aud=args.audience)
+        if args.scope:
+            auth.authenticate_as_app_native_v2(assertion=assertion)
+        else:
+            auth.authenticate_as_app_native(assertion=assertion)
         auth.save_tokens(args)
     elif args.command == 'device':
         if args.action in ('register', 'join'):
