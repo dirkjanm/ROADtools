@@ -415,11 +415,21 @@ class Authentication():
         }
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
-    def generate_federated_assertion(self, appkeypem, kid, iss, sub, aud='api://AzureADTokenExchange'):
+    def generate_federated_assertion(self, iss, sub, kid=None, aud='api://AzureADTokenExchange'):
         """
         Generate a federated assertion for the specified key ID, issuer, subject and audience.
-        Appkeypem should be a PEM encoded private key (as bytes)
+        Appkeypem should be a PEM encoded private key (as bytes), if not specified it should already be loaded
         """
+        if not kid:
+            # Calculate as thumbprint of cert
+            if not self.appcertificate:
+                raise ValueError('Either an app certificate should be specified or a manual key ID (kid) should be provided')
+            data = self.appcertificate.public_bytes(
+                serialization.Encoding.DER
+            )
+            digest = hashes.Hash(hashes.SHA1())
+            digest.update(data)
+            kid = base64.urlsafe_b64encode(digest.finalize()).decode('utf-8')
         headers = {
             'kid':kid
         }
@@ -432,7 +442,7 @@ class Authentication():
             "jti": str(uuid.uuid4()),
             "sub": sub
         }
-        return jwt.encode(payload, algorithm='RS256', key=appkeypem, headers=headers)
+        return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
     def authenticate_with_code(self, code, redirurl, client_secret=None):
         """
