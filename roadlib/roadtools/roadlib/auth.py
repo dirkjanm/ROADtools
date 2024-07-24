@@ -116,6 +116,11 @@ class Authentication():
                 self.appkeydata = keyf.read()
                 self.appprivkey = serialization.load_pem_private_key(self.appkeydata, password=None)
             return True
+        if privkeyfile:
+            with open(privkeyfile, "rb") as keyf:
+                self.appkeydata = keyf.read()
+                self.appprivkey = serialization.load_pem_private_key(self.appkeydata, password=None)
+            return True
         if pfxfile or pfxbase64:
             if pfxfile:
                 with open(pfxfile, 'rb') as pfxf:
@@ -157,6 +162,103 @@ class Authentication():
         context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
         self.tokendata = context.acquire_token_with_username_password(self.resource_uri, self.username, self.password, self.client_id)
 
+        return self.tokendata
+
+    def authenticate_device_code_native(self, additionaldata=None, returnreply=False):
+        """
+        Authenticate with device code flow
+        Native version without adal
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "resource": self.resource_uri,
+        }
+        if self.scope:
+            data['scope'] = self.scope
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = self.requests_post(f"{authority_uri}/oauth2/devicecode", data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        responsedata = res.json()
+        print(responsedata['message'])
+        print(f"Code expires in {responsedata['expires_in']} seconds")
+        interval = float(responsedata['interval'])
+        device_code = responsedata['device_code']
+
+        polldata = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            "code": device_code
+        }
+        while True:
+            time.sleep(interval)
+            res = self.requests_post(f"{authority_uri}/oauth2/token", data=polldata)
+            tokenreply = res.json()
+            print(tokenreply)
+            if res.status_code != 200:
+                # Keep polling
+                if tokenreply['error'] == 'authorization_pending':
+                    continue
+                if tokenreply['error'] in ('expired_token', 'code_expired'):
+                    raise AuthenticationException("The code has expired.")
+                if tokenreply['error'] == 'authorization_declined':
+                    raise AuthenticationException("The user declined the sign-in.")
+                # If not handled, raise
+                raise AuthenticationException(res.text)
+            # Else break out of the loop
+            break
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def authenticate_device_code_native_v2(self, additionaldata=None, returnreply=False):
+        """
+        Authenticate with device code flow
+        Native version without adal
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "scope": self.scope,
+        }
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = self.requests_post(f"{authority_uri}/oauth2/v2.0/devicecode", data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        responsedata = res.json()
+        print(responsedata['message'])
+        # print(f"Code expires in {responsedata['expires_in']} seconds")
+        interval = float(responsedata['interval'])
+        device_code = responsedata['device_code']
+
+        polldata = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            "code": device_code
+        }
+        while True:
+            time.sleep(interval)
+            res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=polldata)
+            tokenreply = res.json()
+            if res.status_code != 200:
+                # Keep polling
+                if tokenreply['error'] == 'authorization_pending':
+                    continue
+                if tokenreply['error'] in ('expired_token', 'code_expired'):
+                    raise AuthenticationException("The code has expired.")
+                if tokenreply['error'] == 'authorization_declined':
+                    raise AuthenticationException("The user declined the sign-in.")
+                # If not handled, raise
+                raise AuthenticationException(res.text)
+            # Else break out of the loop
+            break
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
     def authenticate_username_password_native(self, client_secret=None, additionaldata=None, returnreply=False):
@@ -219,7 +321,7 @@ class Authentication():
 
     def authenticate_as_app(self):
         """
-        Authenticate with an APP id + secret (password credentials assigned to serviceprinicpal)
+        Authenticate with an APP id + secret (password credentials assigned to app or service principal)
         """
         authority_uri = self.get_authority_url()
 
@@ -254,8 +356,6 @@ class Authentication():
         tokenreply = res.json()
         if returnreply:
             return tokenreply
-        access_token = tokenreply['access_token']
-        tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
@@ -287,8 +387,6 @@ class Authentication():
         tokenreply = res.json()
         if returnreply:
             return tokenreply
-        access_token = tokenreply['access_token']
-        tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
@@ -1396,17 +1494,16 @@ class Authentication():
                 else:
                     samltoken = self.saml_token
                 if self.scope:
-                    # Use v2 endpoint if we have a scope
                     return self.authenticate_with_saml_native_v2(samltoken)
-                else:
-                    return self.authenticate_with_saml_native(samltoken)
+                return self.authenticate_with_saml_native(samltoken)
             if args.as_app and self.password:
                 if self.scope:
                     return self.authenticate_as_app_native_v2()
-                else:
-                    return self.authenticate_as_app_native()
+                return self.authenticate_as_app_native()
             if args.device_code:
-                return self.authenticate_device_code()
+                if self.scope:
+                    return self.authenticate_device_code_native_v2()
+                return self.authenticate_device_code_native()
             if args.prt_init:
                 nonce = self.get_prt_cookie_nonce()
                 if nonce:
