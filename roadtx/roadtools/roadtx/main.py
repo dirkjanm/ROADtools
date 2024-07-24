@@ -121,6 +121,8 @@ def main():
     prt_parser.add_argument('-s', '--prt-sessionkey', action='store', help='Primary Refresh Token session key (as hex key)')
 
     prt_parser.add_argument('-hk', '--hello-key', action='store', help='Windows Hello PEM file')
+    prt_parser.add_argument('-ha', '--hello-assertion', action='store', help='Windows Hello assertion as JWT')
+
     # Construct winhello module
     winhello_parser = subparsers.add_parser('winhello', help='Register Windows Hello key')
     winhello_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for key storage (default: winhello.key)')
@@ -170,7 +172,10 @@ def main():
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens')
 
-
+    prtauth_parser.add_argument('-s',
+                                '--scope',
+                                action='store',
+                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     prtauth_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version v3')
 
     # Application auth
@@ -778,6 +783,8 @@ def main():
 
             if args.username and deviceauth.loadhellokey(args.hello_key):
                 prtdata = deviceauth.get_prt_with_hello_key(args.username)
+            if args.username and args.hello_assertion:
+                prtdata = deviceauth.get_prt_with_hello_key(args.username, args.hello_assertion)
             if not prtdata:
                 print('You must specify a username + password or refresh token that can be used to request a PRT')
                 return
@@ -798,6 +805,7 @@ def main():
     elif args.command == 'prtauth':
         auth.set_user_agent(args.user_agent)
         auth.use_cae = args.cae
+        auth.scope = args.scope
         if args.tenant:
             auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
@@ -1185,7 +1193,7 @@ def main():
         except ValueError:
             print("No resource (API) specified in scope, defaulting to Microsoft Graph")
             resource = "https://graph.microsoft.com"
-            scope = args.scope
+            scope = args.scope.lower()
 
         try:
             resourceid = data['resourceidentifiers'][resource.lower()]
