@@ -76,10 +76,15 @@ def main():
     device_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', help='Certificate file to save device cert to (default: <devicename>.pem)')
     device_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for certificate (default: <devicename>.key)')
     device_parser.add_argument('-n', '--name', action='store', help='Device display name (default: DESKTOP-<RANDOM>)')
+    device_parser.add_argument('-d','--domain',action='store',help='Target domain to join to (default: iminyour.cloud)')
     device_parser.add_argument('--access-token', action='store', help='Access token for device registration service. If not specified, taken from .roadtools_auth')
     device_parser.add_argument('--device-type', action='store', help='Device OS type (default: Windows)')
     device_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
     device_parser.add_argument('--deviceticket', action='store', help='Device MSA ticket to match with existing device')
+    device_parser.add_argument('-dua', '--device-user-agent', action='store',
+                                help='Custom device user agent to use. Default: Dsreg/10.0')
+    device_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom request user agent to use. Default: Python requests user agent')
 
     # Construct hybrid device module
     hdevice_parser = subparsers.add_parser('hybriddevice', help='Join an on-prem device to Azure AD')
@@ -89,10 +94,15 @@ def main():
     hdevice_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
     hdevice_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
     hdevice_parser.add_argument('-n', '--name', action='store', help='Device display name (default: DESKTOP-<RANDOM>)')
+    hdevice_parser.add_argument('-d','--domain',action='store',help='Target domain to join to (default: iminyour.cloud)')
     hdevice_parser.add_argument('--device-type', action='store', help='Device OS type (default: Windows)')
     hdevice_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
     hdevice_parser.add_argument('--sid', action='store', required=True, help='Device SID in AD')
     hdevice_parser.add_argument('-t', '--tenant', action='store', required=True, help='Tenant ID where device exists')
+    hdevice_parser.add_argument('-dua', '--device-user-agent', action='store',
+                                help='Custom device user agent to use. Default: Dsreg/10.0')
+    hdevice_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
 
     # Construct PRT module
     prt_parser = subparsers.add_parser('prt', help='PRT request/renewal module')
@@ -122,6 +132,9 @@ def main():
 
     prt_parser.add_argument('-hk', '--hello-key', action='store', help='Windows Hello PEM file')
     prt_parser.add_argument('-ha', '--hello-assertion', action='store', help='Windows Hello assertion as JWT')
+    
+    prt_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
 
     # Construct winhello module
     winhello_parser = subparsers.add_parser('winhello', help='Register Windows Hello key')
@@ -315,6 +328,8 @@ def main():
     codeauth_parser.add_argument('code',
                                  action='store',
                                  help="Code to auth with that you got from Azure AD")
+    codeauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
 
     # Bulk enrollment token
     bulkenrollment_parser = subparsers.add_parser('bulkenrollmenttoken', help='Request / use bulk enrollment tokens')
@@ -699,8 +714,9 @@ def main():
         sys.exit(1)
         return
 
-    deviceauth = DeviceAuthentication(auth)
     args = parser.parse_args()
+    deviceauth = DeviceAuthentication(auth)
+    deviceauth.parse_args(args)
     seleniumproxy = None
 
     if args.proxy:
@@ -822,7 +838,7 @@ def main():
                 jointype = 0
             else:
                 jointype = 4
-            deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version, deviceticket=args.deviceticket)
+            deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem)
         elif args.action == 'delete':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem):
                 return
@@ -830,7 +846,7 @@ def main():
     elif args.command == 'hybriddevice':
         if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
             return
-        deviceauth.register_hybrid_device(args.sid, args.tenant, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version)
+        deviceauth.register_hybrid_device(args.sid, args.tenant, certout=args.cert_pem, privout=args.key_pem)
     elif args.command == 'prt':
         if args.action == 'request':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
@@ -941,6 +957,7 @@ def main():
     elif args.command == 'codeauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
+        auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
         if args.cae:
             auth.use_cae = args.cae
