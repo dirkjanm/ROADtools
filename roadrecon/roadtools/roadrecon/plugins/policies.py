@@ -587,7 +587,7 @@ class AccessPoliciesPlugin():
                 loc['name'] = escape(detail.get("NetworkName"))
                 loc['trusted'] = ("trusted" in detail.get("Categories","") if detail.get("Categories") else False)
                 loc['appliestounknowncountry'] = escape(str(detail.get("ApplyToUnknownCountry"))) if detail.get("ApplyToUnknownCountry") is not None else False
-                loc['ipranges'] = "\n<br />".join(detail.get('CidrIpRanges'))
+                loc['ipranges'] = "\n<br />".join(detail.get('CidrIpRanges')) if detail.get("CidrIpRanges") else ""
                 loc['categories'] = escape(", ".join(detail.get("Categories"))) if detail.get("Categories") is not None else ""
                 loc['associated_policies'] = "\n<br />".join(self._parse_associated_polcies(detail.get('NetworkId'),loc['trusted'],condition_policy_list))
                 loc['country_codes'] =  escape(", ".join(detail.get("CountryIsoCodes"))) if detail.get("CountryIsoCodes") else None

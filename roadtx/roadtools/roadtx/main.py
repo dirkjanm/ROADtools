@@ -131,8 +131,11 @@ def main():
     prt_parser.add_argument('-s', '--prt-sessionkey', action='store', help='Primary Refresh Token session key (as hex key)')
 
     prt_parser.add_argument('-hk', '--hello-key', action='store', help='Windows Hello PEM file')
+    prt_parser.add_argument('-ha', '--hello-assertion', action='store', help='Windows Hello assertion as JWT')
+    
     prt_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. Default: Python requests user agent')
+
     # Construct winhello module
     winhello_parser = subparsers.add_parser('winhello', help='Register Windows Hello key')
     winhello_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for key storage (default: winhello.key)')
@@ -182,17 +185,19 @@ def main():
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens')
 
-
+    prtauth_parser.add_argument('-s',
+                                '--scope',
+                                action='store',
+                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     prtauth_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version v3')
 
     # Application auth
     appauth_parser = subparsers.add_parser('appauth', help='Authenticate as an application')
-    helptext = 'Client ID (application ID) to use when authenticating.'
     appauth_parser.add_argument('-c',
                                 '--client',
                                 action='store',
-                                help=helptext,
-                                default='1b730954-1685-4b74-9bfd-dac224a7b894')
+                                help='Client ID (application ID) to use when authenticating.',
+                                required=True)
     appauth_parser.add_argument('-p',
                                 '--password',
                                 action='store',
@@ -226,6 +231,62 @@ def main():
                                 help='File to store the credentials (default: .roadtools_auth)',
                                 default='.roadtools_auth')
     appauth_parser.add_argument('--tokens-stdout',
+                                action='store_true',
+                                help='Do not store tokens on disk, pipe to stdout instead')
+
+    # Federated application auth
+    fedauth_parser = subparsers.add_parser('federatedappauth', help='Authenticate as an application with federated credentials')
+    fedauth_parser.add_argument('-c',
+                                '--client',
+                                action='store',
+                                help='Client ID (application ID) to use when authenticating.',
+                                required=True)
+    fedauth_parser.add_argument('-r',
+                                '--resource',
+                                action='store',
+                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
+                                default='https://graph.windows.net')
+    fedauth_parser.add_argument('-s',
+                                '--scope',
+                                action='store',
+                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
+    fedauth_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='Tenant ID or domain to auth to',
+                                required=True)
+    fedauth_parser.add_argument('--subject',
+                                action='store',
+                                help='Authentication subject as configured in federated credential',
+                                required=True)
+    fedauth_parser.add_argument('--audience',
+                                action='store',
+                                help='Audience of the federated assertion (default: api://AzureADTokenExchange)',
+                                default='api://AzureADTokenExchange')
+    fedauth_parser.add_argument('-i',
+                                '--issuer',
+                                action='store',
+                                help='Issuer as configured in federated credential',
+                                required=True)
+    fedauth_parser.add_argument('-k',
+                                '--kid',
+                                action='store',
+                                help='Key ID configured (default: SHA1 thumbprint of certificate, if provided)')
+    fedauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with Application certificate')
+    fedauth_parser.add_argument('--key-pem', action='store', metavar='file', help='Private key file for Application')
+    fedauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Application cert and key as PFX file')
+    fedauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    fedauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    fedauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    fedauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
+    fedauth_parser.add_argument('--tokenfile',
+                                action='store',
+                                help='File to store the credentials (default: .roadtools_auth)',
+                                default='.roadtools_auth')
+    fedauth_parser.add_argument('--tokens-stdout',
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
@@ -716,6 +777,11 @@ def main():
         auth.use_cae = args.cae
         auth.tenant = args.tenant
         auth.outfile = args.tokenfile
+        if not args.tokens_stdout:
+            if args.scope:
+                print(f'Requesting token with scope {auth.scope}')
+            else:
+                print(f'Requesting token for resource {auth.resource_uri}')
         if args.password:
             # Password based flow
             if args.scope:
@@ -731,6 +797,26 @@ def main():
             else:
                 assertion = auth.generate_app_assertion(use_v2=False)
                 auth.authenticate_as_app_native(assertion=assertion)
+        auth.save_tokens(args)
+    elif args.command == 'federatedappauth':
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        auth.scope = args.scope
+        auth.use_cae = args.cae
+        auth.tenant = args.tenant
+        auth.outfile = args.tokenfile
+        if not args.tokens_stdout:
+            if args.scope:
+                print(f'Requesting token with scope {auth.scope}')
+            else:
+                print(f'Requesting token for resource {auth.resource_uri}')
+        if not auth.loadappcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+            return
+        assertion = auth.generate_federated_assertion(iss=args.issuer, sub=args.subject, kid=args.kid, aud=args.audience)
+        if args.scope:
+            auth.authenticate_as_app_native_v2(assertion=assertion)
+        else:
+            auth.authenticate_as_app_native(assertion=assertion)
         auth.save_tokens(args)
     elif args.command == 'device':
         if args.action in ('register', 'join'):
@@ -793,6 +879,8 @@ def main():
 
             if args.username and deviceauth.loadhellokey(args.hello_key):
                 prtdata = deviceauth.get_prt_with_hello_key(args.username)
+            if args.username and args.hello_assertion:
+                prtdata = deviceauth.get_prt_with_hello_key(args.username, args.hello_assertion)
             if not prtdata:
                 print('You must specify a username + password or refresh token that can be used to request a PRT')
                 return
@@ -813,6 +901,7 @@ def main():
     elif args.command == 'prtauth':
         auth.set_user_agent(args.user_agent)
         auth.use_cae = args.cae
+        auth.scope = args.scope
         if args.tenant:
             auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
@@ -933,13 +1022,13 @@ def main():
                 krbtoken = sys.stdin.read().strip()
             else:
                 krbtoken = args.krbtoken
-            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=krbtoken)
+            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=krbtoken, keep=args.keep_open)
         elif args.estscookie:
-            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie)
+            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie, keep=args.keep_open)
         elif custom_ua:
-            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, capture=args.capture_code, federated=args.federated)
+            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         else:
-            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code, federated=args.federated)
+            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
@@ -1131,13 +1220,16 @@ def main():
             if args.verbose:
                 print("[debug] Reading token value from stdin.")
             tokendata = sys.stdin.read()
-        # Describing saved token file args.tokenfile
-        elif os.path.exists(args.tokenfile):
-            if args.verbose:
-                print("[debug] Reading token value from file '%s'." % (args.tokenfile))
-            f = open(args.tokenfile, "r")
-            tokendata = f.read()
-            f.close()
+        # Maybe some of the above had already tokendata set. But in Docker isatty is false.. so check if tokendata is None at this point
+        # Otherwise read it from default file
+        if not tokendata or tokendata == "":
+            # Describing saved token file args.tokenfile
+            if os.path.exists(args.tokenfile):
+                if args.verbose:
+                    print("[debug] Reading token value from file '%s'." % (args.tokenfile))
+                f = open(args.tokenfile, "r")
+                tokendata = f.read()
+                f.close()
         if tokendata[0] == '{':
             # assume json object
             tokenobject = json.loads(tokendata)
@@ -1198,7 +1290,7 @@ def main():
         except ValueError:
             print("No resource (API) specified in scope, defaulting to Microsoft Graph")
             resource = "https://graph.microsoft.com"
-            scope = args.scope
+            scope = args.scope.lower()
 
         try:
             resourceid = data['resourceidentifiers'][resource.lower()]

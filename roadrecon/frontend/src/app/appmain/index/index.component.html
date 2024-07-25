@@ -12,6 +12,43 @@
   </mat-card-content>
 </mat-card>
 
+<mat-card *ngIf="directorysettings">
+  <mat-card-title>Directory settings</mat-card-title>
+  <mat-card-content>
+    <table class="userTable">
+      <tbody>
+        <tr *ngFor="let setting of directorysettings.values">
+          <ng-container *ngIf="setting.name === 'LockoutDurationInSeconds'">
+            <th>Lockout Duration</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'LockoutThreshold'">
+            <th>Lockout Threshold</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'BannedPasswordCheckOnPremisesMode'">
+            <th>Banned Password Check On-Premises Mode</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'EnableBannedPasswordCheckOnPremises'">
+            <th>Enable Banned Password Check On-Premises</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'EnableBannedPasswordCheck'">
+            <th>Enable Banned Password Check</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'BannedPasswordList'">
+            <th>Banned Password List</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <!-- Add other conditions here as needed -->
+        </tr>
+      </tbody>
+    </table>
+  </mat-card-content>
+</mat-card>
+
 <mat-card *ngIf="tenantdetails">
   <mat-card-title>Tenant information</mat-card-title>
   <mat-card-content>
@@ -25,6 +62,7 @@
 <button mat-button (click)="showDetails()">View Raw</button>
   </mat-card-actions>
 </mat-card>
+
 
 <mat-card *ngIf="authorizationPolicy">
   <mat-card-title>Authorization Policy</mat-card-title>

@@ -16,11 +16,12 @@ import datetime
 import uuid
 import urllib3
 from cryptography.hazmat.primitives import serialization, padding, hashes
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import rsa, ec
 from cryptography.hazmat.primitives.asymmetric import padding as apadding
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.utils import CryptographyDeprecationWarning
@@ -368,6 +369,27 @@ class DeviceAuthentication():
             }
         return json.dumps(jwk, separators=(',', ':'))
 
+    def create_public_jwk_from_ec_key(self, key):
+        """
+        Convert a key (or certificate) to JWK public numbers
+        https://www.rfc-editor.org/rfc/rfc7517
+        """
+        pubkey = key.public_key()
+        pubnumbers = pubkey.public_numbers()
+
+        # From python docs https://docs.python.org/3/library/stdtypes.html#int.to_bytes
+        x_as_bytes = pubnumbers.x.to_bytes((pubnumbers.x.bit_length() + 7) // 8, byteorder='big')
+        y_as_bytes = pubnumbers.y.to_bytes((pubnumbers.y.bit_length() + 7) // 8, byteorder='big')
+
+        jwk = {
+            'kty': 'EC',
+            'x': base64.b64encode(x_as_bytes).decode('utf-8'),
+            'y': base64.b64encode(y_as_bytes).decode('utf-8'),
+            'crv': 'P-256',
+            'kid': str(uuid.uuid4()).upper()
+        }
+        return json.dumps(jwk, separators=(',', ':'))
+
     def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None, deviceticket=None):
         """
         Registers or joins a device in Azure AD. Requires an access token to the device registration service.
@@ -385,19 +407,44 @@ class DeviceAuthentication():
         if not privout:
             privout = device_name.lower() + '.key'
 
-        # Generate our key
-        key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=2048,
-        )
-        # Write device key to disk
-        print(f'Saving private key to {privout}')
-        with open(privout, "wb") as keyf:
-            keyf.write(key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.TraditionalOpenSSL,
-                encryption_algorithm=serialization.NoEncryption(),
-            ))
+        if not device_type:
+            device_type = "Windows"
+
+        if not os_version:
+            if device_type.lower() == "windows":
+                os_version = "10.0.19041.928"
+            elif device_type.lower() == "macos":
+                os_version = "12.2.0"
+            elif device_type.lower() == "macos14":
+                os_version = "14.5.0"
+            elif device_type.lower() == "android":
+                os_version = "13.0"
+
+        if device_type.lower() != "macos14":
+            # Generate our key
+            key = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=2048,
+            )
+            # Write device key to disk
+            print(f'Saving private key to {privout}')
+            with open(privout, "wb") as keyf:
+                keyf.write(key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                ))
+        else:
+            key = ec.generate_private_key(
+                ec.SECP256R1()
+            )
+            print(f'Saving private key to {privout}')
+            with open(privout, "wb") as keyf:
+                keyf.write(key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                ))
 
         # Generate a CSR
         csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
@@ -408,9 +455,7 @@ class DeviceAuthentication():
         certreq = csr.public_bytes(serialization.Encoding.DER)
         certbytes = base64.b64encode(certreq)
 
-        pubkeycngblob = base64.b64encode(self.create_pubkey_blob_from_key(key))
-
-
+        api_version = "2.0"
         if device_type.lower() == 'macos':
             data = {
                 "DeviceDisplayName" : device_name,
@@ -425,6 +470,31 @@ class DeviceAuthentication():
                 "TransportKey" : base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
                 "JoinType" : jointype,
                 "AttestationData" : ""
+            }
+        if device_type.lower() == 'macos14':
+            api_version = "3.0"
+            data = {
+              "AikCertificate" : "",
+              "AttestationData" : "",
+              "CertificateRequest" : {
+                "Data" : certbytes.decode('utf-8'),
+                "KeySecurity" : "SecureEnclave",
+                "KeyType" : "ECC",
+                "Type" : "pkcs10"
+              },
+              "DeviceDisplayName" : device_name,
+              "DeviceKeys" : [
+                {
+                  "Data" : self.create_public_jwk_from_ec_key(key),
+                  "Encoding" : "JWK",
+                  "Type" : "ECC",
+                  "Usage" : "STK"
+                }
+              ],
+              "DeviceType" : "MacOS",
+              "JoinType" : jointype,
+              "OSVersion" : "14.5.0",
+              "TargetDomain" : "iminyour.cloud"
             }
         elif device_type.lower() == 'android':
             data = {
@@ -442,6 +512,7 @@ class DeviceAuthentication():
                 "TransportKey": base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
             }
         else:
+            pubkeycngblob = base64.b64encode(self.create_pubkey_blob_from_key(key))
             data = {
                 "CertificateRequest":
                     {
@@ -471,7 +542,7 @@ class DeviceAuthentication():
         }
 
         print('Registering device')
-        res = self.auth.requests_post('https://enterpriseregistration.windows.net/EnrollmentServer/device/?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/?api-version={api_version}', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -754,6 +825,57 @@ class DeviceAuthentication():
             raise AuthenticationException(res.text)
         responsedata = res.text
         return responsedata
+
+    def calculate_derived_key_ecdh(self, responsedata, apv):
+        '''
+        Use ECDH with transport key to calculate the derived key
+        using Concat KDF
+        '''
+        def jwk_to_crypto(jwk):
+            public_numbers = ec.EllipticCurvePublicNumbers(
+                curve=ec.SECP256R1(),
+                x=int.from_bytes(get_data(jwk['x']), byteorder="big"),
+                y=int.from_bytes(get_data(jwk['y']), byteorder="big"),
+            )
+            if 'd' in jwk:
+                privkey = ec.EllipticCurvePrivateNumbers(
+                        int.from_bytes(get_data(jwk['d']), byteorder="big"), public_numbers
+                ).private_key()
+                return privkey, privkey.public_key()
+            return None, public_numbers.public_key()
+
+        headerdata, enckey, iv, ciphertext, authtag = responsedata.split('.')
+        headers = json.loads(get_data(headerdata))
+
+        _, pubkey = jwk_to_crypto(headers['epk'])
+        exchanged_key = self.transportprivkey.exchange(ec.ECDH(), pubkey)
+
+        # AlgorithmID
+        alg = 'A256GCM'
+        otherinfo = struct.pack('>I', len(alg))
+        otherinfo += bytes(alg.encode('utf8'))
+
+        # PartyUInfo
+        apu = get_data(headers['apu'])
+        otherinfo += struct.pack('>I', len(apu))
+        otherinfo += apu
+
+        # PartyVInfo
+        apv = get_data(apv)
+        otherinfo += struct.pack('>I', len(apv))
+        otherinfo += apv
+
+        # SuppPubInfo
+        otherinfo += struct.pack('>I', 256)
+
+        # Derive key with Concat KDF
+        ckdf = ConcatKDFHash(
+            algorithm=hashes.SHA256(),
+            length=32,
+            otherinfo=otherinfo,
+        )
+        derived_key = ckdf.derive(exchanged_key)
+        return self.auth.decrypt_auth_response_derivedkey(headerdata, ciphertext, iv, authtag, derived_key)
 
     def get_prt_with_password(self, username, password):
         authlib = Authentication()

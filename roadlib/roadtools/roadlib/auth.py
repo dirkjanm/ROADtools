@@ -116,6 +116,11 @@ class Authentication():
                 self.appkeydata = keyf.read()
                 self.appprivkey = serialization.load_pem_private_key(self.appkeydata, password=None)
             return True
+        if privkeyfile:
+            with open(privkeyfile, "rb") as keyf:
+                self.appkeydata = keyf.read()
+                self.appprivkey = serialization.load_pem_private_key(self.appkeydata, password=None)
+            return True
         if pfxfile or pfxbase64:
             if pfxfile:
                 with open(pfxfile, 'rb') as pfxf:
@@ -157,6 +162,103 @@ class Authentication():
         context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
         self.tokendata = context.acquire_token_with_username_password(self.resource_uri, self.username, self.password, self.client_id)
 
+        return self.tokendata
+
+    def authenticate_device_code_native(self, additionaldata=None, returnreply=False):
+        """
+        Authenticate with device code flow
+        Native version without adal
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "resource": self.resource_uri,
+        }
+        if self.scope:
+            data['scope'] = self.scope
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = self.requests_post(f"{authority_uri}/oauth2/devicecode", data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        responsedata = res.json()
+        print(responsedata['message'])
+        print(f"Code expires in {responsedata['expires_in']} seconds")
+        interval = float(responsedata['interval'])
+        device_code = responsedata['device_code']
+
+        polldata = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            "code": device_code
+        }
+        while True:
+            time.sleep(interval)
+            res = self.requests_post(f"{authority_uri}/oauth2/token", data=polldata)
+            tokenreply = res.json()
+            print(tokenreply)
+            if res.status_code != 200:
+                # Keep polling
+                if tokenreply['error'] == 'authorization_pending':
+                    continue
+                if tokenreply['error'] in ('expired_token', 'code_expired'):
+                    raise AuthenticationException("The code has expired.")
+                if tokenreply['error'] == 'authorization_declined':
+                    raise AuthenticationException("The user declined the sign-in.")
+                # If not handled, raise
+                raise AuthenticationException(res.text)
+            # Else break out of the loop
+            break
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def authenticate_device_code_native_v2(self, additionaldata=None, returnreply=False):
+        """
+        Authenticate with device code flow
+        Native version without adal
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "scope": self.scope,
+        }
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = self.requests_post(f"{authority_uri}/oauth2/v2.0/devicecode", data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        responsedata = res.json()
+        print(responsedata['message'])
+        # print(f"Code expires in {responsedata['expires_in']} seconds")
+        interval = float(responsedata['interval'])
+        device_code = responsedata['device_code']
+
+        polldata = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            "code": device_code
+        }
+        while True:
+            time.sleep(interval)
+            res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=polldata)
+            tokenreply = res.json()
+            if res.status_code != 200:
+                # Keep polling
+                if tokenreply['error'] == 'authorization_pending':
+                    continue
+                if tokenreply['error'] in ('expired_token', 'code_expired'):
+                    raise AuthenticationException("The code has expired.")
+                if tokenreply['error'] == 'authorization_declined':
+                    raise AuthenticationException("The user declined the sign-in.")
+                # If not handled, raise
+                raise AuthenticationException(res.text)
+            # Else break out of the loop
+            break
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
     def authenticate_username_password_native(self, client_secret=None, additionaldata=None, returnreply=False):
@@ -219,7 +321,7 @@ class Authentication():
 
     def authenticate_as_app(self):
         """
-        Authenticate with an APP id + secret (password credentials assigned to serviceprinicpal)
+        Authenticate with an APP id + secret (password credentials assigned to app or service principal)
         """
         authority_uri = self.get_authority_url()
 
@@ -254,8 +356,6 @@ class Authentication():
         tokenreply = res.json()
         if returnreply:
             return tokenreply
-        access_token = tokenreply['access_token']
-        tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
@@ -287,8 +387,6 @@ class Authentication():
         tokenreply = res.json()
         if returnreply:
             return tokenreply
-        access_token = tokenreply['access_token']
-        tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
@@ -313,7 +411,36 @@ class Authentication():
             "exp": str(int(time.time())+(300)),
             "iss": self.client_id,
             "jti": str(uuid.uuid4()),
-            "sub": self.client_id,
+            "sub": self.client_id
+        }
+        return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
+
+    def generate_federated_assertion(self, iss, sub, kid=None, aud='api://AzureADTokenExchange'):
+        """
+        Generate a federated assertion for the specified key ID, issuer, subject and audience.
+        Appkeypem should be a PEM encoded private key (as bytes), if not specified it should already be loaded
+        """
+        if not kid:
+            # Calculate as thumbprint of cert
+            if not self.appcertificate:
+                raise ValueError('Either an app certificate should be specified or a manual key ID (kid) should be provided')
+            data = self.appcertificate.public_bytes(
+                serialization.Encoding.DER
+            )
+            digest = hashes.Hash(hashes.SHA1())
+            digest.update(data)
+            kid = base64.urlsafe_b64encode(digest.finalize()).decode('utf-8')
+        headers = {
+            'kid':kid
+        }
+        payload = {
+            "aud": aud,
+            "iat": str(int(time.time())),
+            "nbf": str(int(time.time())),
+            "exp": str(int(time.time())+(300)),
+            "iss": iss,
+            "jti": str(uuid.uuid4()),
+            "sub": sub
         }
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
@@ -797,24 +924,30 @@ class Authentication():
             if asjson:
                 return json.loads(responsedata)
             return responsedata
-        dataparts = responsedata.split('.')
+        # Encrypted Key doesn't appear to be used, instead the key is the decrypted ciphertext
+        #pylint: disable=unused-variable
+        headerdata, enckey, iv, ciphertext, authtag = responsedata.split('.')
 
-        headers = json.loads(get_data(dataparts[0]))
+        headers = json.loads(get_data(headerdata))
         _, derived_key = self.calculate_derived_key(sessionkey, base64.b64decode(headers['ctx']))
-        data = dataparts[3]
-        iv = dataparts[2]
-        authtag = dataparts[4]
+
+        return self.decrypt_auth_response_derivedkey(headerdata, ciphertext, iv, authtag, derived_key, asjson)
+
+    def decrypt_auth_response_derivedkey(self, headerdata, ciphertext, iv, authtag, derived_key, asjson=False):
+        """
+        Decrypt an encrypted authentication response, using the derived key
+        """
         if len(get_data(iv)) == 12:
             # This appears to be actual AES GCM
             aesgcm = AESGCM(derived_key)
             # JWE header is used as additional data
             # Totally legit source: https://github.com/AzureAD/microsoft-authentication-library-common-for-objc/compare/dev...kedicl/swift/addframework#diff-ec15357c1b0dba2f2304f64750e5126ec910156f09c0f75eba0bb22cb83ada6dR46
             # Also hinted at in RFC examples https://www.rfc-editor.org/rfc/rfc7516.txt
-            depadded_data = aesgcm.decrypt(get_data(iv), get_data(data) + get_data(authtag), dataparts[0].encode('utf-8'))
+            depadded_data = aesgcm.decrypt(get_data(iv), get_data(ciphertext) + get_data(authtag), headerdata.encode('utf-8'))
         else:
             cipher = Cipher(algorithms.AES(derived_key), modes.CBC(get_data(iv)))
             decryptor = cipher.decryptor()
-            decrypted_data = decryptor.update(get_data(data)) + decryptor.finalize()
+            decrypted_data = decryptor.update(get_data(ciphertext)) + decryptor.finalize()
             unpadder = padding.PKCS7(128).unpadder()
             depadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
         if asjson:
@@ -1142,8 +1275,16 @@ class Authentication():
     def ensure_binary_sessionkey(sessionkey):
         if not sessionkey:
             return None
-        if len(sessionkey) == 44:
-            keybytes = base64.b64decode(sessionkey)
+        # See if this is a base64 string that should be padded
+        padding_needed = len(sessionkey)%4
+        if padding_needed:
+            esklen = len(sessionkey+('='*(4-padding_needed)))
+        else:
+            esklen = len(sessionkey)
+        if esklen == 44:
+            # Base64 encoded session key
+            # get_data handles both web encoded and regular encoded data
+            keybytes = get_data(sessionkey)
         else:
             sessionkey = sessionkey.replace(' ','')
             keybytes = binascii.unhexlify(sessionkey)
@@ -1363,17 +1504,16 @@ class Authentication():
                 else:
                     samltoken = self.saml_token
                 if self.scope:
-                    # Use v2 endpoint if we have a scope
                     return self.authenticate_with_saml_native_v2(samltoken)
-                else:
-                    return self.authenticate_with_saml_native(samltoken)
+                return self.authenticate_with_saml_native(samltoken)
             if args.as_app and self.password:
                 if self.scope:
                     return self.authenticate_as_app_native_v2()
-                else:
-                    return self.authenticate_as_app_native()
+                return self.authenticate_as_app_native()
             if args.device_code:
-                return self.authenticate_device_code()
+                if self.scope:
+                    return self.authenticate_device_code_native_v2()
+                return self.authenticate_device_code_native()
             if args.prt_init:
                 nonce = self.get_prt_cookie_nonce()
                 if nonce:
