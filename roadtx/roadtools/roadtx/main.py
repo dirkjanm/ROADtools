@@ -81,10 +81,8 @@ def main():
     device_parser.add_argument('--device-type', action='store', help='Device OS type (default: Windows)')
     device_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
     device_parser.add_argument('--deviceticket', action='store', help='Device MSA ticket to match with existing device')
-    device_parser.add_argument('-dua', '--device-user-agent', action='store',
-                                help='Custom device user agent to use. Default: Dsreg/10.0')
     device_parser.add_argument('-ua', '--user-agent', action='store',
-                                help='Custom request user agent to use. Default: Python requests user agent')
+                               help='Custom request user agent to use. Default: Depends on device type')
 
     # Construct hybrid device module
     hdevice_parser = subparsers.add_parser('hybriddevice', help='Join an on-prem device to Azure AD')
@@ -99,8 +97,6 @@ def main():
     hdevice_parser.add_argument('--os-version', action='store', help='Device OS version (default: 10.0.19041.928)')
     hdevice_parser.add_argument('--sid', action='store', required=True, help='Device SID in AD')
     hdevice_parser.add_argument('-t', '--tenant', action='store', required=True, help='Tenant ID where device exists')
-    hdevice_parser.add_argument('-dua', '--device-user-agent', action='store',
-                                help='Custom device user agent to use. Default: Dsreg/10.0')
     hdevice_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. Default: Python requests user agent')
 
@@ -132,14 +128,16 @@ def main():
 
     prt_parser.add_argument('-hk', '--hello-key', action='store', help='Windows Hello PEM file')
     prt_parser.add_argument('-ha', '--hello-assertion', action='store', help='Windows Hello assertion as JWT')
-    
+
     prt_parser.add_argument('-ua', '--user-agent', action='store',
-                                help='Custom user agent to use. Default: Python requests user agent')
+                            help='Custom user agent to use. Default: Python requests user agent')
 
     # Construct winhello module
     winhello_parser = subparsers.add_parser('winhello', help='Register Windows Hello key')
     winhello_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for key storage (default: winhello.key)')
     winhello_parser.add_argument('--access-token', action='store', help='Access token for device registration service. If not specified, taken from .roadtools_auth')
+    winhello_parser.add_argument('-ua', '--user-agent', action='store',
+                                 help='Custom user agent to use. Default: Dsreg/10.0 (Windows 10.0.19044.1826)')
 
     # Construct winhello key generation module - included for reference
     # winhello_parser = subparsers.add_parser('genhellokey', help='Generate Windows Hello key')
@@ -329,7 +327,7 @@ def main():
                                  action='store',
                                  help="Code to auth with that you got from Azure AD")
     codeauth_parser.add_argument('-ua', '--user-agent', action='store',
-                                help='Custom user agent to use. Default: Python requests user agent')
+                                 help='Custom user agent to use. Default: Python requests user agent')
 
     # Bulk enrollment token
     bulkenrollment_parser = subparsers.add_parser('bulkenrollmenttoken', help='Request / use bulk enrollment tokens')
@@ -716,7 +714,6 @@ def main():
 
     args = parser.parse_args()
     deviceauth = DeviceAuthentication(auth)
-    deviceauth.parse_args(args)
     seleniumproxy = None
 
     if args.proxy:
@@ -819,6 +816,7 @@ def main():
             auth.authenticate_as_app_native(assertion=assertion)
         auth.save_tokens(args)
     elif args.command == 'device':
+        auth.set_user_agent(args.user_agent)
         if args.action in ('register', 'join'):
             if args.access_token:
                 tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
@@ -838,16 +836,18 @@ def main():
                 jointype = 0
             else:
                 jointype = 4
-            deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem)
+            deviceauth.register_device(tokenobject['accessToken'], jointype=jointype, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version, deviceticket=args.deviceticket, domain=args.domain)
         elif args.action == 'delete':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem):
                 return
             deviceauth.delete_device(args.cert_pem, args.key_pem)
     elif args.command == 'hybriddevice':
+        auth.set_user_agent(args.user_agent)
         if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
             return
-        deviceauth.register_hybrid_device(args.sid, args.tenant, certout=args.cert_pem, privout=args.key_pem)
+        deviceauth.register_hybrid_device(args.sid, args.tenant, certout=args.cert_pem, privout=args.key_pem, device_type=args.device_type, device_name=args.name, os_version=args.os_version)
     elif args.command == 'prt':
+        auth.set_user_agent(args.user_agent)
         if args.action == 'request':
             if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
                 return
@@ -1335,6 +1335,7 @@ def main():
                 foci = 'Yes' if app['foci'] else 'No'
                 print(f"{appid:<40} {app['name']:<40} {foci:<7} {scopes}")
     elif args.command == 'winhello':
+        auth.set_user_agent(args.user_agent)
         if args.access_token:
             tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
         else:

@@ -65,47 +65,6 @@ class DeviceAuthentication():
         else:
             self.auth = Authentication()
 
-    def parse_args(self, args):
-        if hasattr(args,"os_version"):
-            self.os_version = args.os_version
-        if hasattr(args,"deviceticket"):
-            self.deviceticket = args.deviceticket
-        if hasattr(args,"name"):
-            self.device_name = args.name
-        if hasattr(args,"domain"):
-            self.domain = args.domain
-        if hasattr(args,"device_type"):
-            self.device_type = args.device_type
-        if hasattr(args,"user_agent"):
-            self.user_agent = args.user_agent
-            self.auth.user_agent = args.user_agent
-        if hasattr(args,"cert_pem"):
-            self.certout = args.cert_pem
-        if hasattr(args,"key_pem"):
-            self.privout = args.key_pem
-        if hasattr(args,"device_user_agent"):
-            self.device_user_agent = args.device_user_agent
-
-        if not hasattr(self,"device_user_agent") or self.device_user_agent is None:
-            self.device_user_agent = "Dsreg/10.0"
-
-        if not hasattr(self,"device_type") or self.device_type is None:
-            self.device_type = "Windows"
-
-        if not hasattr(self,"domain") or self.domain is None:
-            self.domain = "iminyour.cloud"
-
-        if not hasattr(self,"os_version") or self.os_version is None:
-            if self.device_type.lower() == "windows":
-                self.os_version = "10.0.19041.928"
-            elif self.device_type.lower() == "macos":
-                self.os_version = "12.2.0"
-            elif self.device_type.lower() == "android":
-                self.os_version = "13.0"
-
-        if not hasattr(self,"device_name") or self.device_name is None:
-            self.device_name = 'DESKTOP-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-
     def loadcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
         """
         Load a device certificate from disk
@@ -304,14 +263,14 @@ class DeviceAuthentication():
     def register_winhello_key(self, pubkeycngblob, access_token):
         headers = {
             'Authorization': f'Bearer {access_token}',
+            'User-Agent': 'Dsreg/10.0 (Windows 10.0.19044.1826)',
             'Content-Type': 'application/json',
-            'User-Agent': f'{self.device_user_agent} (Windows {self.os_version})',
             'Accept': 'application/json',
         }
         data = {
             "kngc": pubkeycngblob.decode('utf-8')
         }
-        res = requests.post('https://enterpriseregistration.windows.net/EnrollmentServer/key/?api-version=1.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post('https://enterpriseregistration.windows.net/EnrollmentServer/key/?api-version=1.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         return res.json()
 
     def create_pubkey_blob_from_key(self, key):
@@ -390,15 +349,13 @@ class DeviceAuthentication():
         }
         return json.dumps(jwk, separators=(',', ':'))
 
-    def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None, deviceticket=None):
+    def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None, deviceticket=None, device_domain=None):
         """
         Registers or joins a device in Azure AD. Requires an access token to the device registration service.
         """
-        # For backward compatiblity fill arguments that are not provided from properties
-        device_type = device_type or self.device_type
-        device_name = device_name or self.device_name
-        os_version = os_version or self.os_version
-        deviceticket = deviceticket or self.deviceticket
+        # Fill in names if not supplied
+        if not device_name:
+            device_name = 'DESKTOP-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
         # Fill in names if not supplied
         if not certout:
@@ -419,6 +376,9 @@ class DeviceAuthentication():
                 os_version = "14.5.0"
             elif device_type.lower() == "android":
                 os_version = "13.0"
+
+        if not device_domain:
+            device_domain = "iminyour.cloud"
 
         if device_type.lower() != "macos14":
             # Generate our key
@@ -457,6 +417,7 @@ class DeviceAuthentication():
 
         api_version = "2.0"
         if device_type.lower() == 'macos':
+            user_agent = 'DeviceRegistrationClient'
             data = {
                 "DeviceDisplayName" : device_name,
                 "CertificateRequest" : {
@@ -464,14 +425,15 @@ class DeviceAuthentication():
                     "Data" : certbytes.decode('utf-8')
                 },
                 "OSVersion" : os_version,
-                "TargetDomain" : self.domain,
+                "TargetDomain" : device_domain,
                 "AikCertificate" : "",
                 "DeviceType" : "MacOS",
                 "TransportKey" : base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
                 "JoinType" : jointype,
                 "AttestationData" : ""
             }
-        if device_type.lower() == 'macos14':
+        elif device_type.lower() == 'macos14':
+            user_agent = 'DeviceRegistrationClient'
             api_version = "3.0"
             data = {
               "AikCertificate" : "",
@@ -497,6 +459,7 @@ class DeviceAuthentication():
               "TargetDomain" : "iminyour.cloud"
             }
         elif device_type.lower() == 'android':
+            user_agent = 'DeviceRegistrationClient'
             data = {
                 "Attributes": {},
                 "CertificateRequest":
@@ -512,6 +475,7 @@ class DeviceAuthentication():
                 "TransportKey": base64.b64encode(self.create_public_jwk_from_key(key, True).encode('utf-8')).decode('utf-8'),
             }
         else:
+            user_agent = f'Dsreg/10.0 (Windows {os_version})'
             pubkeycngblob = base64.b64encode(self.create_pubkey_blob_from_key(key))
             data = {
                 "CertificateRequest":
@@ -521,7 +485,7 @@ class DeviceAuthentication():
                     },
                 "TransportKey": pubkeycngblob.decode('utf-8'),
                 # Can likely be edited to anything, are not validated afaik
-                "TargetDomain": self.domain,
+                "TargetDomain": device_domain,
                 "DeviceType": device_type,
                 "OSVersion": os_version,
                 "DeviceDisplayName": device_name,
@@ -537,6 +501,7 @@ class DeviceAuthentication():
 
 
         headers = {
+            'User-Agent': user_agent,
             'Authorization': f'Bearer {access_token}',
             'Content-Type': 'application/json'
         }
@@ -561,13 +526,24 @@ class DeviceAuthentication():
         '''
         Register hybrid device. Requires existing key/cert to be already loaded and the SID to be specified.
         Device should be synced to AAD already, otherwise this will fail.
+        Note that certout and privout will be suffixed with the _aad suffix in the actual output to prevent overwriting the original self-signed cert
         '''
-        # For backward compatiblity fill arguments that are not provided from properties
-        device_type = device_type or self.device_type
-        device_name = device_name or self.device_name
-        os_version = os_version or self.os_version
+        # Get device name from cert if not supplied
+        if not device_name:
+            certname = certout.rsplit('.', 1)
+            if len(certname) > 1:
+                device_name = certname[0]
+            else:
+                device_name = certname
+            print(f"Assuming device name {device_name} from certificate file name")
 
-        # Fill in names if not supplied
+        if not device_type:
+            device_type = "Windows"
+
+        if not os_version:
+            os_version = "10.0.19041.928"
+
+        # Output keys have the _aad suffix to prevent overwriting original cert + key
         certout = device_name.lower() + '_aad.pem'
         privout = device_name.lower() + '_aad.key'
 
@@ -585,7 +561,7 @@ class DeviceAuthentication():
                 encryption_algorithm=serialization.NoEncryption(),
             ))
 
-        # Generate a CSR
+        # Generate a CSR that will give us an Azure AD signed cert
         csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
             x509.NameAttribute(NameOID.COMMON_NAME, "7E980AD9-B86D-4306-9425-9AC066FB014A"),
         ])).sign(key, hashes.SHA256())
@@ -612,7 +588,7 @@ class DeviceAuthentication():
             "ServerAdJoinData":
             {
                 "TransportKey": pubkeycngblob.decode('utf-8'),
-                "TargetDomain": self.domain,
+                "TargetDomain": tenantid,
                 "DeviceType": device_type,
                 "OSVersion": os_version,
                 "DeviceDisplayName": device_name,
@@ -633,7 +609,7 @@ class DeviceAuthentication():
         }
 
         headers = {
-            'User-Agent': f'{self.device_user_agent} ({device_type} {os_version})',
+            'User-Agent': f'Dsreg/10.0 (Windows {os_version})',
             'Content-Type': 'application/json'
         }
         # Extract device ID from certificate
