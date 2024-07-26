@@ -21,6 +21,7 @@ def main():
     # Primary argument parser
     parser = argparse.ArgumentParser(add_help=True, description=RR_HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-p', '--proxy', action='store', help="Proxy requests through a proxy (format: proxyip:port). Ignores TLS validation if specified, unless --secure is used.")
+    parser.add_argument('-pt', '--proxy-type', action='store', default="http", help="Proxy type to use. Supported: http / socks4 / socks5. Default: http")
     parser.add_argument('-s', '--secure', action='store_true', help="Enforce certificate validation even if using a proxy")
 
     # Add subparsers for modules
@@ -714,13 +715,11 @@ def main():
 
     args = parser.parse_args()
     deviceauth = DeviceAuthentication(auth)
-    seleniumproxy = None
 
     if args.proxy:
         auth.proxies = deviceauth.proxies = {
-            'https': f'http://{args.proxy}'
+            'https': f'{args.proxy_type}://{args.proxy}'
         }
-        seleniumproxy = f'http://{args.proxy}'
         if not args.secure:
             auth.verify = deviceauth.verify = False
 
@@ -1008,7 +1007,7 @@ def main():
             auth.scope = args.scope
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
         if args.auth_url:
             url = args.auth_url
         else:
@@ -1044,7 +1043,7 @@ def main():
         auth.use_cae = args.cae
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
         password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         if args.auth_url:
             url = args.auth_url
@@ -1080,7 +1079,7 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=seleniumproxy)
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
         if args.auth_url:
             url = args.auth_url
         else:
@@ -1173,7 +1172,7 @@ def main():
             replyurl = "ms-appx-web://Microsoft.AAD.BrokerPlugin/dd762716-544d-4aeb-a526-687b73838a22"
             url = f'https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=dd762716-544d-4aeb-a526-687b73838a22&redirect_uri=ms-appx-web%3a%2f%2fMicrosoft.AAD.BrokerPlugin%2fdd762716-544d-4aeb-a526-687b73838a22&resource=urn%3ams-drs%3aenterpriseregistration.windows.net&add_account=noheadsup&scope=openid{hint}&response_mode=form_post&windows_api_version=2.0&amr_values=ngcmfa'
 
-        selauth = SeleniumAuthentication(auth, deviceauth, replyurl, proxy=seleniumproxy)
+        selauth = SeleniumAuthentication(auth, deviceauth, replyurl, proxy=args.proxy, proxy_type=args.proxy_type)
         if args.username and args.keepass and (args.keepass_password or 'KPPASS' in os.environ or args.keepass.endswith('.xml')):
             _, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         else:

@@ -38,10 +38,12 @@ def selenium_wrap(func):
     return wrapped
 
 class SeleniumAuthentication():
-    def __init__(self, auth, deviceauth, redirurl, proxy=None):
-        if proxy and proxy.startswith('http'):
-            proxy = proxy.replace('http://','').replace('https://','')
+    def __init__(self, auth, deviceauth, redirurl, proxy=None, proxy_type="http"):
+        if proxy:
+            # Strip possible prefixes
+            proxy = proxy.replace('http://','').replace('https://','').replace('socks://','').replace('socks4://','').replace('socks5://','')
         self.proxy = proxy
+        self.proxy_type = proxy_type
         self.auth = auth
         self.deviceauth = deviceauth
         self.driver = None
@@ -66,24 +68,11 @@ class SeleniumAuthentication():
         Load webdriver based on service, which is either
         from selenium or selenium-wire if interception is requested
         '''
-        if self.headless and self.proxy:
+        if self.proxy:
             options = {
                 'proxy': {
-                    'http': f'http://{self.proxy}',
-                    'https': f'https://{self.proxy}',
-                    'no_proxy': 'localhost,127.0.0.1'
-                },
-                'request_storage': 'memory'
-            }
-            firefox_options=FirefoxOptions()
-            firefox_options.add_argument("-headless")
-            # Force intercept to add proxy
-            intercept = True
-        elif self.proxy:
-            options = {
-                'proxy': {
-                    'http': f'http://{self.proxy}',
-                    'https': f'https://{self.proxy}',
+                    'http': f'{self.proxy_type}://{self.proxy}',
+                    'https': f'{self.proxy_type}://{self.proxy}',
                     'no_proxy': 'localhost,127.0.0.1'
                 },
                 'request_storage': 'memory'
