@@ -44,6 +44,7 @@ def main():
                                  action='store',
                                  help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
                                  default='https://graph.windows.net')
+    rttsauth_parser.add_argument('--refresh-token', action='store', help='Custom refresh token to use instead of taking it from the tokenfile')
     rttsauth_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password secret of the application if not a public app')
     rttsauth_parser.add_argument('-s',
                                  '--scope',
@@ -735,13 +736,23 @@ def main():
             return
         auth.save_tokens(args)
     elif args.command == 'refreshtokento':
-        try:
-            with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
-                tokenobject = json.load(infile)
-            _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
-        except FileNotFoundError:
-            print('This command requires the .roadtools_auth file, which was not found. Use the gettokens command to supply a refresh token manually.')
-            return
+        if args.refresh_token:
+            if not args.client:
+                print('The client argument (-c) is required when specifying a custom refresh token')
+                return
+            # Allow overriding the token
+            tokenobject = {
+                'refreshToken':args.refresh_token,
+                '_clientId': args.client
+            }
+        else:
+            try:
+                with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                    tokenobject = json.load(infile)
+                _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+            except FileNotFoundError:
+                print('This command requires the .roadtools_auth file, which was not found. Use the gettokens command to supply a refresh token manually.')
+                return
         auth.set_client_id(tokenobject['_clientId'])
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
