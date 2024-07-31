@@ -1,0 +1,21 @@
+## The following combination still work, but later versions of 1.x were broken
+# due to their upstream package brought in a breaking change
+# https://github.com/pallets/markupsafe/issues/286
+# Flask==1.1.4
+# werkzeug==1.0.1
+# Jinja2==2.11.3
+# MarkupSafe==2.0.1
+#
+# Since Flask family do not use semantic versioning, we remove our upper bound here
+Flask>=2
+werkzeug>=2
+requests
+cryptography
+# cachelib==0.1  # Only need this if you are running Python 2
+# Note: This sample does NOT directly depend on cachelib.
+# It is an indirect dependency of flask-session.
+# Cachelib 0.1.1 no longer supports Python 2
+# (see also https://github.com/pallets/cachelib/issues/14)
+# So, if you still need to run your app in Python 2,
+# your workaround is to pin cachelib to its older version 0.1,
+# but keep in mind it contains a known bug https://github.com/pallets/cachelib/pull/12

@@ -1,0 +1,4 @@
+Flask>=2
+werkzeug>=2
+requests
+cryptography
