@@ -271,9 +271,9 @@ def main():
                                 '--kid',
                                 action='store',
                                 help='Key ID configured (default: SHA1 thumbprint of certificate, if provided)')
-    fedauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with Application certificate')
-    fedauth_parser.add_argument('--key-pem', action='store', metavar='file', help='Private key file for Application')
-    fedauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Application cert and key as PFX file')
+    fedauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with IdP certificate')
+    fedauth_parser.add_argument('--key-pem', action='store', metavar='file', help='Private key file for IdP')
+    fedauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='IdP cert and key as PFX file')
     fedauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
     fedauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
     fedauth_parser.add_argument('--cae',

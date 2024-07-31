@@ -183,7 +183,7 @@ class Authentication():
             raise AuthenticationException(res.text)
         responsedata = res.json()
         print(responsedata['message'])
-        print(f"Code expires in {responsedata['expires_in']} seconds")
+        # print(f"Code expires in {responsedata['expires_in']} seconds")
         interval = float(responsedata['interval'])
         device_code = responsedata['device_code']
 
@@ -196,7 +196,6 @@ class Authentication():
             time.sleep(interval)
             res = self.requests_post(f"{authority_uri}/oauth2/token", data=polldata)
             tokenreply = res.json()
-            print(tokenreply)
             if res.status_code != 200:
                 # Keep polling
                 if tokenreply['error'] == 'authorization_pending':
