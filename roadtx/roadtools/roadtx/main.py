@@ -676,6 +676,12 @@ def main():
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
+    # OWA Login with token
+    owalogin_parser = subparsers.add_parser('owalogin', help='Login to OWA with token')
+    owalogin_parser.add_argument('--access-token', action='store', help='Access token for Outlook. If not specified, taken from .roadtools_auth')
+    owalogin_parser.add_argument('-ua', '--user-agent', action='store',
+                                 help='Custom user agent to use. By default the user agent from FireFox is used without modification')
+
     # ADFS Encrypted blob decrypt
     adfsdec_parser = subparsers.add_parser('decryptadfskey', help='Decrypt Encrypted PFX blob from ADFSpoof into PEM or PFX file')
     adfsdec_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', default='roadtx_adfs.pem', help='Certificate file to save ADFS cert (default: roadtx_adfs.pem)')
@@ -1455,6 +1461,30 @@ def main():
         cookie = auth.create_prt_cookie_kdf_ver_2(deviceauth.prt, deviceauth.session_key, challenge)
         print(f"PRT cookie: {cookie}")
         print("Can be used in external browsers using the x-ms-RefreshTokenCredential header or cookie. Note that a PRT cookie is only valid for 5 minutes.")
+
+    elif args.command == 'owalogin':
+        auth.set_user_agent(args.user_agent)
+        if args.access_token:
+            tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
+        else:
+            try:
+                with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                    tokenobject = json.load(infile)
+                _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+            except FileNotFoundError:
+                print('No auth data found. Ether supply an access token with --access-token or make sure a token is present on disk in .roadtools_auth')
+                return
+        if tokendata['aud'] not in ['https://outlook.office.com','https://outlook.office365.com','https://outlook.office.com/','00000002-0000-0ff1-ce00-000000000000','https://outlook.office365.com/']:
+            print(f"Wrong token audience, got {tokendata['aud']} but expected: https://outlook.office.com")
+            print("Make sure to request a token with -r https://outlook.office.com")
+            return
+        auth.set_user_agent(args.user_agent)
+        selauth = SeleniumAuthentication(auth, deviceauth, None, proxy=args.proxy, proxy_type=args.proxy_type)
+        service = selauth.get_service(None)
+        if not service:
+            return
+        selauth.driver = selauth.get_webdriver(service, intercept=True)
+        selauth.selenium_login_owatoken(tokenobject['accessToken'])
 
 if __name__ == '__main__':
     main()
