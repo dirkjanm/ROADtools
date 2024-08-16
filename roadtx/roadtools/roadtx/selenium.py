@@ -160,6 +160,16 @@ class SeleniumAuthentication():
                 els = WebDriverWait(driver, 6000).until(lambda d: d.find_element(By.ID, "i0118"))
                 els.send_keys(Keys.ENTER)
 
+        try:
+            # handle case with "Action Required"
+            # happens when user is not registered with MFA yet and has XX days until required
+            els = WebDriverWait(driver, 2).until(lambda d: d.find_element(By.ID, 'txtSkipMfaRegistration'))
+            print(f"MFA will be enforced for this account: {els.text} (skipping now)")
+            els = WebDriverWait(driver, 2).until(lambda d: d.find_element(By.ID, 'btnAskLater'))
+            els.click()
+        except TimeoutException:
+            pass
+        
         # Quick check of mfa not needed
         try:
             WebDriverWait(driver, 2).until(lambda d: '?code=' in d.current_url)
