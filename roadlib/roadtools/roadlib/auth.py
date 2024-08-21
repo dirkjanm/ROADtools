@@ -45,6 +45,7 @@ class Authentication():
         self.password = password
         self.tenant = tenant
         self.client_id = None
+        self.origin = None
         self.set_client_id(client_id)
         self.resource_uri = 'https://graph.windows.net/'
         self.tokendata = {}
@@ -78,6 +79,12 @@ class Authentication():
         Sets client ID to use (accepts aliases)
         """
         self.client_id = self.lookup_client_id(clid)
+
+    def set_origin_value(self, origin):
+        """
+        Sets Origin header to use
+        """
+        self.origin = origin
 
     def set_resource_uri(self, uri):
         """
@@ -1215,6 +1222,9 @@ class Authentication():
         auth_parser.add_argument('--refresh-token',
                                  action='store',
                                  help='Refresh token (or the word "file" to read it from .roadtools_auth)')
+        auth_parser.add_argument('--origin',
+                                 action='store',
+                                 help='Origin of a browser refresh token like "https://portal.azure.com". Used with Azure portal or other portal refresh tokens when combind with a client id like -c c44b4083-3bb0-49c1-b47d-974e53cbdf3c.')
         auth_parser.add_argument('--saml-token',
                                  action='store',
                                  help='SAML token from Federation Server')
@@ -1449,6 +1459,11 @@ class Authentication():
             headers = kwargs.get('headers',{})
             headers['User-Agent'] = self.user_agent
             kwargs['headers'] = headers
+        if self.origin:
+            #self.set_client_id('c44b4083-3bb0-49c1-b47d-974e53cbdf3c') This is the portal.azure.com default client id
+            headers = kwargs.get('headers',{})
+            headers['Origin'] = self.origin
+            kwargs['headers'] = headers
         return requests.post(*args, timeout=30.0, **kwargs)
 
     def parse_args(self, args):
@@ -1458,6 +1473,7 @@ class Authentication():
         self.set_client_id(args.client)
         self.access_token = args.access_token
         self.refresh_token = args.refresh_token
+        self.set_origin_value(args.origin)
         self.saml_token = args.saml_token
         self.outfile = args.tokenfile
         self.debug = args.debug
