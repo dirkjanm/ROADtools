@@ -493,6 +493,8 @@ class Authentication():
         }
         if client_secret:
             data['client_secret'] = client_secret
+        if self.client_id == "c44b4083-3bb0-49c1-b47d-974e53cbdf3c":
+            self.set_origin_value("https://portal.azure.com")
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/token", data=data)
@@ -521,6 +523,8 @@ class Authentication():
         }
         if client_secret:
             data['client_secret'] = client_secret
+        if self.client_id == "c44b4083-3bb0-49c1-b47d-974e53cbdf3c":
+            self.set_origin_value("https://portal.azure.com")
         if self.use_cae:
             data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         if additionaldata:
