@@ -126,12 +126,10 @@ def checktoken():
             auth.set_user_agent(token['useragent'])
         if 'refreshToken' in token:
             #token = auth.authenticate_with_refresh(token)
-            try {
+            try:
                 token = auth.authenticate_with_refresh_native(token['refreshToken'])
-            }
-            except {
-                token = auth.authenticate_with_refresh_native_v2(['refreshToken'])
-            }
+            except:
+                token = auth.authenticate_with_refresh_native_v2(token['refreshToken'])
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
             expiretime = time.time() + token['expiresIn']
             print('Refreshed token')
