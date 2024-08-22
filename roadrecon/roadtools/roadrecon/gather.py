@@ -25,6 +25,7 @@ from roadtools.roadlib.metadef.database import (
 from sqlalchemy import bindparam, func, text
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
+from datetime import datetime
 
 warnings.simplefilter('ignore')
 token = None
@@ -131,7 +132,9 @@ def checktoken():
             except:
                 token = auth.authenticate_with_refresh_native_v2(token['refreshToken'])
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
-            expiretime = time.time() + token['expiresIn']
+            #expiretime = time.time() + token['expiresIn']
+            dt = datetime.strptime(token['expiresOn'], "%Y-%m-%d %H:%M:%S")
+            expiretime = dt.timestamp()
             print('Refreshed token')
             return True
         elif time.time() > expiretime:
