@@ -116,7 +116,6 @@ async def ratelimit():
 def checktoken():
     global token, expiretime
     if time.time() > expiretime - 300:
-        print("+ Attempting token refresh +")
         auth = Authentication()
         try:
             auth.client_id = token['_clientId']
@@ -127,6 +126,7 @@ def checktoken():
         if 'useragent' in token:
             auth.set_user_agent(token['useragent'])
         if 'refreshToken' in token:
+            print("+ Attempting token refresh +")
             #token = auth.authenticate_with_refresh(token)
             try:
                 token = auth.authenticate_with_refresh_native(token['refreshToken'])
