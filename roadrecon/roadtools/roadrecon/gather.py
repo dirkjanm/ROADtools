@@ -125,18 +125,14 @@ def checktoken():
         auth.tokendata = token
         if 'useragent' in token:
             auth.set_user_agent(token['useragent'])
+        if 'originheader' in token:
+            auth.set_origin_value(token['originheader'])
         if 'refreshToken' in token:
-            print("+ Attempting token refresh +")
-            #token = auth.authenticate_with_refresh(token)
-            try:
-                token = auth.authenticate_with_refresh_native(token['refreshToken'])
-            except:
-                token = auth.authenticate_with_refresh_native_v2(token['refreshToken'])
+            print("- Attempting token refresh -")
+            token = auth.authenticate_with_refresh(token)
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
-            #expiretime = time.time() + token['expiresIn']
-            dt = datetime.strptime(token['expiresOn'], "%Y-%m-%d %H:%M:%S")
-            expiretime = dt.timestamp()
-            print('Refreshed token')
+            expiretime = time.time() + token['expiresIn']
+            print('+ Refreshed token +')
             return True
         elif time.time() > expiretime:
             print('Access token is expired, but no access to refresh token! Dumping will fail')

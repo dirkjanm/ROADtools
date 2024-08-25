@@ -85,6 +85,7 @@ class Authentication():
         Sets Origin header to use
         """
         self.origin = origin
+        adal.oauth2_client._REQ_OPTION['headers']['Origin'] = self.origin
 
     def set_resource_uri(self, uri):
         """
@@ -477,6 +478,8 @@ class Authentication():
         inputdata = json.loads(base64.b64decode(tokens[1]+('='*(len(tokens[1])%4))))
         self.tokendata['_clientId'] = self.client_id
         self.tokendata['tenantId'] = inputdata['tid']
+        if self.origin:
+            self.tokendata['originheader'] = self.origin
         return self.tokendata
 
     def authenticate_with_refresh_native(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
@@ -493,8 +496,6 @@ class Authentication():
         }
         if client_secret:
             data['client_secret'] = client_secret
-        if self.client_id == "c44b4083-3bb0-49c1-b47d-974e53cbdf3c":
-            self.set_origin_value("https://portal.azure.com")
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/token", data=data)
@@ -506,6 +507,8 @@ class Authentication():
         access_token = tokenreply['access_token']
         tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        if self.origin:
+            self.tokendata['originheader'] = self.origin
         return self.tokendata
 
     def authenticate_with_refresh_native_v2(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
@@ -523,8 +526,6 @@ class Authentication():
         }
         if client_secret:
             data['client_secret'] = client_secret
-        if self.client_id == "c44b4083-3bb0-49c1-b47d-974e53cbdf3c":
-            self.set_origin_value("https://portal.azure.com")
         if self.use_cae:
             data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         if additionaldata:
@@ -536,6 +537,8 @@ class Authentication():
         if returnreply:
             return tokenreply
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        if self.origin:
+            self.tokendata['originheader'] = self.origin
         return self.tokendata
 
     def authenticate_with_code_native(self, code, redirurl, client_secret=None, pkce_secret=None, additionaldata=None, returnreply=False):
@@ -1228,7 +1231,7 @@ class Authentication():
                                  help='Refresh token (or the word "file" to read it from .roadtools_auth)')
         auth_parser.add_argument('--origin',
                                  action='store',
-                                 help='Origin of a browser refresh token like "https://portal.azure.com". Used with Azure portal or other portal refresh tokens when combind with a client id like -c c44b4083-3bb0-49c1-b47d-974e53cbdf3c.')
+                                 help='Origin of a browser refresh token from a Single Page Application (i.e. "https://portal.azure.com"). Used with Azure portal or other portal refresh tokens when combind with a client id like -c c44b4083-3bb0-49c1-b47d-974e53cbdf3c.')
         auth_parser.add_argument('--saml-token',
                                  action='store',
                                  help='SAML token from Federation Server')
@@ -1464,7 +1467,6 @@ class Authentication():
             headers['User-Agent'] = self.user_agent
             kwargs['headers'] = headers
         if self.origin:
-            #self.set_client_id('c44b4083-3bb0-49c1-b47d-974e53cbdf3c') This is the portal.azure.com default client id
             headers = kwargs.get('headers',{})
             headers['Origin'] = self.origin
             kwargs['headers'] = headers
@@ -1577,6 +1579,8 @@ class Authentication():
         return False
 
     def save_tokens(self, args):
+        if args.origin:
+            self.tokendata['originheader'] = args.origin
         if args.tokens_stdout:
             sys.stdout.write(json.dumps(self.tokendata))
         else:
