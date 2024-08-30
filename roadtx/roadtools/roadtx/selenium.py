@@ -60,6 +60,9 @@ class SeleniumAuthentication():
             if driverpath != 'geckodriver' and not os.path.exists(driverpath):
                 print('geckodriver not found! Required for selenium operation. Please download from https://github.com/mozilla/geckodriver/releases')
                 return False
+        else:
+            if os.path.exists('/snap/bin/geckodriver'):
+                driverpath = '/snap/bin/geckodriver'
         service = Service(executable_path=driverpath)
         return service
 
