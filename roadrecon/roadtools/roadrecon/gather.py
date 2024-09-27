@@ -25,6 +25,7 @@ from roadtools.roadlib.metadef.database import (
 from sqlalchemy import bindparam, func, text
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
+from datetime import datetime
 
 warnings.simplefilter('ignore')
 token = None
@@ -124,11 +125,14 @@ def checktoken():
         auth.tokendata = token
         if 'useragent' in token:
             auth.set_user_agent(token['useragent'])
+        if 'originheader' in token:
+            auth.set_origin_value(token['originheader'])
         if 'refreshToken' in token:
+            print("- Attempting token refresh -")
             token = auth.authenticate_with_refresh(token)
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
             expiretime = time.time() + token['expiresIn']
-            print('Refreshed token')
+            print('+ Refreshed token +')
             return True
         elif time.time() > expiretime:
             print('Access token is expired, but no access to refresh token! Dumping will fail')
