@@ -84,6 +84,8 @@ class SeleniumAuthentication():
             intercept = True
         else:
             options = {'request_storage': 'memory'}
+            if self.redir_has_custom_scheme():
+                intercept = True
         if intercept and self.headless:
             firefox_options=FirefoxOptions()
             firefox_options.add_argument("-headless")
@@ -103,6 +105,33 @@ class SeleniumAuthentication():
         except StaleElementReferenceException:
             return False
         return False
+
+    def redir_has_custom_scheme(self):
+        '''
+        Check whether the redirect URL has a custom scheme
+        In this case we try to replace this during the response since Firefox otherwise bugs out
+        '''
+        if not self.redirurl:
+            return False
+        parsed = urlparse(self.redirurl)
+        print(parsed)
+        return not parsed.scheme.lower() in ('http', 'https')
+
+    def redir_interceptor(self, request, response):
+        '''
+        Intercept redirect response to replace custom scheme
+        '''
+        if request.url.startswith('https://login.microsoftonline.com/'):
+            # Microsoft seems to auto-lowercase the redirect URL internally, but only the hostname
+            if response.headers['Location'] and response.headers['Location'].lower().startswith(self.redirurl.lower()):
+                parsed = urlparse(response.headers['Location'])
+                newredir = "https://login.microsoftonline.com/common/oauth2/nativeclient"
+                if parsed.query:
+                    newredir += f'?{parsed.query}'
+                if parsed.fragment:
+                    newredir += f'#{parsed.fragment}'
+                del response.headers['Location']
+                response.headers['Location'] = newredir
 
     def get_keepass_cred(self, identity, filepath, password):
         '''
@@ -239,6 +268,8 @@ class SeleniumAuthentication():
             del request.headers['User-Agent']
             request.headers['User-Agent'] = self.auth.user_agent
         self.driver.request_interceptor = interceptor
+        if self.redir_has_custom_scheme():
+            self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
 
     def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None, capture=False):
@@ -273,6 +304,8 @@ class SeleniumAuthentication():
                                                                            self.deviceauth.session_key)
                         request.headers['X-Ms-Refreshtokencredential'] = cookie
         self.driver.request_interceptor = interceptor
+        if self.redir_has_custom_scheme():
+            self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
     def selenium_login_with_kerberos(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, krbdata=None):
@@ -297,6 +330,8 @@ class SeleniumAuthentication():
                     request.headers['Authorization'] = f'Negotiate {krbdata}'
 
         self.driver.request_interceptor = interceptor
+        if self.redir_has_custom_scheme():
+            self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
     def selenium_login_with_estscookie(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, estscookie=None):
@@ -320,6 +355,8 @@ class SeleniumAuthentication():
             request.headers['Cookie'] = f'ESTSAUTHPERSISTENT={estscookie}; ' + existing
 
         self.driver.request_interceptor = interceptor
+        if self.redir_has_custom_scheme():
+            self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
     @selenium_wrap
@@ -367,12 +404,23 @@ class SeleniumAuthentication():
                     del response.headers['Content-Length']
                     response.headers['Content-Length'] = len(response.body)
 
+                # Microsoft seems to auto-lowercase the redirect URL internally
+                if response.headers['Location'] and response.headers['Location'].lower().startswith(self.redirurl.lower()):
+                    parsed = urlparse(response.headers['Location'])
+                    newredir = "https://login.microsoftonline.com/common/oauth2/nativeclient"
+                    if parsed.query:
+                        newredir += f'?{parsed.query}'
+                    if parsed.fragment:
+                        newredir += f'#{parsed.fragment}'
+                    del response.headers['Location']
+                    response.headers['Location'] = newredir
+
         self.driver.request_interceptor = interceptor
         self.driver.response_interceptor = response_interceptor
 
         driver = self.driver
         driver.get(url)
-        
+
         if otpseed:
             try:
                 els = WebDriverWait(driver, 4).until(lambda d: d.find_element(By.CSS_SELECTOR, '[data-value="PhoneAppOTP"]'))
@@ -388,7 +436,7 @@ class SeleniumAuthentication():
             except TimeoutException:
                 # No MFA?
                 pass
-        
+
         el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='form[name="hiddenform"] input[name="code"]'))
         code = el.get_property("value")
         driver.close()
@@ -457,4 +505,3 @@ class SeleniumAuthentication():
         driver.get("https://outlook.office.com/owa/?init")
         el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='div[name="youshouldquit"]'))
         driver.close()
-
