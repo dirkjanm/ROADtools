@@ -84,9 +84,19 @@ jobs:
       set -e
       roadtx gettokens -u $rtuser -p $rtpass -r drs
       roadtx device -a join -c pipeline.pem -k pipeline.key
-      retry_if_fail()
-      {
-          for i in 1 2 3 4 5; do "$@" && break || sleep 10s; done
+      retry_if_fail() {
+        local exit_code=0
+        for i in 1 2 3 4 5; do
+            "$@"
+            exit_code=$?
+            if [ $exit_code -eq 0 ]; then
+                break
+            fi
+            if [ $i -lt 5 ]; then
+                sleep 10s
+            fi
+        done
+        return $exit_code
       }
       retry_if_fail roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null
       retry_if_fail roadtx prtauth
