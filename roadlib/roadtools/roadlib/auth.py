@@ -1579,8 +1579,8 @@ class Authentication():
         return False
 
     def save_tokens(self, args):
-        if args.origin:
-            self.tokendata['originheader'] = args.origin
+        if self.origin:
+            self.tokendata['originheader'] = self.origin
         if args.tokens_stdout:
             sys.stdout.write(json.dumps(self.tokendata))
         else:
