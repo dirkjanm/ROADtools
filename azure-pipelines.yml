@@ -85,6 +85,7 @@ jobs:
       roadtx gettokens -u $rtuser -p $rtpass -r drs
       roadtx device -a join -c pipeline.pem -k pipeline.key
       retry_if_fail() {
+        set +e
         local exit_code=0
         for i in 1 2 3 4 5; do
             "$@"
@@ -96,6 +97,7 @@ jobs:
                 sleep 10s
             fi
         done
+        set -e
         return $exit_code
       }
       retry_if_fail roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null
