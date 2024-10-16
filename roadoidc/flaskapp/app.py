@@ -1,9 +1,11 @@
-from flask import Flask, render_template, session, request, redirect, url_for, abort, jsonify
+from flask import Flask, render_template, render_template_string, session, request, redirect, url_for, abort, jsonify
 from cryptography.hazmat.primitives import serialization, padding, hashes
 from cryptography import x509
 import base64
 import requests
+import time
 import app_config
+import jwt
 
 app = Flask(__name__)
 app.config.from_object(app_config)
@@ -93,6 +95,99 @@ def servekeys():
         }]
     }
     return jsonify(jwks)
+
+@app.route("/eam/authorize", methods=['POST','GET'])
+def eam_authorize():
+    tpl = '''
+    <html><head><title>Working...</title></head><body>
+<form method="POST" name="hiddenform" action="{{ redirurl }}">
+<input type="hidden" name="token_type" value="Bearer" />
+<input type="hidden" name="id_token" value="{{ id_token }}" />
+<input type="hidden" name="expires_in" value="300" />
+<input type="hidden" name="state" value="{{ state }}" />
+<input type="hidden" name="scope" value="openid" /><noscript><p>Script is disabled. Click Submit to continue.</p>
+<input type="submit" value="Submit" /></noscript></form><script language="javascript">function submit_form(){window.setTimeout('document.forms[0].submit()', 0);}window.onload=submit_form;</script></body></html>
+    '''
+    encoded = request.form['id_token_hint']
+    id_token_hint = jwt.decode(encoded, options={"verify_signature": False})
+
+
+    payload = {
+      "iss": f"{app_config.ISSUER}/eam",
+      "sub": id_token_hint['sub'],
+      "aud": request.form['client_id'],
+      "exp": int(time.time())+300,
+      "iat": int(time.time()),
+      "nonce": request.form['nonce'],
+      "DuoMfa": "MfaDone",
+      "acr": "possessionorinherence",
+      "amr": [
+        "fido"
+      ]
+    }
+    headers = {
+        "kid": "ROIDKEY",
+    }
+    token = jwt.encode(payload, algorithm='RS256', key=app_config.PRIVKEY.encode('utf-8'), headers=headers)
+    return render_template_string(tpl, redirurl=request.form['redirect_uri'], state=request.form['state'], id_token=token)
+
+@app.route("/eam/.well-known/openid-configuration")
+def eamoidc():
+    data = {
+      "token_endpoint": f"{app_config.ISSUER}/token",
+      "token_endpoint_auth_methods_supported": [
+        "client_secret_post",
+        "private_key_jwt",
+        "client_secret_basic"
+      ],
+      "jwks_uri": f"{app_config.ISSUER}/keys.json",
+      "response_modes_supported": [
+        "query",
+        "fragment",
+        "form_post"
+      ],
+      "subject_types_supported": [
+        "pairwise"
+      ],
+      "id_token_signing_alg_values_supported": [
+        "RS256"
+      ],
+      "response_types_supported": [
+        "code",
+        "id_token",
+        "code id_token",
+        "id_token token"
+      ],
+      "scopes_supported": [
+        "openid",
+        "profile",
+        "email",
+        "offline_access"
+      ],
+      "issuer": f"{app_config.ISSUER}/eam",
+      "request_uri_parameter_supported": False,
+      "userinfo_endpoint": f"{app_config.ISSUER}/oidc/userinfo",
+      "authorization_endpoint": f"{app_config.ISSUER}/eam/authorize",
+      "http_logout_supported": True,
+      "frontchannel_logout_supported": True,
+      "claims_supported": [
+        "sub",
+        "iss",
+        "aud",
+        "exp",
+        "iat",
+        "auth_time",
+        "acr",
+        "nonce",
+        "name",
+        "tid",
+        "ver",
+        "at_hash",
+        "c_hash",
+        "email"
+      ]
+    }
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run()

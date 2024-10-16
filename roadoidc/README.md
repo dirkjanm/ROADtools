@@ -86,3 +86,20 @@ Follow the instructions above, then upload the files to the correct folders on y
 
 # Requesting tokens
 Info on configuring federated credentials on apps and user managed identities, and how to request tokens with roadtx can be found on the roadoidc [release blog](https://dirkjanm.io/persisting-with-federated-credentials-entra-apps-managed-identities/).
+
+## Using roadoidc as an External Authentication Method
+You can also use roadoidc as an External Authentication Method (EAM) in Entra ID that fakes Multi Factor Authentication (MFA) as an EAM provider. roadoidc will approve any incoming MFA request without prompt, which means this isn't exactly something you should be using in production environments. But, if you don't want to bother with real MFA for lab environments, you can make your life easier with roadoidc. This setup requires that roadoidc is running as an Azure App service, since this is not a static configuration. You have to specify `--eam` during the configuration generation with `genconfig.py` (see above) to ensure that this is enabled.
+
+In Entra ID, this is set up as follows (you will need Global Admin rights to configure this):
+
+* Create an application (app registration in Entra ID)
+* Configure the roadoidc EAM URL as a redirect URL on this application. This URL consists of the `issuer` URL plus the `eam/authorize` suffix. For example, if you host roadoidc on `https://yourappname.azurewebsites.net`, the redirect URL would be `https://yourappname.azurewebsites.net/eam/authorize`
+* Make sure the following permissions are configured on your app and consented by an admin: `openid`, `profile`
+* Note down the client ID (app ID) of this app
+
+* Go to Security -> Authentication methods -> Policies -> Add external method
+* Fill in an appropriate name for the method. The name doesn't matter but will be shown to users signing in, and cannot be used afterwards.
+* The client ID can be anything since this is not checked by roadoidc. A random GUID will work.
+* The discovery endpoint should be the `issuer` URL, plus the `eam/.well-known/openid-configuration` suffix. For example, if you host roadoidc on `https://yourappname.azurewebsites.net`, the discovery endpoint would be `https://yourappname.azurewebsites.net/.well-known/openid-configuration`
+* The App ID should be the ID of the application we created above.
+* Scope the EAM to the users (or all users) you want to bypass the MFA requirement for

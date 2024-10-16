@@ -19,3 +19,4 @@ cryptography
 # So, if you still need to run your app in Python 2,
 # your workaround is to pin cachelib to its older version 0.1,
 # but keep in mind it contains a known bug https://github.com/pallets/cachelib/pull/12
+pyjwt
