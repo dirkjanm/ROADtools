@@ -353,6 +353,8 @@ class SAMLSigner():
                     pfxdata = pfxf.read()
             if pfxbase64:
                 pfxdata = base64.b64decode(pfxbase64)
+            if isinstance(pfxpass, str):
+                pfxpass = pfxpass.encode()
             self.privkey, self.certificate, _ = pkcs12.load_key_and_certificates(pfxdata, pfxpass)
             # PyJWT needs the key as PEM data anyway, so encode it
             self.keydata = self.privkey.private_bytes(

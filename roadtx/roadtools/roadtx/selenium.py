@@ -114,7 +114,6 @@ class SeleniumAuthentication():
         if not self.redirurl:
             return False
         parsed = urlparse(self.redirurl)
-        print(parsed)
         return not parsed.scheme.lower() in ('http', 'https')
 
     def redir_interceptor(self, request, response):
