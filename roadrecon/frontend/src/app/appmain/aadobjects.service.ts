@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment'
+import {HttpClient, HttpParams} from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import {
   Router, Resolve,
   RouterStateSnapshot,
-  ActivatedRouteSnapshot
-}                                 from '@angular/router';
+  ActivatedRouteSnapshot, Params
+} from '@angular/router';
 import { Observable, of, EMPTY }  from 'rxjs';
 import { mergeMap, take }         from 'rxjs/operators';
+import {SortDirection} from '@angular/material/sort';
 
 export interface GroupsItem {
   displayName: string;
@@ -241,47 +242,67 @@ export interface AuthorizationPolicy {
     permissionGrantPolicyIdsAssignedToDefaultUserRole: string[];
 }
 
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+  sortField?: string;
+  sortDirection?: SortDirection;
+  contains?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class DatabaseService {
+  defaultPage = 1;
+  defaultPageSize = 50;
 
   constructor(private http: HttpClient) { }
 
-  public getUsers():  Observable<UsersItem[]> {
-      return this.http.get<UsersItem[]>(environment.apibase + 'users');
+  public getUsers(pagination?: PaginationParams): Observable<UsersItem[]> {
+      return this.http.get<UsersItem[]>(environment.apibase + 'users', {
+        params: this.toHttpParams(pagination)
+      });
   }
 
   public getUser(id):  Observable<UsersItem> {
       return this.http.get<UsersItem>(environment.apibase + 'users/'+ id);
   }
 
-  public getDevices():  Observable<DevicesItem[]> {
-      return this.http.get<DevicesItem[]>(environment.apibase + 'devices');
+  public getDevices(pagination?: PaginationParams):  Observable<DevicesItem[]> {
+      return this.http.get<DevicesItem[]>(environment.apibase + 'devices',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
   public getDevice(id):  Observable<DevicesItem> {
       return this.http.get<DevicesItem>(environment.apibase + 'devices/'+ id);
   }
 
-  public getGroups():  Observable<GroupsItem[]> {
-      return this.http.get<GroupsItem[]>(environment.apibase + 'groups');
+  public getGroups(pagination?: PaginationParams):  Observable<GroupsItem[]> {
+      return this.http.get<GroupsItem[]>(environment.apibase + 'groups',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
   public getGroup(id):  Observable<GroupsItem> {
       return this.http.get<GroupsItem>(environment.apibase + 'groups/'+ id);
   }
 
-  public getAdministrativeUnits():  Observable<AdministrativeUnitsItem[]> {
-      return this.http.get<AdministrativeUnitsItem[]>(environment.apibase + 'administrativeunits');
+  public getAdministrativeUnits(pagination?: PaginationParams):  Observable<AdministrativeUnitsItem[]> {
+      return this.http.get<AdministrativeUnitsItem[]>(environment.apibase + 'administrativeunits',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
   public getAdministrativeUnit(id):  Observable<AdministrativeUnitsItem> {
       return this.http.get<AdministrativeUnitsItem>(environment.apibase + 'administrativeunits/'+ id);
   }
 
-  public getServicePrincipals():  Observable<ServicePrincipalsItem[]> {
-      return this.http.get<ServicePrincipalsItem[]>(environment.apibase + 'serviceprincipals');
+  public getServicePrincipals(pagination?: PaginationParams):  Observable<ServicePrincipalsItem[]> {
+      return this.http.get<ServicePrincipalsItem[]>(environment.apibase + 'serviceprincipals',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
   public getServicePrincipal(id):  Observable<ServicePrincipalsItem> {
@@ -292,20 +313,26 @@ export class DatabaseService {
       return this.http.get<ServicePrincipalsItem>(environment.apibase + 'serviceprincipals-by-appid/'+ id);
   }
 
-  public getApplications():  Observable<ApplicationsItem[]> {
-      return this.http.get<ApplicationsItem[]>(environment.apibase + 'applications');
+  public getApplications(pagination?: PaginationParams):  Observable<ApplicationsItem[]> {
+      return this.http.get<ApplicationsItem[]>(environment.apibase + 'applications',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
   public getApplication(id):  Observable<ApplicationsItem> {
       return this.http.get<ApplicationsItem>(environment.apibase + 'applications/'+ id);
   }
 
-  public getDirectoryRoles():  Observable<DirectoryRolesItem[]> {
-      return this.http.get<DirectoryRolesItem[]>(environment.apibase + 'directoryroles');
+  public getDirectoryRoles(pagination?: PaginationParams):  Observable<DirectoryRolesItem[]> {
+      return this.http.get<DirectoryRolesItem[]>(environment.apibase + 'directoryroles',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
-  public getRoleDefinitions():  Observable<RoleDefinitionsItem[]> {
-      return this.http.get<RoleDefinitionsItem[]>(environment.apibase + 'roledefinitions');
+  public getRoleDefinitions(pagination?: PaginationParams):  Observable<RoleDefinitionsItem[]> {
+      return this.http.get<RoleDefinitionsItem[]>(environment.apibase + 'roledefinitions',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
   public getTenantStats():  Observable<TenantStats> {
@@ -315,17 +342,21 @@ export class DatabaseService {
   public getTenantDetail():  Observable<TenantDetail> {
       return this.http.get<TenantDetail>(environment.apibase + 'tenantdetails');
   }
-  
+
   public getDirectorySetting():  Observable<DirectorySetting> {
       return this.http.get<DirectorySetting>(environment.apibase + 'directorysettings');
   }
 
-  public getAuthorizationPolicies(): Observable<AuthorizationPolicy[]> {
-      return this.http.get<AuthorizationPolicy[]>(environment.apibase + 'authorizationpolicies');
+  public getAuthorizationPolicies(pagination?: PaginationParams): Observable<AuthorizationPolicy[]> {
+      return this.http.get<AuthorizationPolicy[]>(environment.apibase + 'authorizationpolicies',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
-  public getAppRoles():  Observable<AppRolesItem[]> {
-      return this.http.get<AppRolesItem[]>(environment.apibase + 'approles');
+  public getAppRoles(pagination?: PaginationParams):  Observable<AppRolesItem[]> {
+      return this.http.get<AppRolesItem[]>(environment.apibase + 'approles',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
   public getAppRolesByResource(spid):  Observable<AppRolesItem[]> {
@@ -336,12 +367,32 @@ export class DatabaseService {
       return this.http.get<AppRolesItem[]>(environment.apibase + 'approles_by_principal/' + pid);
   }
 
-  public getMfa():  Observable<MfaItem[]> {
-      return this.http.get<MfaItem[]>(environment.apibase + 'mfa');
+  public getMfa(pagination?: PaginationParams):  Observable<MfaItem[]> {
+      return this.http.get<MfaItem[]>(environment.apibase + 'mfa',
+        { params: this.toHttpParams(pagination) }
+      );
   }
 
-  public getOAuth2Permissions():  Observable<OAuth2PermissionsItem[]> {
-      return this.http.get<OAuth2PermissionsItem[]>(environment.apibase + 'oauth2permissions');
+  public getOAuth2Permissions(pagination?: PaginationParams):  Observable<OAuth2PermissionsItem[]> {
+      return this.http.get<OAuth2PermissionsItem[]>(environment.apibase + 'oauth2permissions',
+        { params: this.toHttpParams(pagination) }
+      );
+  }
+
+  toHttpParams(params?: PaginationParams): HttpParams {
+    let httpParams = new HttpParams();
+    httpParams = httpParams.set('page', params?.page || this.defaultPage);
+    httpParams = httpParams.set('per_page', params?.pageSize || this.defaultPageSize);
+    if (params?.sortField) {
+      httpParams = httpParams.set('sort', params.sortField);
+    }
+    if (params?.sortDirection) {
+      httpParams = httpParams.set('direction', params.sortDirection);
+    }
+    if (params?.contains) {
+      httpParams = httpParams.set('contains', params.contains);
+    }
+    return httpParams;
   }
 }
 
