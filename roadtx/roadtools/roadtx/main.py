@@ -290,6 +290,40 @@ def main():
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
+    # Construct device token module
+    devauth_parser = subparsers.add_parser('deviceauth', aliases=('getdevicetokens', 'getdevicetoken'), help='Request device tokens with device cert')
+    devauth_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', help='Certificate file with device certificate')
+    devauth_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for device')
+    devauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Device cert and key as PFX file')
+    devauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    devauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    helptext = 'Client ID to use when authenticating.'
+    devauth_parser.add_argument('--client',
+                                action='store',
+                                help=helptext,
+                                default='1b730954-1685-4b74-9bfd-dac224a7b894')
+    devauth_parser.add_argument('-r',
+                                '--resource',
+                                action='store',
+                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
+                                default='https://graph.windows.net')
+    devauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
+                                 help='Custom redirect URL used when authenticating (default: ms-appx-web://Microsoft.AAD.BrokerPlugin/<clientid>)')
+    devauth_parser.add_argument('--tokenfile',
+                                action='store',
+                                help='File to store the credentials (default: .roadtools_auth)',
+                                default='.roadtools_auth')
+    devauth_parser.add_argument('--tokens-stdout',
+                                action='store_true',
+                                help='Do not store tokens on disk, pipe to stdout instead')
+    devauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
+    devauth_parser.add_argument('-t',
+                                '--tenant',
+                                required=True,
+                                action='store',
+                                help='Tenant ID or domain to auth to')
+
     # Code grant flow auth
     codeauth_parser = subparsers.add_parser('codeauth', help='Code grant flow - exchange code for auth tokens')
     clienthelptext = 'Client ID (application ID) to use when authenticating. Accepts aliases (list with roadtx listaliases)'
@@ -939,6 +973,17 @@ def main():
         else:
             print('No access token in token data, assuming custom request')
             print(tokendata)
+    elif args.command in ('deviceauth', 'getdevicetoken', 'getdevicetokens'):
+        auth.set_user_agent(args.user_agent)
+        if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+            return
+        auth.set_user_agent(args.user_agent)
+        if args.tenant:
+            auth.tenant = args.tenant
+        tokenreply = deviceauth.get_token_for_device(args.client, args.resource, redirect_uri=args.redirect_url)
+        auth.outfile = args.tokenfile
+        auth.tokendata = auth.tokenreply_to_tokendata(tokenreply)
+        auth.save_tokens(args)
     elif args.command == 'decrypt':
         header, enc_key, iv, ciphertext, auth_tag = auth.parse_compact_jwe(args.data, args.verbose)
         if header['alg'] == 'RSA-OAEP':
@@ -1165,6 +1210,12 @@ def main():
             return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
+        if args.keep_open:
+            try:
+                time.sleep(99999)
+            except KeyboardInterrupt:
+                return
+            return
     elif args.command == 'prtenrich':
         if not args.no_prt:
             if args.prt and args.prt_sessionkey:
