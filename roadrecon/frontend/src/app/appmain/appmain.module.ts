@@ -7,7 +7,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
@@ -100,4 +100,8 @@ import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permission
     ServicePrincipalsResolveService
   ]
 })
-export class AppmainModule { }
+export class AppmainModule {
+    constructor(matIconRegistry: MatIconRegistry) {
+    matIconRegistry.setDefaultFontSetClass('material-symbols-outlined');
+  }
+}

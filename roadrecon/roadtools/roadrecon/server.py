@@ -41,7 +41,7 @@ class RTModelSchema(ma.SQLAlchemyAutoSchema):
 class UsersSchema(ma.Schema):
     class Meta:
         model = User
-        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled', 'strongAuthenticationDetail', 'userType')
+        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled', 'strongAuthenticationDetail', 'userType', 'searchableDeviceKey')
 
 class DevicesSchema(ma.Schema):
     class Meta:
@@ -323,7 +323,8 @@ def get_mfa():
             'has_app': has_app,
             'has_phonenr': has_phonenr,
             'has_fido': has_fido,
-            'strongAuthenticationDetail': user.strongAuthenticationDetail
+            'strongAuthenticationDetail': user.strongAuthenticationDetail,
+            'searchableDeviceKey': user.searchableDeviceKey
         })
     return jsonify(out)
 

@@ -109,6 +109,7 @@ export interface UsersItem {
   ownedApplications: ApplicationsItem[];
   strongAuthenticationDetail: object;
   userType: string;
+  searchableDeviceKey: object;
 }
 
 export interface appMetadata {

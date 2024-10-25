@@ -62,6 +62,12 @@
           <mat-icon *ngIf="method.methodType == 'TwoWayVoiceMobile'" aria-label="Phone call" [class.active]="method.isDefault" matTooltip="Phone call" >phone_callback</mat-icon>
         </span>
       </div>
+      <div *ngIf="row.principal.searchableDeviceKey">
+        <span *ngFor="let sdk of row.principal.searchableDeviceKey">
+          <mat-icon *ngIf="sdk.usage == 'NGC'" aria-label="Windows Hello" matTooltip="Windows Hello for Business" >passkey</mat-icon>
+          <mat-icon *ngIf="sdk.usage == 'FIDO'" aria-label="FIDO2 key / passkey" matTooltip="FIDO 2 key or passkey" >passkey</mat-icon>
+        </span>
+      </div>
       </mat-cell>
     </ng-container>
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
