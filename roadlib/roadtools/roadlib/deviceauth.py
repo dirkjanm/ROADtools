@@ -873,7 +873,7 @@ class DeviceAuthentication():
     def get_prt_with_samltoken(self, samltoken):
         authlib = Authentication()
         challenge = authlib.get_srv_challenge()['Nonce']
-        # Construct
+        # Construct request payload
         payload = {
             "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
             "request_nonce": challenge,
@@ -885,6 +885,23 @@ class DeviceAuthentication():
             "assertion": base64.b64encode(samltoken.encode('utf-8')).decode('utf-8'),
         }
         return self.request_token_with_devicecert_signed_payload(payload)
+
+    def get_token_for_device(self, client_id, resource, redirect_uri=None):
+        challenge = self.auth.get_srv_challenge()['Nonce']
+        # Construct request payload
+        payload = {
+          "resource": resource,
+          "client_id": client_id,
+          "request_nonce": challenge,
+          "win_ver": "10.0.22621.608",
+          "grant_type": "device_token",
+          "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client_id}",
+          "iss": "aad:brokerplugin"
+        }
+        # Custom redirect_uri if needed
+        if redirect_uri:
+            payload['redirect_uri'] = redirect_uri
+        return self.request_token_with_devicecert_signed_payload(payload, reqtgt=False, reqclientinfo=False, returnreply=True)
 
     def get_prt_with_refresh_token(self, refresh_token):
         authlib = Authentication()
