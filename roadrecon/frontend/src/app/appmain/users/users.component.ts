@@ -81,9 +81,4 @@ export class UsersComponent implements AfterViewInit, OnInit {
       }
     ).subscribe((data: UsersItem[]) => this.dataSource.data = data);
   }
-
-  loadData() {
-    this.service.getUsers(this.paginator?.pageIndex, this.paginator?.pageSize, this.sort?.active, this.sort?.direction)
-      .subscribe((data: UsersItem[]) => this.dataSource.data = data);
-  }
 }
