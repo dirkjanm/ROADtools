@@ -8,7 +8,7 @@ import base64
 import time
 from collections import defaultdict
 from urllib.parse import quote_plus
-from roadtools.roadlib.auth import Authentication, get_data
+from roadtools.roadlib.auth import Authentication, get_data, AuthenticationException
 from roadtools.roadlib.constants import WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES, WELLKNOWN_USER_AGENTS
 from roadtools.roadlib.deviceauth import DeviceAuthentication
 from roadtools.roadtx.selenium import SeleniumAuthentication
@@ -811,12 +811,21 @@ def main():
                 print(f'Requesting token with scope {args.scope}')
             else:
                 print(f'Requesting token for resource {auth.resource_uri}')
-        if args.scope:
-            auth.scope = args.scope
-            auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password)
-        else:
-            auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password)
-        auth.save_tokens(args)
+        try:
+            if args.scope:
+                auth.scope = args.scope
+                auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password)
+            else:
+                auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password)
+            auth.save_tokens(args)
+        except AuthenticationException as ex:
+            try:
+                error_data = json.loads(str(ex))
+                print(f"Error during authentication: {error_data['error_description']}")
+            except TypeError:
+                # No json
+                print(str(ex))
+            sys.exit(1)
     elif args.command == 'appauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
