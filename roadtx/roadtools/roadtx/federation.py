@@ -386,15 +386,12 @@ class SAMLSigner():
         id_attribute = "AssertionID"
         data = etree.fromstring(saml_string)
 
-        # Certificate should be X509 object from pyOpenSSL, not from cryptography
-        signcert = X509.from_cryptography(self.certificate)
-
         signer = XMLSigner(c14n_algorithm="http://www.w3.org/2001/10/xml-exc-c14n#",
                            signature_algorithm=algorithm,
                            digest_algorithm=digest)
         signed_xml = signer.sign(data,
                                  key=self.privkey,
-                                 cert=[signcert],
+                                 cert=[self.certificate],
                                  reference_uri=assertionid,
                                  id_attribute=id_attribute)
         signed_saml_string = etree.tostring(signed_xml).replace(b'\n', b'')

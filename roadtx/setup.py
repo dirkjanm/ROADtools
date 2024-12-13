@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='roadtx',
-      version='1.12.1',
+      version='1.12.2',
       description='ROADtools Token eXchange',
       author='Dirk-jan Mollema',
       author_email='dirkjan@outsidersecurity.nl',
@@ -24,7 +24,7 @@ setup(name='roadtx',
           'selenium-wire',
           'pyotp',
           'pycryptodomex',
-          'signxml',
+          'signxml>3',
           'blinker<1.8.0'
       ],
       zip_safe=False,
