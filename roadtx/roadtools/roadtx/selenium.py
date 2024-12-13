@@ -27,8 +27,8 @@ def selenium_wrap(func):
                 print('Browser window was closed by the user')
                 return False
             raise exc
-        except exceptions.WebDriverException as exc:
-            if 'Failed to decode response from marionette' in str(exc):
+        except exceptions.InvalidSessionIdException as exc:
+            if 'Failed to decode response from marionette' in str(exc) or 'WebDriver session does not exist' in str(exc):
                 print('Browser window closed by the user')
                 return False
             raise exc
