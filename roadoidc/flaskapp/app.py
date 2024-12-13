@@ -98,6 +98,8 @@ def servekeys():
 
 @app.route("/eam/authorize", methods=['POST','GET'])
 def eam_authorize():
+    if not app_config.EAMENABLED:
+        abort(404)
     tpl = '''
     <html><head><title>Working...</title></head><body>
 <form method="POST" name="hiddenform" action="{{ redirurl }}">
@@ -108,10 +110,25 @@ def eam_authorize():
 <input type="hidden" name="scope" value="openid" /><noscript><p>Script is disabled. Click Submit to continue.</p>
 <input type="submit" value="Submit" /></noscript></form><script language="javascript">function submit_form(){window.setTimeout('document.forms[0].submit()', 0);}window.onload=submit_form;</script></body></html>
     '''
-    encoded = request.form['id_token_hint']
-    id_token_hint = jwt.decode(encoded, options={"verify_signature": False})
+    id_token_hint_unverified = request.form['id_token_hint']
 
+    oidc_server = 'login.microsoftonline.com/common'
+    oidc_config = requests.get(
+        f"https://{oidc_server}/.well-known/openid-configuration"
+    ).json()
+    signing_algos = oidc_config["id_token_signing_alg_values_supported"]
 
+    # Validate incoming ID token signature
+    jwks_client = jwt.PyJWKClient(oidc_config["jwks_uri"])
+    signing_key = jwks_client.get_signing_key_from_jwt(id_token_hint_unverified)
+    id_token_hint = jwt.decode(
+        id_token_hint_unverified,
+        key=signing_key.key,
+        algorithms=signing_algos,
+        options={"verify_aud": False},
+    )
+
+    # Construct response
     payload = {
       "iss": f"{app_config.ISSUER}/eam",
       "sub": id_token_hint['sub'],
@@ -126,7 +143,7 @@ def eam_authorize():
       ]
     }
     headers = {
-        "kid": "ROIDKEY",
+        "kid": app_config.KEYID,
     }
     token = jwt.encode(payload, algorithm='RS256', key=app_config.PRIVKEY.encode('utf-8'), headers=headers)
     return render_template_string(tpl, redirurl=request.form['redirect_uri'], state=request.form['state'], id_token=token)
