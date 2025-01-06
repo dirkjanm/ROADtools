@@ -112,6 +112,9 @@
                 "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
                     "Authorization.ReadWrite",
                     "user_impersonation"
+                ],
+                "499b84ac-1321-427f-aa17-267ca6975798":[
+                    "user_impersonation"
                 ]
             }
         },
@@ -402,6 +405,9 @@
                 ],
                 "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
                     "Authorization.ReadWrite",
+                    "user_impersonation"
+                ],
+                "499b84ac-1321-427f-aa17-267ca6975798":[
                     "user_impersonation"
                 ]
             }
@@ -2083,6 +2089,9 @@
                 "e1979c22-8b73-4aed-a4da-572cc4d0b832": [
                     "AppDefinitions.ReadWrite",
                     "Cards.ReadWrite"
+                ],
+                "499b84ac-1321-427f-aa17-267ca6975798":[
+                    "user_impersonation"
                 ]
             }
         },
@@ -3009,6 +3018,9 @@
                 ],
                 "fe053c5f-3692-4f14-aef2-ee34fc081cae": [
                     "Runtime.All"
+                ],
+                "499b84ac-1321-427f-aa17-267ca6975798":[
+                    "user_impersonation"
                 ]
             }
         },
