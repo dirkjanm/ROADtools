@@ -25,6 +25,7 @@ setup(name='roadtx',
           'pyotp',
           'pycryptodomex',
           'signxml>3',
+          'setuptools',
           'blinker<1.8.0'
       ],
       zip_safe=False,
