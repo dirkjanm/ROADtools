@@ -21,7 +21,8 @@ WELLKNOWN_CLIENTS = {
     "msedge": "ecd6b820-32c2-49b6-98a6-444530e5a77a",
     "edge": "ecd6b820-32c2-49b6-98a6-444530e5a77a",
     "msbroker": "29d9ed98-a469-4536-ade2-f981bc1d605e",
-    "broker": "29d9ed98-a469-4536-ade2-f981bc1d605e"
+    "broker": "29d9ed98-a469-4536-ade2-f981bc1d605e",
+    "companyportal": "9ba1a5c7-f17a-4de9-a1f1-6178c8d51223"
 }
 
 WELLKNOWN_USER_AGENTS = {
