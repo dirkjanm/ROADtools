@@ -129,6 +129,11 @@ class AccessPoliciesPlugin():
             return self.session.query(ServicePrincipal).filter(ServicePrincipal.objectId.in_(uid)).all()
         return self.session.query(ServicePrincipal).filter(ServicePrincipal.objectId == uid).first()
 
+    def _get_serviceprincipalrule(self, rule):
+        if isinstance(rule, list):
+            return [', '.join(rule)]
+        return [rule]
+
     def _get_role(self, rid):
         if isinstance(rid, list):
             return self.session.query(DirectoryRole).filter(DirectoryRole.roleTemplateId.in_(rid)).all()
@@ -174,6 +179,7 @@ class AccessPoliciesPlugin():
             'Groups' : self._get_group,
             'Roles': self._get_role,
             'ServicePrincipals': self._get_serviceprincipal,
+            'ServicePrincipalFilterRule': self._get_serviceprincipalrule,
             'GuestsOrExternalUsers': self._translate_guestsexternal
         }
         ot = ''
@@ -206,6 +212,9 @@ class AccessPoliciesPlugin():
                 elif ctype == 'GuestsOrExternalUsers':
                     ot += 'Guests or external user types: '
                     ot += ', '.join([escape(uobj) for uobj in objects])
+                elif ctype == 'ServicePrincipalFilterRule':
+                    ot += 'Service Principals matching the following filter: '
+                    ot += ', '.join([escape(sprule) for sprule in objects])
                 else:
                     raise Exception('Unsupported criterium type: {0}'.format(ctype))
             else:
@@ -229,6 +238,8 @@ class AccessPoliciesPlugin():
                     break
                 if 'Office365' in clist:
                     ot += 'All Office 365 applications'
+                if 'MicrosoftAdminPortals' in clist:
+                    ot += 'All Microsoft Admin Portals'
                 objects = self._get_application(clist)
                 if objects is not None: 
                     if len(objects) > 0:
