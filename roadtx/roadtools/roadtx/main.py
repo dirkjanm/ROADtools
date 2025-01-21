@@ -7,11 +7,12 @@ import binascii
 import base64
 import time
 from collections import defaultdict
-from urllib.parse import quote_plus
+from urllib.parse import urlparse, parse_qs, quote_plus
 from roadtools.roadlib.auth import Authentication, get_data, AuthenticationException
 from roadtools.roadlib.constants import WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES, WELLKNOWN_USER_AGENTS
 from roadtools.roadlib.deviceauth import DeviceAuthentication
 from roadtools.roadtx.selenium import SeleniumAuthentication
+from roadtools.roadtx.utils import find_redirurl_for_client
 from roadtools.roadtx.federation import EncryptedPFX, SAMLSigner, encode_object_guid
 import pyotp
 
@@ -482,8 +483,7 @@ def main():
                                 action='store',
                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     intauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
-                                default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+                                help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
     intauth_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. By default the user agent from FireFox is used without modification')
     intauth_parser.add_argument('-t',
@@ -534,8 +534,7 @@ def main():
                                 action='store',
                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     kdbauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
-                                default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+                                help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
     kdbauth_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. By default the user agent from FireFox is used without modification')
     kdbauth_parser.add_argument('-t',
@@ -588,8 +587,7 @@ def main():
                                        action='store',
                                        help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     browserprtauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                       help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
-                                       default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+                                       help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
     browserprtauth_parser.add_argument('-ua', '--user-agent', action='store',
                                        help='Custom user agent to use. Default: Chrome on Windows user agent')
     browserprtauth_parser.add_argument('-t',
@@ -648,8 +646,7 @@ def main():
                                 action='store',
                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     injauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
-                                default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+                                help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
     injauth_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. Default: Chrome on Windows user agent')
     injauth_parser.add_argument('-t',
@@ -960,7 +957,12 @@ def main():
     elif args.command == 'prtauth':
         auth.set_user_agent(args.user_agent)
         auth.use_cae = args.cae
+        auth.set_client_id(args.client)
         auth.scope = args.scope
+        if args.redirect_url:
+            redirect_url = args.redirect_url
+        else:
+            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False, broker=True)
         if args.tenant:
             auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
@@ -1078,11 +1080,15 @@ def main():
             auth.scope = args.scope
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
+        if args.redirect_url:
+            redirect_url = args.redirect_url
+        else:
+            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
+        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
         if args.auth_url:
             url = args.auth_url
         else:
-            url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(redirect_url, 'code', args.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1098,7 +1104,7 @@ def main():
         elif custom_ua:
             result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         else:
-            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
+            result = selauth.selenium_login_regular(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
@@ -1114,23 +1120,29 @@ def main():
         auth.use_cae = args.cae
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
+        if args.redirect_url:
+            redirect_url = args.redirect_url
+        else:
+            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
+        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
         password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         if args.auth_url:
             url = args.auth_url
         else:
-            url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(redirect_url, 'code', args.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service, intercept=custom_ua)
-        if custom_ua or selauth.redir_has_custom_scheme():
+        if custom_ua:
             result = selauth.selenium_login_with_custom_useragent(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
         else:
-            result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
+            result = selauth.selenium_login_regular(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
+            return
+        if not result:
             return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
@@ -1150,7 +1162,11 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
+        if args.redirect_url:
+            redirect_url = args.redirect_url
+        else:
+            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
+        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
         if args.auth_url:
             url = args.auth_url
         else:
@@ -1159,7 +1175,7 @@ def main():
                     print(f'Running in token request mode - Requesting token with scope {auth.scope}\nIf you want a browser window instead, use the -url parameter to start browsing.')
                 else:
                     print(f'Running in token request mode - Requesting token for {auth.resource_uri}\nIf you want a browser window instead, use the -url parameter to start browsing.')
-            url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(redirect_url, 'code', args.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1196,11 +1212,15 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
-        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url)
+        if args.redirect_url:
+            redirect_url = args.redirect_url
+        else:
+            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
+        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url)
         if args.auth_url:
             url = args.auth_url
         else:
-            url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(redirect_url, 'code', args.scope)
             if args.username:
                 url += '&login_hint=' + quote_plus(args.username)
             else:
