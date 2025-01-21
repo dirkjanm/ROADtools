@@ -707,6 +707,42 @@ def main():
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
+    # CLI authentication with device code flow
+    cliauth_parser = subparsers.add_parser('clicodeauth', help='Manual interactive authentication with external browser')
+    cliauth_parser.add_argument('-c',
+                                '--client',
+                                action='store',
+                                help=clienthelptext,
+                                default='1b730954-1685-4b74-9bfd-dac224a7b894')
+    cliauth_parser.add_argument('-r',
+                                '--resource',
+                                action='store',
+                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
+                                default='https://graph.windows.net')
+    cliauth_parser.add_argument('-s',
+                                '--scope',
+                                action='store',
+                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
+    cliauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
+                                help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
+    cliauth_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='Tenant ID or domain to auth to')
+    cliauth_parser.add_argument('--tokenfile',
+                                action='store',
+                                help='File to store the credentials (default: .roadtools_auth)',
+                                default='.roadtools_auth')
+    cliauth_parser.add_argument('--tokens-stdout',
+                                action='store_true',
+                                help='Do not store tokens on disk, pipe to stdout instead')
+    cliauth_parser.add_argument('--capture-code',
+                                action='store_true',
+                                help='Do not attempt to redeem any authentication code but print it instead')
+    cliauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+
     # OWA Login with token
     owalogin_parser = subparsers.add_parser('owalogin', help='Login to OWA with token')
     owalogin_parser.add_argument('--access-token', action='store', help='Access token for Outlook. If not specified, taken from .roadtools_auth')
@@ -1110,6 +1146,51 @@ def main():
                 print(f'Captured auth code: {result}')
             return
         elif result:
+            auth.outfile = args.tokenfile
+            auth.save_tokens(args)
+    elif args.command == 'clicodeauth':
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
+        auth.use_cae = args.cae
+        if args.scope:
+            auth.scope = args.scope
+        if args.redirect_url:
+            redirect_url = args.redirect_url
+        else:
+            redirect_url = find_redirurl_for_client(auth.client_id, interactive=True)
+        url = auth.build_auth_url(redirect_url, 'code', args.scope)
+        print('Use the following URL in the external browser. Once authentication completes, paste the URL with a code query parameter back in the console here')
+        print(f"\n{url}\n")
+        code = None
+        while True:
+            try:
+                confirm = input(f'Enter the final URL or write quit to cancel: ')
+            except KeyboardInterrupt:
+                return
+            answer = confirm.strip()
+            if answer.lower() in ('q', 'quit'):
+                return
+            try:
+                parsed = urlparse(answer.strip())
+            except:
+                print('Please paste a valid URL')
+                continue
+            params = parse_qs(parsed.query)
+            try:
+                code = params['code'][0]
+                break
+            except KeyError:
+                print('Please paste a valid URL containing a code query parameter')
+        if args.capture_code:
+            if code:
+                print(f'Captured auth code: {code}')
+            return
+        elif code:
+            if auth.scope:
+                auth.authenticate_with_code_native_v2(code, redirect_url)
+            else:
+                auth.authenticate_with_code_native(code, redirect_url)
             auth.outfile = args.tokenfile
             auth.save_tokens(args)
     elif args.command == 'keepassauth':
