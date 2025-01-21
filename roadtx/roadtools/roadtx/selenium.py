@@ -27,7 +27,7 @@ def selenium_wrap(func):
                 print('Browser window was closed by the user')
                 return False
             raise exc
-        except exceptions.InvalidSessionIdException as exc:
+        except exceptions.WebDriverException as exc:
             if 'Failed to decode response from marionette' in str(exc) or 'WebDriver session does not exist' in str(exc):
                 print('Browser window closed by the user')
                 return False
@@ -267,6 +267,14 @@ class SeleniumAuthentication():
             del request.headers['User-Agent']
             request.headers['User-Agent'] = self.auth.user_agent
         self.driver.request_interceptor = interceptor
+        if self.redir_has_custom_scheme():
+            self.driver.response_interceptor = self.redir_interceptor
+        return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
+
+    def selenium_login_regular(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, federated=False, devicecode=None):
+        '''
+        Wrapper for plain login but with redirect URL rewrite support
+        '''
         if self.redir_has_custom_scheme():
             self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
