@@ -279,13 +279,11 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
-                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "People.Read.All",
                     "QnA.Read.All",
-                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
@@ -389,6 +387,28 @@
             "scopes": {
                 "b8066b99-6e67-41be-abfa-75db1a2c8809": [
                     "deviceid.patch"
+                ]
+            }
+        },
+        "17d5e35f-655b-4fb0-8ae6-86356e9a49f5": {
+            "foci": false,
+            "name": "Office Online Maker SSO",
+            "preferred_interactive_redirurl": "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "62fd1447-0ef3-4ab7-a956-7dd05232ecc1": [
+                    "Service.Functionality"
                 ]
             }
         },
@@ -1129,6 +1149,116 @@
                 ]
             }
         },
+        "243c63a3-247d-41c5-9d83-7788c43f1c43": {
+            "foci": false,
+            "name": "Office Online Core SSO",
+            "preferred_interactive_redirurl": "https://gbc-oauth.officeapps.live.com/oa/WacOAuth.aspx",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "brk-multihub://gbc-owl.officeapps.live.com",
+                "brk-multihub://owl.officeapps.live.com",
+                "brk-multihub://ppc-owl.officeapps.live.com",
+                "brk-multihub://ffc-owl.officeapps.live.com",
+                "brk-multihub://gbc-oauth.officeapps.live.com",
+                "brk-multihub://oauth.officeapps.live.com",
+                "brk-multihub://ppc-oauth.officeapps.live.com",
+                "brk-multihub://ffc-oauth.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://gbc-oauth.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://oauth.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://ppc-oauth.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://ffc-oauth.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://gbc-oauth.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://oauth.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://ppc-oauth.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://ffc-oauth.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://gbc-oauth.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://oauth.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://ppc-oauth.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://ffc-oauth.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://gbc-oauth.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://oauth.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://ppc-oauth.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://ffc-oauth.officeapps.live.com",
+                "https://gbc-oauth.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://oauth.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://gbc-oauth.officeapps.live.com/oa/OAuth.html",
+                "https://oauth.officeapps.live.com/oa/OAuth.html",
+                "https://ppc-oauth.officeapps.live.com/oa/OAuth.html",
+                "https://ffc-oauth.officeapps.live.com/oa/OAuth.html",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://gbc-owl.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://owl.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://ppc-owl.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://ffc-owl.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://gbc-owl.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://owl.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://ppc-owl.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://ffc-owl.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://gbc-owl.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://owl.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://ppc-owl.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://ffc-owl.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://gbc-owl.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://owl.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://ppc-owl.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://ffc-owl.officeapps.live.com",
+                "https://gbc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://owl.officeapps.live.com/oa/OAuth.html",
+                "https://ppc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://ffc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://gbc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ppc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ffc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "PrinterShare.ReadBasic.All",
+                    "PrintJob.Create",
+                    "PrintJob.ReadBasic"
+                ],
+                "00000006-0000-0ff1-ce00-000000000000": [
+                    "M365AdminPortal.Centro.LicenseRequest"
+                ],
+                "1bcf809c-9b88-4be3-8b3c-7131d25fc05d": [
+                    "officespeech"
+                ],
+                "394866fc-eedb-4f01-8536-3ff84b16be2a": [
+                    "User.Read.All"
+                ],
+                "4354e225-50c9-4423-9ece-2d5afd904870": [
+                    "AugLoop.All"
+                ],
+                "62fd1447-0ef3-4ab7-a956-7dd05232ecc1": [
+                    "Service.Functionality"
+                ],
+                "b97b6bd4-a49f-4a0c-af18-af507d1da76c": [
+                    "User.Read.All"
+                ],
+                "e03a13ee-9730-4cae-8525-47559c8cf18a": [
+                    "augloop.spo.acquire",
+                    "features.read",
+                    "files.open"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "SubstrateSearch-Internal.ReadWrite"
+                ],
+                "f3b07414-6bf4-46e6-b63f-56941f3f4128": [
+                    "Connections.ReadWrite",
+                    "EditingSession.ReadWrite",
+                    "Mashup.Evaluate"
+                ]
+            }
+        },
         "268761a2-03f3-40df-8a8b-c3db24145b6b": {
             "foci": false,
             "name": "Universal Store Native Client",
@@ -1232,17 +1362,12 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
-                    "Conversations.Read.All",
-                    "Directory.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
-                    "NewsFeed.ReadWrite",
                     "People.Read.All",
-                    "PowerBi.Read.All",
                     "QnA.Read.All",
-                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "c9d254a9-346a-4c00-95eb-950cb62a58f0": [
@@ -1273,7 +1398,7 @@
             "foci": true,
             "name": "Outlook Mobile",
             "preferred_interactive_redirurl": "https://loki.delve.office.com/linkedInAuthRedirect.aspx",
-            "preferred_noninteractive_redirurl": "https://loki.delve.office.com/linkedInAuthRedirect.aspx",
+            "preferred_noninteractive_redirurl": "msauth://com.microsoft.office.outlook.dawg/HVCldfbstyOrp%2BQ6d7e5A36J630%3D",
             "redirect_uris": [
                 "https://loki.delve.office.com/linkedInAuthRedirect.aspx",
                 "https://msit.loki.delve.office.com/linkedInAuthRedirect.aspx",
@@ -1423,15 +1548,12 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
-                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
-                    "NewsFeed.ReadWrite",
                     "People.Read.All",
                     "QnA.Read.All",
-                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "b669c6ea-1adf-453f-b8bc-6d526592b419": [
@@ -1490,6 +1612,73 @@
                 ]
             }
         },
+        "2793995e-0a7d-40d7-bd35-6968ba142197": {
+            "foci": false,
+            "name": "My Apps",
+            "preferred_interactive_redirurl": "https://launcher.myapps.microsoft.com/api/passwordsso",
+            "preferred_noninteractive_redirurl": "msauth://com.myapps/e%2fwWXNjQurk5S5P0EkZaIvjcMps%3d",
+            "redirect_uris": [
+                "https://launcher.myapps.microsoft.com/api/passwordsso",
+                "https://myapps.microsoft.com/blank.html",
+                "https://myapplications.microsoft.com/blank.html",
+                "https://launcher.myapps.microsoft.com/api/signin-oidc",
+                "https://launcher.myapps.microsoft.com",
+                "https://myapplications.microsoft.com/api/signin-oidc",
+                "msauth://com.myapps/e%2fwWXNjQurk5S5P0EkZaIvjcMps%3d",
+                "x-msauth-MyApplications://com.microsoft.MyApplications",
+                "https://myapplications.microsoft.com",
+                "https://myapps.microsoft.com"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000002-0000-0ff1-ce00-000000000000": [
+                    "SDS-Internal.ReadWrite"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Application.ReadWrite.All",
+                    "CrossTenantInformation.ReadBasic.All",
+                    "Directory.Read.All",
+                    "User.Read"
+                ],
+                "0000000c-0000-0000-c000-000000000000": [
+                    "apps.write"
+                ],
+                "47ee738b-3f1a-4fc7-ab11-37e4822b007e": [
+                    "Directory.AccessAsUser.All"
+                ],
+                "5f09333a-842c-47da-a157-57da27fcbca5": [
+                    "ShellInfo.Read"
+                ],
+                "65d91a3d-ab74-42e6-8a2f-0add61688c74": [
+                    "groups.read",
+                    "groups.write"
+                ],
+                "8c59ead7-d703-4a27-9e55-c96a0054c8d2": [
+                    "features.read.all"
+                ],
+                "a57aca87-cbc0-4f3c-8b9e-dc095fdc8978": [
+                    "read"
+                ],
+                "b8066b99-6e67-41be-abfa-75db1a2c8809": [
+                    "branding.search"
+                ],
+                "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
+                    "UserPolicies.Read"
+                ],
+                "e8bdeda8-b4a3-4eed-b307-5e2456238a77": [
+                    "ShellInfo.Read"
+                ],
+                "f0ae4899-d877-4d3c-ae25-679e38eea492": [
+                    "FederatedSso.Read"
+                ]
+            }
+        },
         "29d9ed98-a469-4536-ade2-f981bc1d605e": {
             "foci": false,
             "name": "Microsoft Authentication Broker",
@@ -1542,6 +1731,28 @@
                 ]
             }
         },
+        "2abdc806-e091-4495-9b10-b04d93c3f040": {
+            "foci": false,
+            "name": "Office Online Augmentation Loop SSO",
+            "preferred_interactive_redirurl": "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "4354e225-50c9-4423-9ece-2d5afd904870": [
+                    "AugLoop.All"
+                ]
+            }
+        },
         "2d7f3606-b07d-41d1-b9d2-0d0c9296a6e8": {
             "foci": true,
             "name": "Microsoft Bing Search for Microsoft Edge",
@@ -1578,15 +1789,12 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
-                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
-                    "NewsFeed.ReadWrite",
                     "People.Read.All",
                     "QnA.Read.All",
-                    "Sites.Read.All",
                     "User.Read.All"
                 ]
             }
@@ -1715,6 +1923,36 @@
                 "f920ab6b-8a48-4438-9255-1650179a3a0f": [
                     "User.Read",
                     "Userinfo.ReadWrite"
+                ]
+            }
+        },
+        "3ce44149-e365-40e4-9bb4-8c0ecb710fe6": {
+            "foci": false,
+            "name": "Office Online Print SSO",
+            "preferred_interactive_redirurl": "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "PrinterShare.ReadBasic.All",
+                    "PrintJob.Create",
+                    "PrintJob.ReadBasic"
+                ],
+                "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
+                    "UserPolicies.Read"
                 ]
             }
         },
@@ -1875,6 +2113,40 @@
                     "Printers.Create",
                     "PrintJob.Read",
                     "PrintJob.ReadWriteBasic"
+                ]
+            }
+        },
+        "467423d3-dc5d-4c1e-b0e7-12d85ade8da8": {
+            "foci": false,
+            "name": "Office Online Speech SSO",
+            "preferred_interactive_redirurl": "https://gbc-owl.officeapps.live.com/oa/OAuth.html",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "https://gbc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://owl.officeapps.live.com/oa/OAuth.html",
+                "https://ppc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://ffc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://gbc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ppc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ffc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://gbc-oauth.online.office.com/oa/OAuth.html",
+                "https://oauth.online.office.com/oa/OAuth.html",
+                "https://ppc-oauth.online.office.com/oa/OAuth.html",
+                "https://ffc-oauth.online.office.com/oa/OAuth.html",
+                "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "1bcf809c-9b88-4be3-8b3c-7131d25fc05d": [
+                    "officespeech"
                 ]
             }
         },
@@ -2362,6 +2634,59 @@
                 "8578e004-a5c6-46e7-913e-12f58912df43": [
                     "Connectivity.Connections.Read",
                     "Connectivity.Connections.Write"
+                ]
+            }
+        },
+        "5a4eed13-c4c4-4b4c-9506-334ab200bf31": {
+            "foci": false,
+            "name": "Office Online Search SSO",
+            "preferred_interactive_redirurl": "https://gbc-owl.officeapps.live.com/oa/OAuth.html",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "brk-multihub://assignments.onenote.com",
+                "brk-multihub://wukprodprv.www.office.com",
+                "brk-multihub://sukprodprv.www.office.com",
+                "brk-multihub://easprodprv.www.office.com",
+                "brk-multihub://seaprodprv.www.office.com",
+                "brk-multihub://neuprodprv.www.office.com",
+                "brk-multihub://weuprodprv.www.office.com",
+                "brk-multihub://eusprodprv.www.office.com",
+                "brk-multihub://wusprodprv.www.office.com",
+                "brk-multihub://ncuprodprv.www.office.com",
+                "brk-multihub://scuprodprv.www.office.com",
+                "brk-multihub://www.microsoft365.com",
+                "brk-multihub://www.office.com",
+                "https://gbc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://owl.officeapps.live.com/oa/OAuth.html",
+                "https://ppc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://ffc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://gbc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ppc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ffc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://gbc-oauth.online.office.com/oa/OAuth.html",
+                "https://oauth.online.office.com/oa/OAuth.html",
+                "https://ppc-oauth.online.office.com/oa/OAuth.html",
+                "https://ffc-oauth.online.office.com/oa/OAuth.html",
+                "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0ff1-ce00-000000000000": [
+                    "Files.Read.All"
+                ],
+                "b97b6bd4-a49f-4a0c-af18-af507d1da76c": [
+                    "User.Read.All"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "SubstrateSearch-Internal.ReadWrite"
                 ]
             }
         },
@@ -2984,6 +3309,225 @@
                 ]
             }
         },
+        "93d53678-613d-4013-afc1-62e9e444a0a5": {
+            "foci": false,
+            "name": "Office Online Add-in SSO",
+            "preferred_interactive_redirurl": "https://gbc-oauth.officeapps.live.com/oa/WacOAuth.aspx",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "brk-multihub://gbc-owl.officeapps.live.com",
+                "brk-multihub://owl.officeapps.live.com",
+                "brk-multihub://ppc-owl.officeapps.live.com",
+                "brk-multihub://ffc-owl.officeapps.live.com",
+                "brk-multihub://gbc-oauth.officeapps.live.com",
+                "brk-multihub://oauth.officeapps.live.com",
+                "brk-multihub://ppc-oauth.officeapps.live.com",
+                "brk-multihub://ffc-oauth.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://gbc-oauth.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://oauth.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://ppc-oauth.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://ffc-oauth.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://gbc-oauth.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://oauth.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://ppc-oauth.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://ffc-oauth.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://gbc-oauth.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://oauth.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://ppc-oauth.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://ffc-oauth.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://gbc-oauth.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://oauth.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://ppc-oauth.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://ffc-oauth.officeapps.live.com",
+                "https://gbc-oauth.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://oauth.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://gbc-oauth.officeapps.live.com/oa/OAuth.html",
+                "https://oauth.officeapps.live.com/oa/OAuth.html",
+                "https://ppc-oauth.officeapps.live.com/oa/OAuth.html",
+                "https://ffc-oauth.officeapps.live.com/oa/OAuth.html",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://gbc-owl.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://owl.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://ppc-owl.officeapps.live.com",
+                "brk-14e3d5b3-8888-4eb1-9343-e4aca764b965://ffc-owl.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://gbc-owl.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://owl.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://ppc-owl.officeapps.live.com",
+                "brk-2821b473-fe24-4c86-ba16-62834d6e80c3://ffc-owl.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://gbc-owl.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://owl.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://ppc-owl.officeapps.live.com",
+                "brk-865367a6-9c28-4844-88ce-259d34dbabae://ffc-owl.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://gbc-owl.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://owl.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://ppc-owl.officeapps.live.com",
+                "brk-08e18876-6177-487e-b8b5-cf950c1e598c://ffc-owl.officeapps.live.com",
+                "https://gbc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://owl.officeapps.live.com/oa/OAuth.html",
+                "https://ppc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://ffc-owl.officeapps.live.com/oa/OAuth.html",
+                "https://gbc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ppc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "https://ffc-owl.officeapps.live.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000009-0000-0000-c000-000000000000": [
+                    "__Dataset.Read.Internal",
+                    "__Link.Create.Internal",
+                    "__Search.Read.Internal",
+                    "__Snapshot.Read.Internal",
+                    "__User.RequestAccess.Internal",
+                    "__UserInfo.Read.Internal",
+                    "Content.Create",
+                    "Dataset.Read.All",
+                    "MLModel.Execute.All",
+                    "Report.Read.All",
+                    "UserState.ReadWrite.All"
+                ],
+                "00695ed2-3202-4156-8da1-69f60065e255": [
+                    "access_as_user",
+                    "sites.readwrite.all"
+                ],
+                "4439d626-9bfa-41ca-805d-5c264263bc71": [
+                    "TenantFeedback.Write"
+                ],
+                "4787c7ff-7cea-43db-8d0d-919f15c6354b": [
+                    "access_as_user"
+                ],
+                "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": [
+                    "access_as_user",
+                    "Forms.Read",
+                    "Forms.ReadWrite",
+                    "Responses.ReadWrite"
+                ]
+            }
+        },
+        "95de633a-083e-42f5-b444-a4295d8e9314": {
+            "foci": false,
+            "name": "Microsoft Whiteboard Services",
+            "preferred_interactive_redirurl": "https://whiteboard.cloud.dev.microsoft/msalv2redirect/",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugin/S-1-15-2-3148409450-93931577-653054674-1327173769-2139987986-2452236064-3546846841",
+            "redirect_uris": [
+                "https://whiteboard.cloud.dev.microsoft/msalv2redirect/",
+                "https://whiteboard.cloud-dev.microsoft/intmsalv2redirect/",
+                "https://whiteboard.cloud-dev.microsoft/msalv2redirect/",
+                "https://whiteboard.cloud.microsoft/msalv2redirect/",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/S-1-15-2-3148409450-93931577-653054674-1327173769-2139987986-2452236064-3546846841",
+                "https://whiteboard.microsoft.com/adalredirect/",
+                "https://whiteboard.microsoft.com/msalredirect/",
+                "https://dev.whiteboard.microsoft.com/msalv2redirect/",
+                "https://int.whiteboard.microsoft.com/msalv2redirect/",
+                "https://app.int.whiteboard.microsoft.com/msalv2redirect/",
+                "https://app.whiteboard.microsoft.com/msalv2redirect/",
+                "https://whiteboard.microsoft.com/msalv2redirect/",
+                "https://whiteboard.office.com/msalv2redirect/",
+                "msauth.com.microsoft.whiteboard://auth",
+                "msauth.com.microsoft.whiteboard-df://auth",
+                "msauth.com.microsoft.whiteboard.dogfood://auth",
+                "ms-appx-web://microsoft.aad.brokerplugin/95de633a-083e-42f5-b444-a4295d8e9314",
+                "msauth://com.microsoft.whiteboard.debug/ItBhHD4DM0HWYpoD8MO%2BLdkZiqA%3D",
+                "msauth://com.microsoft.whiteboard.publicpreview/keEuI0LVrg3jS4Mh1WuqfYp4OE8%3D",
+                "https://whiteboard.office.com/msalredirect/",
+                "https://whiteboard.office.com/adalredirect/",
+                "https://app.whiteboard.microsoft.com/msalredirect/",
+                "https://int.whiteboard.microsoft.com/msalredirect/",
+                "https://int.whiteboard.microsoft.com/adalredirect/",
+                "msauth://com.microsoft.whiteboard.beta/fcg80qvoM1YMKJZibjBwQcDfOno%3D",
+                "https://app.int.whiteboard.microsoft.com/msalredirect/",
+                "https://dev.whiteboard.microsoft.com/msalredirect/",
+                "https://app.int.whiteboard.microsoft.com/adalredirect/",
+                "msauth://com.microsoft.whiteboard/ItBhHD4DM0HWYpoD8MO%2BLdkZiqA%3D",
+                "https://app.whiteboard.microsoft.com/adalredirect/",
+                "https://dev.whiteboard.microsoft.com/",
+                "https://dev.whiteboard.microsoft.com/adalredirect/",
+                "https://dev.whiteboard.microsoft.com/me/webboard/"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000002-0000-0ff1-ce00-000000000000": [
+                    "Directory.Read.Global",
+                    "TenantSettings-Internal.Read.Global"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Chat.ReadWrite",
+                    "Directory.Read.All",
+                    "Files.ReadWrite.All",
+                    "Group.Read.All",
+                    "GroupMember.ReadWrite.All",
+                    "InformationProtectionPolicy.Read",
+                    "Organization.Read.All",
+                    "People.Read",
+                    "Tasks.ReadWrite",
+                    "User.Read",
+                    "User.ReadBasic.All"
+                ],
+                "00000003-0000-0ff1-ce00-000000000000": [
+                    "Container.Selected",
+                    "Files.ReadWrite.All",
+                    "Sites.FullControl.All"
+                ],
+                "0a5f63c0-b750-4f38-a71c-4fc0d58b89e2": [
+                    "Intune.MAM.Registrations.Read.All",
+                    "Intune.MAM.Registrations.Write.All"
+                ],
+                "394866fc-eedb-4f01-8536-3ff84b16be2a": [
+                    "User.Read.All"
+                ],
+                "4354e225-50c9-4423-9ece-2d5afd904870": [
+                    "AugLoop.All",
+                    "user_impersonation"
+                ],
+                "4439d626-9bfa-41ca-805d-5c264263bc71": [
+                    "TenantFeedback.Read",
+                    "TenantFeedback.Write"
+                ],
+                "4747d38e-36c5-4bc3-979b-b0ef74df54d1": [
+                    "PushChannel.ReadWrite.All"
+                ],
+                "499b84ac-1321-427f-aa17-267ca6975798": [
+                    "vso.profile",
+                    "vso.work_write"
+                ],
+                "5f09333a-842c-47da-a157-57da27fcbca5": [
+                    "ShellInfo.Read"
+                ],
+                "66a88757-258c-4c72-893c-3e8bed4d6899": [
+                    "SubstrateSearch-Internal.ReadWrite"
+                ],
+                "7df0a125-d3be-4c96-aa54-591f83ff541c": [
+                    "Flows.Manage.All",
+                    "Flows.Read.All"
+                ],
+                "9e4a5442-a5c9-4f6f-b03f-5b9fcaaf24b1": [
+                    "MRU.ReadWrite",
+                    "RoamingUserSettings.ReadWrite",
+                    "SharedWithMe.Read"
+                ],
+                "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": [
+                    "Forms.ReadWrite"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "ActivityFeed-Internal.ReadWrite",
+                    "Collab-Internal.ReadWrite",
+                    "OfficeFeed-Internal.ReadWrite",
+                    "Signals.ReadWrite",
+                    "Signals-Internal.ReadWrite"
+                ]
+            }
+        },
         "9ba1a5c7-f17a-4de9-a1f1-6178c8d51223": {
             "foci": true,
             "name": "Microsoft Intune Company Portal",
@@ -3041,6 +3585,327 @@
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
+                ]
+            }
+        },
+        "9bd5ab7f-4031-4045-ace9-6bebbad202f6": {
+            "foci": false,
+            "name": "Microsoft Visual Studio Services API",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "https://login.microsoftonline.com/common/oauth2/nativeclient"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ]
+            }
+        },
+        "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7": {
+            "foci": false,
+            "name": "Bing",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "https://usgov.business.bing.com/api/v2/authtools/gettoken",
+                "https://copilot.microsoft.com/signout-callback-oidc",
+                "https://www.bing.com/signout-callback-oidc",
+                "https://www.bing-exp.com/orgid/idtoken/nosignin",
+                "https://www.bing-exp.com/orgid/idtoken/conditional",
+                "https://www.bing-exp.com/orgid/idtoken/silent",
+                "https://akam.bing.com/orgid/idtoken/nosignin",
+                "https://akam.bing.com/orgid/idtoken/conditional",
+                "https://akam.bing.com/orgid/idtoken/silent",
+                "https://cn.bing.com/orgid/idtoken/nosignin",
+                "https://cn.bing.com/orgid/idtoken/conditional",
+                "https://cn.bing.com/orgid/idtoken/silent",
+                "https://www4.bing.com/orgid/idtoken/nosignin",
+                "https://www4.bing.com/orgid/idtoken/conditional",
+                "https://www4.bing.com/orgid/idtoken/silent",
+                "https://www2.bing.com/orgid/idtoken/nosignin",
+                "https://www2.bing.com/orgid/idtoken/conditional",
+                "https://www2.bing.com/orgid/idtoken/silent",
+                "https://6.bing.com/orgid/idtoken/nosignin",
+                "https://6.bing.com/orgid/idtoken/conditional",
+                "https://6.bing.com/orgid/idtoken/silent",
+                "https://4.bing.com/orgid/idtoken/nosignin",
+                "https://4.bing.com/orgid/idtoken/conditional",
+                "https://4.bing.com/orgid/idtoken/silent",
+                "https://2.bing.com/orgid/idtoken/nosignin",
+                "https://2.bing.com/orgid/idtoken/conditional",
+                "https://2.bing.com/orgid/idtoken/silent",
+                "https://www.bing.com/orgid/idtoken/nosignin",
+                "https://www.bing.com/orgid/idtoken/conditional",
+                "https://www.bing.com/orgid/idtoken/silent",
+                "https://copilot.microsoft.com/orgid/idtoken",
+                "https://copilot.microsoft.com/orgid/idtoken/nosignin",
+                "https://copilot.microsoft.com/orgid/idtoken/conditional",
+                "https://copilot.microsoft.com/orgid/idtoken/silent",
+                "https://edgeservices.bing.com/edgesvc/chat",
+                "https://copilot.microsoft.com/identity/idtokenv2",
+                "https://copilotint.microsoft.com/identity/idtokenv2",
+                "https://cn.bing.com/identity/idtokenv2",
+                "https://2.bing.com/identity/idtokenv2",
+                "https://4.bing.com/identity/idtokenv2",
+                "https://6.bing.com/identity/idtokenv2",
+                "https://www2.bing.com/identity/idtokenv2",
+                "https://www4.bing.com/identity/idtokenv2",
+                "https://www.bing-exp.com/identity/idtokenv2",
+                "https://akam.bing.com/identity/idtokenv2",
+                "https://www.bing.com/identity/idtokenv2",
+                "https://copilot.microsoft.com/version.aspx",
+                "https://copilot.microsoft.com/empty.html",
+                "https://copilotint.microsoft.com/version.aspx",
+                "https://copilotint.microsoft.com/empty.html",
+                "https://copilot.microsoft.com",
+                "https://copilotint.microsoft.com",
+                "https://business.bing.com/api/v2/authtools/gettoken",
+                "https://akam.bing.com/search",
+                "https://cn.bing.com/search",
+                "https://www.bing.com/search",
+                "https://2.bing.com/search",
+                "https://4.bing.com/search",
+                "https://6.bing.com/search",
+                "https://www2.bing.com/search",
+                "https://www4.bing.com/search",
+                "https://www.bing-exp.com/search",
+                "https://www4.bing.com/identity/idtoken",
+                "https://akam.bing.com/orgid/idtoken",
+                "https://cn.bing.com/orgid/idtoken",
+                "https://www.bing.com/orgid/idtoken",
+                "https://2.bing.com/orgid/idtoken",
+                "https://4.bing.com/orgid/idtoken",
+                "https://6.bing.com/orgid/idtoken",
+                "https://www2.bing.com/orgid/idtoken",
+                "https://www4.bing.com/orgid/idtoken",
+                "https://www.bing-exp.com/orgid/idtoken",
+                "https://www.bing-exp.com/",
+                "https://akam.bing.com",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7",
+                "https://www4.bing.com",
+                "https://www2.bing.com",
+                "https://6.bing.com",
+                "https://4.bing.com",
+                "https://2.bing.com",
+                "https://www.bing.com",
+                "https://cn.bing.com"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000002-0000-0ff1-ce00-000000000000": [
+                    "Calendars.Read",
+                    "Calendars.Read.All",
+                    "Calendars.Read.Shared",
+                    "Calendars.ReadWrite",
+                    "Contacts.Read",
+                    "Directory.AccessAsUser.All",
+                    "Directory.Read.All",
+                    "Files.Read",
+                    "Files.Read.Shared",
+                    "Group.Read.All",
+                    "People.Read",
+                    "Privilege.SkipClientAccessRules",
+                    "Todo-Internal.ReadWrite",
+                    "User.Read",
+                    "User.Read.All",
+                    "User.ReadBasic.All"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Calendars.Read",
+                    "Calendars.Read.Shared",
+                    "Channel.ReadBasic.All",
+                    "Directory.Read.All",
+                    "EduAssignments.Read",
+                    "EduRoster.ReadBasic",
+                    "Files.ReadWrite.All",
+                    "Group.Read.All",
+                    "People.Read",
+                    "Presence.Read.All",
+                    "Sites.Read.All",
+                    "Sites.ReadWrite.All",
+                    "Team.ReadBasic.All",
+                    "User.Read",
+                    "User.Read.All"
+                ],
+                "00000003-0000-0ff1-ce00-000000000000": [
+                    "Sites.FullControl.All"
+                ],
+                "1e70cd27-4707-4589-8ec5-9bd20c472a46": [
+                    "PresenceRW"
+                ],
+                "341de446-708a-48e3-b0b3-1e028625439b": [
+                    "AccountLinking.ReadWrite"
+                ],
+                "394866fc-eedb-4f01-8536-3ff84b16be2a": [
+                    "User.Read.All"
+                ],
+                "39aaf054-81a5-48c7-a4f8-0293012095b9": [
+                    "Media.ReadWrite.All",
+                    "Messaging.ReadWrite.All"
+                ],
+                "4354e225-50c9-4423-9ece-2d5afd904870": [
+                    "AugLoop.All"
+                ],
+                "4439d626-9bfa-41ca-805d-5c264263bc71": [
+                    "TenantFeedback.Write"
+                ],
+                "4787c7ff-7cea-43db-8d0d-919f15c6354b": [
+                    "access_as_user"
+                ],
+                "48af08dc-f6d2-435f-b2a7-069abd99c086": [
+                    "Connectors.AdaptiveCards.Actions"
+                ],
+                "57da3f69-2d82-4c17-9e57-2e6d78b2dc60": [
+                    "read",
+                    "write"
+                ],
+                "66a88757-258c-4c72-893c-3e8bed4d6899": [
+                    "SubstrateSearch-Internal.ReadWrite"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ],
+                "7df0a125-d3be-4c96-aa54-591f83ff541c": [
+                    "Flows.Manage.All",
+                    "Flows.Read.All"
+                ],
+                "8578e004-a5c6-46e7-913e-12f58912df43": [
+                    "Connectivity.ConnectionPermissions.Read",
+                    "Connectivity.Connections.Read",
+                    "Connectivity.Connections.Write",
+                    "Connectivity.ConnectorPermissions.Read",
+                    "Connectivity.Connectors.Read"
+                ],
+                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
+                    "CopilotEligibility.Read",
+                    "CopilotSettings.ReadWrite"
+                ],
+                "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
+                    "UserPolicies.Read"
+                ],
+                "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
+                    "Apps.ReadWrite",
+                    "Authorization.ReadWrite",
+                    "Region.Read",
+                    "Region.ReadWrite",
+                    "user_impersonation"
+                ],
+                "e8bdeda8-b4a3-4eed-b307-5e2456238a77": [
+                    "ShellSettings.Read"
+                ],
+                "e8be65d6-d430-4289-a665-51bf2a194bda": [
+                    "AuthConfig.Read",
+                    "Title.ReadWrite"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "CoreItem-Internal.Read.All",
+                    "Files.Read.All",
+                    "Files.ReadWrite.Shared",
+                    "Group.Read.Shared",
+                    "Group.ReadWrite.Shared",
+                    "OfficeFeed-Internal.ReadWrite",
+                    "PeoplePredictions-Internal.Read",
+                    "RelatedKeywords.Read",
+                    "RoamingUserSettings.ReadWrite",
+                    "SubstrateSearch-Internal.ReadWrite",
+                    "UserGraph-Internal.Read",
+                    "UserSettings.Read",
+                    "UserSettings.Read.All",
+                    "UserSettings.ReadWrite",
+                    "UserSettings.ReadWrite.All"
+                ],
+                "f3a218b7-5c8f-460b-93af-56b072788c15": [
+                    "User.Read.All"
+                ],
+                "fe053c5f-3692-4f14-aef2-ee34fc081cae": [
+                    "Runtime.All"
+                ]
+            }
+        },
+        "9ed4cd8c-9a98-405f-966b-38ab1b0c24a3": {
+            "foci": false,
+            "name": "Microsoft Services",
+            "preferred_interactive_redirurl": "https://engagecenter.microsoft.com/",
+            "preferred_noninteractive_redirurl": "msauth://com.microsoft.serviceshubmobile/ZKBxBv9FVXZ1AlhJgM7ysXvYfVo=",
+            "redirect_uris": [
+                "https://engagecenter.microsoft.com/",
+                "https://engagecenter.microsoft.com",
+                "https://rc.engagecenter.microsoft.com/",
+                "https://rc.engagecenter.microsoft.com",
+                "https://engagecenter.microsoft.com/tokenAuthorize/ExtensionName/Microsoft_AzureCXP_EngageHub",
+                "https://rc.engagecenter.microsoft.com/tokenAuthorize/ExtensionName/Microsoft_AzureCXP_EngageHub",
+                "https://rc.engagehub.microsoft.com/tokenAuthorize/ExtensionName/Microsoft_AzureCXP_EngageHub",
+                "https://engagehub.microsoft.com/tokenAuthorize/ExtensionName/Microsoft_AzureCXP_EngageHub",
+                "https://rc.engagehub.microsoft.com/",
+                "https://rc.engagehub.microsoft.com",
+                "https://engagehub.microsoft.com/",
+                "https://engagehub.microsoft.com",
+                "https://trs.serviceshub.microsoft.com",
+                "https://trs.prod.serviceshub.microsoft.com",
+                "https://trs.dev.serviceshub.microsoft.com",
+                "https://servicehubideas.powerappsportals.com/",
+                "https://servicehubideas.powerappsportals.com/signin-openid_1",
+                "https://webui-ori-prod-eus-stage.azurewebsites.net/",
+                "https://webui-ori-dev-eus-stage.azurewebsites.net/",
+                "msauth://com.microsoft.serviceshubmobile/ZKBxBv9FVXZ1AlhJgM7ysXvYfVo=",
+                "https://us.serviceshub.microsoft.com",
+                "https://ori-dev.serviceshub.microsoft.com",
+                "https://resourceprovider.serviceshub.microsoft.com",
+                "https://rpservice-trs-prod-ause.azurewebsites.net",
+                "https://rpservice-trs-prod-eas.azurewebsites.net",
+                "https://rpservice-trs-prod-eus.azurewebsites.net",
+                "https://rpservice-trs-prod-weu.azurewebsites.net",
+                "https://rpservice-trs-prod-wus.azurewebsites.net",
+                "serviceshub://react-native-auth",
+                "msauth.com.microsoft.serviceshubmobile://auth",
+                "msauth.com.microsoft.ServicesHubMobileStaging-df://auth",
+                "msauth.com.microsoft.ServicesHubMobileDev-df://auth",
+                "msauth.com.microsoft.ServicesHubMobile://auth",
+                "msauth.com.microsoft.ServicesHubMobileMVP-df://auth",
+                "serviceshubmobile://react-native-auth",
+                "https://serviceshub.microsoft.com",
+                "https://dev.serviceshub.microsoft.com/",
+                "https://services.premier.microsoft.com/",
+                "https://services-ops.premier.microsoft.com/",
+                "https://services-local.premier.microsoft.com/",
+                "https://services-sln1-ops.premier.microsoft.com/",
+                "https://services-sln1.premier.microsoft.com/",
+                "https://webui-trs-dev-wus2-stage.azurewebsites.net/",
+                "https://webui-trs-prod-wus2-stage.azurewebsites.net/",
+                "https://support.dev.serviceshub.microsoft.com",
+                "https://support.serviceshub.microsoft.com",
+                "https://trs-prod.serviceshub.microsoft.com",
+                "https://services-local.premier.microsoft.com:444",
+                "https://local.serviceshub.microsoft.com/",
+                "https://local.serviceshub.microsoft.com:444/",
+                "https://support.local.serviceshub.microsoft.com/"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "People.Read",
+                    "User.Read"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "app_impersonation"
                 ]
             }
         },
@@ -3411,6 +4276,129 @@
                 ]
             }
         },
+        "b20d0d3a-dc90-485b-ad11-6031e769e221": {
+            "foci": false,
+            "name": "SalesInsightsWebApp",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "https://ui-ger.sales.ai.dynamics.com",
+                "https://ui-ger.sales.ai.dynamics.com/authentication",
+                "https://ger.sales.ai.dynamics.com/callback/",
+                "https://ger.sales.ai.dynamics.com",
+                "https://ui-csc-dev-usa.sales.ai.dynamics.com/authentication",
+                "https://ui-csc-dev-usa.sales.ai.dynamics.com",
+                "https://csc-dev-usa.sales.ai.dynamics.com/callback",
+                "https://csc-dev-usa.sales.ai.dynamics.com/callback/",
+                "https://csc-dev-usa.sales.ai.dynamics.com",
+                "https://tip1.sales.ai.dynamics.com",
+                "https://ui-tip1.sales.ai.dynamics.com",
+                "https://ui-tip1.sales.ai.dynamics.com/authentication",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient",
+                "https://ui-nuae.sales.ai.dynamics.com/authentication",
+                "https://ui-nuae.sales.ai.dynamics.com",
+                "https://ui-nzaf.sales.ai.dynamics.com/authentication",
+                "https://ui-nzaf.sales.ai.dynamics.com",
+                "https://ui-ssam.sales.ai.dynamics.com/authentication",
+                "https://ui-ssam.sales.ai.dynamics.com",
+                "https://ui-seapj.sales.ai.dynamics.com/authentication",
+                "https://ui-ccan.sales.ai.dynamics.com/authentication",
+                "https://ui-swiss.sales.ai.dynamics.com/authentication",
+                "https://ui-weur.sales.ai.dynamics.com/authentication",
+                "https://ui-cfra.sales.ai.dynamics.com/authentication",
+                "https://ui-gbr.sales.ai.dynamics.com/authentication",
+                "https://ui-cind.sales.ai.dynamics.com/authentication",
+                "https://ui-ejpn.sales.ai.dynamics.com/authentication",
+                "https://ui-eoce.sales.ai.dynamics.com/authentication",
+                "https://ui-nam2.sales.ai.dynamics.com/authentication",
+                "https://ui-nam.sales.ai.dynamics.com/authentication",
+                "https://ui-seapj.sales.ai.dynamics.com",
+                "https://ui-ccan.sales.ai.dynamics.com",
+                "https://ui-swiss.sales.ai.dynamics.com",
+                "https://ui-weur.sales.ai.dynamics.com",
+                "https://ui-cfra.sales.ai.dynamics.com",
+                "https://ui-gbr.sales.ai.dynamics.com",
+                "https://ui-cind.sales.ai.dynamics.com",
+                "https://ui-ejpn.sales.ai.dynamics.com",
+                "https://ui-eoce.sales.ai.dynamics.com",
+                "https://ui-nam2.sales.ai.dynamics.com",
+                "https://ui-nam.sales.ai.dynamics.com",
+                "https://swiss.sales.ai.dynamics.com/callback/",
+                "https://tip1.sales.ai.dynamics.com/callback/",
+                "https://tip.sales.ai.dynamics.com/authentication",
+                "https://sales.ai.dynamics.com/authentication",
+                "https://tip.sales.ai.dynamics.com",
+                "https://sales.ai.dynamics.com",
+                "https://nam2.sales.ai.dynamics.com/callback/",
+                "https://nam.sales.ai.dynamics.com/callback/",
+                "https://cfra.sales.ai.dynamics.com/callback/",
+                "https://gbr.sales.ai.dynamics.com/callback/",
+                "https://eoce.sales.ai.dynamics.com/callback/",
+                "https://seapj.sales.ai.dynamics.com/callback/",
+                "https://cind.sales.ai.dynamics.com/callback/",
+                "https://ejpn.sales.ai.dynamics.com/callback/",
+                "https://tip.sales.ai.dynamics.com/callback/"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Application.Read.All",
+                    "Calendars.ReadWrite",
+                    "Chat.Read",
+                    "Contacts.Read",
+                    "Directory.Read.All",
+                    "Files.ReadWrite.All",
+                    "OnlineMeetingArtifact.Read.All",
+                    "OnlineMeetingTranscript.Read.All",
+                    "Presence.ReadWrite",
+                    "User.Read.All"
+                ],
+                "394866fc-eedb-4f01-8536-3ff84b16be2a": [
+                    "User.Read.All"
+                ],
+                "4787c7ff-7cea-43db-8d0d-919f15c6354b": [
+                    "access_as_user"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ],
+                "e8bdeda8-b4a3-4eed-b307-5e2456238a77": [
+                    "ShellInfo.Read"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "Collab-Internal.Read",
+                    "KnowledgeGraph-Internal.ReadWrite"
+                ]
+            }
+        },
+        "b23dd4db-9142-4734-867f-3577f640ad0c": {
+            "foci": false,
+            "name": "Office Online Loki SSO",
+            "preferred_interactive_redirurl": "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "394866fc-eedb-4f01-8536-3ff84b16be2a": [
+                    "User.Read.All"
+                ]
+            }
+        },
         "b26aadf8-566f-4478-926f-589f601d9c74": {
             "foci": true,
             "name": "OneDrive",
@@ -3458,6 +4446,55 @@
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
+                ]
+            }
+        },
+        "b6e69c34-5f1f-4c34-8cdf-7fea120b8670": {
+            "foci": false,
+            "name": "Office Online Unified Consent SSO",
+            "preferred_interactive_redirurl": "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310",
+            "redirect_uris": [
+                "https://gbc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ppc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "https://ffc-oauth.online.office.com/oa/WacOAuth.aspx",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-930279079-3258969966-1203931420-3379063298-1496040207-3203565093-3038441310"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ]
+            }
+        },
+        "b97b6bd4-a49f-4a0c-af18-af507d1da76c": {
+            "foci": false,
+            "name": "Office Shredding Service",
+            "preferred_interactive_redirurl": "https://shredder-gcc.osi.office.net",
+            "preferred_noninteractive_redirurl": "urn:ietf:wg:oauth:2.0:oob",
+            "redirect_uris": [
+                "https://shredder-gcc.osi.office.net",
+                "urn:ietf:wg:oauth:2.0:oob",
+                "https://shredder.osi.office.net"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Files.Read.All",
+                    "Organization.Read.All",
+                    "User.Read.All"
+                ],
+                "00000003-0000-0ff1-ce00-000000000000": [
+                    "Files.Read",
+                    "Files.Read.All",
+                    "Sites.Read.All"
+                ],
+                "66a88757-258c-4c72-893c-3e8bed4d6899": [
+                    "SubstrateSearch-Internal.ReadWrite"
                 ]
             }
         },
@@ -3740,6 +4777,37 @@
                 ]
             }
         },
+        "ce48853e-0605-4f77-8746-d70ac63cc6bc": {
+            "foci": false,
+            "name": "Bot Framework Composer",
+            "preferred_interactive_redirurl": null,
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugin/ce48853e-0605-4f77-8746-d70ac63cc6bc",
+            "redirect_uris": [
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/ce48853e-0605-4f77-8746-d70ac63cc6bc",
+                "composer://oauth",
+                "bfcomposer://oauth"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "AppCatalog.ReadWrite.All",
+                    "Application.ReadWrite.All",
+                    "Organization.Read.All"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ],
+                "96ff4394-9197-43aa-b393-6a41652e21f8": [
+                    "PowerVA.Bots.Basic"
+                ]
+            }
+        },
         "cf36b471-5b44-428c-9ce7-313bf84528de": {
             "foci": true,
             "name": "Microsoft Bing Search",
@@ -3817,15 +4885,12 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
-                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
-                    "NewsFeed.ReadWrite",
                     "People.Read.All",
                     "QnA.Read.All",
-                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "a4f2693f-129c-4b96-982b-2c364b8314d7": [
@@ -4814,6 +5879,74 @@
                 ]
             }
         },
+        "e1979c22-8b73-4aed-a4da-572cc4d0b832": {
+            "foci": false,
+            "name": "App Studio for Microsoft Teams",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "https://dev-int.teams.cloud.dev.microsoft/home",
+                "https://dev.teams.cloud.microsoft/home",
+                "https://dev.teams.microsoft.com/home",
+                "https://dev-int.teams.microsoft.com/home",
+                "https://dev.teams.microsoft.com/preview",
+                "https://dev.teams.microsoft.com/authcallback.html",
+                "https://dev.teams.microsoft.com/appconfiguration.html",
+                "https://dev-int.teams.microsoft.com/appconfiguration.html",
+                "https://vscode-redirect.azurewebsites.net",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient",
+                "https://dev.teams.microsoft.com/index.html",
+                "https://dev-int.teams.microsoft.com/index.html",
+                "https://dev-int.teams.microsoft.com/authcallback.html",
+                "https://dev-int.teams.microsoft.com",
+                "https://dev.teams.microsoft.com"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "AppCatalog.ReadWrite.All",
+                    "People.Read",
+                    "User.Read"
+                ],
+                "00000006-0000-0ff1-ce00-000000000000": [
+                    "User.Read"
+                ],
+                "3e53edf8-185f-4fb1-b849-97faed43d817": [
+                    "Account.Read",
+                    "User.Read",
+                    "User.RoleAssignment.Read",
+                    "User.RoleAssignment.RoleDefinition.Permission.Read",
+                    "User.RoleAssignment.RoleDefinition.Read"
+                ],
+                "5f09333a-842c-47da-a157-57da27fcbca5": [
+                    "ShellInfo.Read"
+                ],
+                "ab3be6b7-f5df-413d-ac2d-abf1e3fd9c0b": [
+                    "ApiSecretRegistration.ReadWrite",
+                    "OAuthConfig.Delete",
+                    "OAuthConfig.Read",
+                    "OAuthConfig.Write",
+                    "TeamsAppValidation.Execute",
+                    "TeamsAppValidation.Submit"
+                ],
+                "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
+                    "Region.ReadWrite",
+                    "user_impersonation"
+                ],
+                "e8bdeda8-b4a3-4eed-b307-5e2456238a77": [
+                    "ShellInfo.Read"
+                ],
+                "f3723d34-6ff5-4ceb-a148-d99dcd2511fc": [
+                    "Bot.AccessAsUser"
+                ]
+            }
+        },
         "e28ff72c-58a5-49ba-8125-42ec264d7cd0": {
             "foci": false,
             "name": "Office Browser Extension",
@@ -4920,6 +6053,67 @@
                 ],
                 "f2d19332-a09d-48c8-a53b-c49ae5502dfc": [
                     "User.Read"
+                ]
+            }
+        },
+        "eb20f3e3-3dce-4d2c-b721-ebb8d4414067": {
+            "foci": true,
+            "name": "Managed Meeting Rooms",
+            "preferred_interactive_redirurl": "https://portal-green.rooms.microsoft.com/",
+            "preferred_noninteractive_redirurl": "msauth://com.microsoft.managedservicesteams.android/Bi1xSgEWP3ZJ2LJ2Uzo2TBYclRA%3D",
+            "redirect_uris": [
+                "https://portal-green.rooms.microsoft.com/",
+                "msauth://com.microsoft.managedservicesteams.android/Bi1xSgEWP3ZJ2LJ2Uzo2TBYclRA%3D",
+                "https://mmrwebstgwuswas.azurewebsites.net",
+                "https://portal.rooms.microsoft.com/",
+                "msauth://com.managedservicesteams/B9E92paBs3MeA%2B1z23MI1B0FZj8%3D",
+                "msauth.com.microsoft.ManagedServicesTeams.iOS-df://auth",
+                "msauth.com.microsoft.ManagedServicesTeams.iOS://auth",
+                "https://demo.rooms.microsoft.com/",
+                "msauth://com.microsoft.mmr.mmragent/IBg3lquLY63SvE6%2FUSAIumJ5y0I%3D",
+                "msauth://com.microsoft.mmr.mmragent/V3RchuIXaSJXKJIzJw38shvZ9vY%3D",
+                "https://partners.rooms.microsoft.com/",
+                "https://partner.rooms.microsoft.com/",
+                "msauth://com.microsoft.rooms/KiOewXi66av2AXGyE74ISTpOCb8%3D",
+                "msauth://com.microsoft.rooms/32pLpunW5kzYFouc3NZJrfYpfUs%3D",
+                "https://rooms.microsoft.com/",
+                "https://setoolsportaldev.azurewebsites.net/",
+                "msauth://com.microsoft.mmr/9AuBcxzFxCncUkUZfYGbdeLWxd8%3D",
+                "msauth.com.microsoft.rooms://auth"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000002-0000-0ff1-ce00-000000000000": [
+                    "AdminApi.AccessAsUser.All"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "DeviceManagementServiceConfig.Read.All",
+                    "Group.Read.All",
+                    "LicenseAssignment.ReadWrite.All",
+                    "Organization.Read.All",
+                    "Place.ReadWrite.All",
+                    "RoleManagement.Read.Directory",
+                    "User.ManageIdentities.All",
+                    "User.Read",
+                    "User.Read.All"
+                ],
+                "00000006-0000-0ff1-ce00-000000000000": [
+                    "M365AdminPortal.Centro.Read"
+                ],
+                "39aaf054-81a5-48c7-a4f8-0293012095b9": [
+                    "Media.ReadWrite.All"
+                ],
+                "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
+                    "UserPolicies.Read"
+                ],
+                "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
+                    "Authorization.ReadWrite"
                 ]
             }
         },
@@ -5231,15 +6425,12 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
-                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
-                    "NewsFeed.ReadWrite",
                     "People.Read.All",
                     "QnA.Read.All",
-                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "a4f2693f-129c-4b96-982b-2c364b8314d7": [
@@ -5388,6 +6579,8 @@
         "api://127.0.0.1/3016d0ce-47cc-4005-b11d-5fcabb1b643d": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
         "api://394866fc-eedb-4f01-8536-3ff84b16be2a": "394866fc-eedb-4f01-8536-3ff84b16be2a",
         "api://7084e364-df71-4a4a-9e8f-d375b5529913": "7084e364-df71-4a4a-9e8f-d375b5529913",
+        "api://96ff4394-9197-43aa-b393-6a41652e21f8": "96ff4394-9197-43aa-b393-6a41652e21f8",
+        "api://96ff4394-9197-43aa-b393-6a41652e21f8/": "96ff4394-9197-43aa-b393-6a41652e21f8",
         "api://altvr.localhost/3016d0ce-47cc-4005-b11d-5fcabb1b643d": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
         "api://app.powerbi.com/00000009-0000-0000-c000-000000000000": "00000009-0000-0000-c000-000000000000",
         "api://app.powerbi.com/botid-61cccd33-6c1a-4329-b091-504c7ddd882f": "00000009-0000-0000-c000-000000000000",
@@ -5651,11 +6844,15 @@
         "https://apihub.azure.com": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://app.vssps.visualstudio.com/": "499b84ac-1321-427f-aa17-267ca6975798",
         "https://app.vssps.vsallin.net/": "499b84ac-1321-427f-aa17-267ca6975798",
+        "https://appmanagement.activedirectory.microsoft.com": "f0ae4899-d877-4d3c-ae25-679e38eea492",
+        "https://approvalmanagement.activedirectory.windowsazure.com": "65d91a3d-ab74-42e6-8a2f-0add61688c74",
         "https://arc.msn.com/v4": "16aeb910-ce68-41d1-9ac3-9e1673ac9575",
         "https://are-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://asia1.msgraph.msappproxy.net/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://asia1.msgraph.msappproxy.net:8082/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://assist.microsoft.com": "2b8844d8-6c87-4fce-97a0-fbec9006e140",
+        "https://aue-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://aue-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://augloop.office.com": "4354e225-50c9-4423-9ece-2d5afd904870",
         "https://augloop.office.com/": "4354e225-50c9-4423-9ece-2d5afd904870",
         "https://augloop.office.com/v2": "4354e225-50c9-4423-9ece-2d5afd904870",
@@ -5701,6 +6898,9 @@
         "https://brazilsoutheast2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://brazilsoutheast3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://brazilsoutheast4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
+        "https://brzs-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://brzs-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://brzs-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://business-assist.microsoft.com": "2b8844d8-6c87-4fce-97a0-fbec9006e140",
         "https://businessassist.microsoft.com": "2b8844d8-6c87-4fce-97a0-fbec9006e140",
         "https://canadacentral0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
@@ -5752,7 +6952,11 @@
         "https://cqd.gov.teams.microsoft.us": "c61d67cf-295a-462c-972f-33af37008751",
         "https://cqd.lync.com": "c61d67cf-295a-462c-972f-33af37008751",
         "https://cqd.teams.microsoft.com": "c61d67cf-295a-462c-972f-33af37008751",
+        "https://cus-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://cus-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://dev-int.teams.microsoft.com": "e1979c22-8b73-4aed-a4da-572cc4d0b832",
+        "https://dev.botframework.com/": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
+        "https://dev.botframework.com/*": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
         "https://dev.labs.azure.com": "835b2a73-6e10-4aa5-a979-21dfda45231c",
         "https://dev.teams.microsoft.com": "e1979c22-8b73-4aed-a4da-572cc4d0b832",
         "https://df.compliance.microsoft.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
@@ -5763,6 +6967,7 @@
         "https://dod-graph.microsoft.us": "00000003-0000-0000-c000-000000000000",
         "https://dod-graph.microsoft.us/": "00000003-0000-0000-c000-000000000000",
         "https://dod.loki.office365.us/": "394866fc-eedb-4f01-8536-3ff84b16be2a",
+        "https://dxp.aad.azure.com": "a57aca87-cbc0-4f3c-8b9e-dc095fdc8978",
         "https://easm-api-ppe.trafficmanager.net/": "b7faa489-a4c8-4b39-bb0c-842c3de2de6a",
         "https://easm-api-prod.trafficmanager.net/": "b7faa489-a4c8-4b39-bb0c-842c3de2de6a",
         "https://easm.defender.microsoft.com/": "b7faa489-a4c8-4b39-bb0c-842c3de2de6a",
@@ -5833,6 +7038,13 @@
         "https://eur-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://eur1.msgraph.msappproxy.net/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://eur1.msgraph.msappproxy.net:8082/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
+        "https://eus-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://eus-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://eus-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://eus-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://eus-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://eus-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://eus-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://eus.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://eus.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://eusportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
@@ -5907,6 +7119,9 @@
         "https://francesouth4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://francesouthR-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://francesouthR-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
+        "https://frc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://frc-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://frc-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://gbr-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://gcc.loki.delve.office.com/": "394866fc-eedb-4f01-8536-3ff84b16be2a",
         "https://gcchigh.loki.office365.us/": "394866fc-eedb-4f01-8536-3ff84b16be2a",
@@ -5973,7 +7188,14 @@
         "https://japanwest2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://japanwest3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://japanwest4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
+        "https://jpe-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://jpe-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://jpe-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://jpe-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://jpe-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://jpn-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
+        "https://jpw-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://jpw-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://koreacentral0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://koreacentral1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://koreacentral1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
@@ -5992,6 +7214,7 @@
         "https://learningapp.microsoft.com/botid-ab794c79-7fab-4b3e-a8af-a02a57d4e943": "2c9e12e5-a56c-4ba1-b768-7a141586c6fe",
         "https://learningapp.microsoft.com/botid-c146d8f9-2e26-4118-9cd0-bba9c72bb4e4": "2c9e12e5-a56c-4ba1-b768-7a141586c6fe",
         "https://link-df.gcs.office.com": "56c1da01-2129-48f7-9355-af6d59d42766",
+        "https://local.botframework.com/": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
         "https://local.dev.labs.azure.com": "835b2a73-6e10-4aa5-a979-21dfda45231c",
         "https://localhost:50443": "22d27567-b3f0-4dc2-9ec2-46ed368ba538",
         "https://loki.delve.office.com/": "394866fc-eedb-4f01-8536-3ff84b16be2a",
@@ -6019,6 +7242,8 @@
         "https://msai-kmd.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://msai.meetingintelligence.ai": "038187f5-ca69-4382-8c0b-8d87708d099f",
         "https://msbbotservice.microsoft.com": "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7",
+        "https://msit.cosmic.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://msit.cosmic.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://msmamservice.api.application": "0a5f63c0-b750-4f38-a71c-4fc0d58b89e2",
         "https://mwaas-services-customerapi-ppe.azurewebsites.net": "c9d36ed4-91b3-4c87-b8d7-68d92826c96c",
         "https://mwaas-services-customerapi-prod.azurewebsites.net": "c9d36ed4-91b3-4c87-b8d7-68d92826c96c",
@@ -6033,6 +7258,13 @@
         "https://ncu.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://ncu.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://ncuportalprv.office.com": "00000006-0000-0ff1-ce00-000000000000",
+        "https://neu-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://neu-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://neu-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://neu-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://neu-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://neu-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://neu-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://neu.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://neu.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://newzealandnorth-web.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
@@ -6145,6 +7377,8 @@
         "https://outlook.office365.com/weve": "3c896ded-22c5-450f-91f6-3d1ef0848f6e",
         "https://outlook.office365.com/wevengine": "3c896ded-22c5-450f-91f6-3d1ef0848f6e",
         "https://outlook.office365.com:443/": "00000002-0000-0ff1-ce00-000000000000",
+        "https://pagql.microsoft-int.com": "3e53edf8-185f-4fb1-b849-97faed43d817",
+        "https://pagql.microsoft.com": "3e53edf8-185f-4fb1-b849-97faed43d817",
         "https://partner.outlook.cn/autosuggest": "66a88757-258c-4c72-893c-3e8bed4d6899",
         "https://partner.outlook.cn/search": "66a88757-258c-4c72-893c-3e8bed4d6899",
         "https://passwordbreach.microsoft.com": "bdd48c81-3a58-4ea9-849c-ebea7f6b6360",
@@ -6161,7 +7395,9 @@
         "https://power-apis-usgov001-sovereign.azure-apihub.us": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://power-apis-usgov001-sovereign.consent.azure-apihub.us": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://powerquery.microsoft.com": "f3b07414-6bf4-46e6-b63f-56941f3f4128",
+        "https://ppe.botframework.com/": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
         "https://ppe.edgesync.microsoft.com": "a4f2693f-129c-4b96-982b-2c364b8314d7",
+        "https://pptservicescast.officeapps.live.com": "1bcf809c-9b88-4be3-8b3c-7131d25fc05d",
         "https://presence.dod.teams.microsoft.us/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://presence.gcc.teams.microsoft.com/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://presence.gov.teams.microsoft.us/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
@@ -6198,6 +7434,7 @@
         "https://saraonlinedev.azurewebsites.net/": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
         "https://saraonlineinternal.azurewebsites.net": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
         "https://saraonlinetest.azurewebsites.net": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
+        "https://scratch.botframework.com/": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
         "https://scu.prv.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://scu.prv.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://scu.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
@@ -6205,7 +7442,17 @@
         "https://scuportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://scuportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
         "https://scuportalprv.office.com": "00000006-0000-0ff1-ce00-000000000000",
+        "https://scus-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://scus-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://scus-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://sdfv2-kms.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
+        "https://sea-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://sea-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://sea-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://sea-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://sea-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://sea-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://sea-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://sea.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://sea.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://seaportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
@@ -6219,6 +7466,20 @@
         "https://securityoperations.microsoft.com/": "fc780465-2017-40d4-a0c5-307022471b92",
         "https://service.flow.microsoft.com/": "7df0a125-d3be-4c96-aa54-591f83ff541c",
         "https://shell.suite.office.com:1443": "5f09333a-842c-47da-a157-57da27fcbca5",
+        "https://shredder-eu.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-eu.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-gcc.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-gcc.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-msit.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-msit.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-test.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-test.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-us.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder-us.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder.osi.officeppe.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://shredder.osi.officeppe.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://sip.compliance.microsoft.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
@@ -6328,6 +7589,7 @@
         "https://suite.office.net": "e8bdeda8-b4a3-4eed-b307-5e2456238a77",
         "https://sukportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://sukportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
+        "https://support.iam.ad.azure.com": "a57aca87-cbc0-4f3c-8b9e-dc095fdc8978",
         "https://svc.prv.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://svc.prv.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://svc.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
@@ -6398,6 +7660,8 @@
         "https://uknorth2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://uknorth3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://uknorth4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
+        "https://uks-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://uks-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://uksouth0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://uksouth1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://uksouth1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
@@ -6417,6 +7681,8 @@
         "https://ukwest4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://userrequestsgraphapiep-prd.trafficmanager.net": "fc780465-2017-40d4-a0c5-307022471b92",
         "https://userrequestsgraphapiep-prd.trafficmanager.net/": "fc780465-2017-40d4-a0c5-307022471b92",
+        "https://usge-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://usge-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://usgovarizona-web.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://usgovarizona1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://usgovtexas0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
@@ -6429,6 +7695,8 @@
         "https://usgovvirginia2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://usgovvirginia3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://usgovvirginia4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
+        "https://usgsw-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://usgsw-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://vvm-dev.teams.microsoft.com": "e97edbaf-39b2-4546-ba61-0a24e1bef890",
         "https://vvm-int.teams.microsoft.com": "e97edbaf-39b2-4546-ba61-0a24e1bef890",
         "https://vvm.teams.microsoft.com": "e97edbaf-39b2-4546-ba61-0a24e1bef890",
@@ -6463,6 +7731,15 @@
         "https://westus2.api.loganalytics.io/": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
         "https://westus21-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://westus31-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
+        "https://weu-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://weu-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://weu-001.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://weu-001.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://weu-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://weu-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://weu-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://weu-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://weu-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://weu.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://weu.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://weuportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
@@ -6474,8 +7751,19 @@
         "https://wns.windows.com/": "04436913-cf0d-4d2a-9cc6-2ffe7f1d3d1c",
         "https://wukportal.office.com/": "00000006-0000-0ff1-ce00-000000000000",
         "https://wukportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
+        "https://wus-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://wus.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://wus.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
+        "https://wus2-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus2-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus2-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://wus2-010.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://wusportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://wusportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
         "https://wusportalprv.office.com": "00000006-0000-0ff1-ce00-000000000000",
