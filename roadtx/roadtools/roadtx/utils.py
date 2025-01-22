@@ -14,7 +14,7 @@ def find_redirurl_for_client(client, interactive=True, broker=False):
     try:
         app = data['apps'][client.lower()]
     except KeyError:
-        return None
+        return 'https://login.microsoftonline.com/common/oauth2/nativeclient'
     if broker:
         brokerurl = f'ms-appx-web://Microsoft.AAD.BrokerPlugin/{client.lower()}'
         if brokerurl in app['redirect_uris']:
@@ -22,4 +22,7 @@ def find_redirurl_for_client(client, interactive=True, broker=False):
         return app['preferred_noninteractive_redirurl']
     if interactive and app['preferred_interactive_redirurl'] is not None:
         return app['preferred_interactive_redirurl']
-    return app['preferred_noninteractive_redirurl']
+    if app['preferred_noninteractive_redirurl']:
+        return app['preferred_noninteractive_redirurl']
+    # Return default URL even if it might not work since some follow up functions break when called with a None value
+    return 'https://login.microsoftonline.com/common/oauth2/nativeclient'
