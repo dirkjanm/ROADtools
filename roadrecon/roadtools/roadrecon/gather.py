@@ -723,8 +723,17 @@ def main(args=None):
             dburl = 'sqlite:///' + args.database
     else:
         dburl = args.database
+    try:
+        _, tokendata = Authentication.parse_accesstoken(token['accessToken'])
+    except KeyError:
+        print('No access token found in tokenfile')
+        return
+    if tokendata['aud'] not in ('https://graph.windows.net', 'https://graph.windows.net/', '00000002-0000-0000-c000-000000000000'):
+        print(f"Wrong token audience, got {tokendata['aud']} but expected https://graph.windows.net")
+        print("Make sure to request a token with -r https://graph.windows.net")
+        return
 
-    headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
+    headers['Authorization'] = f"Bearer {token['accessToken']}"
 
     seconds = time.perf_counter()
     loop = asyncio.get_event_loop()
