@@ -8,6 +8,7 @@ import traceback
 import warnings
 
 import aiohttp
+import jwt
 import requests
 import roadtools.roadlib.metadef.database as database
 #from roadlib.metadef.database import Domain
@@ -711,11 +712,23 @@ def main(args=None):
         if len(sys.argv) < 2:
             parser.print_help()
             sys.exit(1)
+
+    # Read and validate the token.
     if args.tokens_stdin:
         token = json.loads(sys.stdin.read())
     else:
         with open(args.tokenfile, 'r') as infile:
             token = json.load(infile)
+    if not ('tokenType' in token and 'accessToken' in token):
+        raise ValueError("invalid token file: missing required 'tokenType' or 'accessToken' field")
+    try:
+        decoded = jwt.decode(token['accessToken'], options={"verify_signature": False})
+        aud = decoded.get('aud', '').lower().strip()
+        if aud != 'https://graph.windows.net':
+            raise ValueError("token audience must be 'https://graph.windows.net', not '%s'" % aud)
+    except jwt.DecodeError as e:
+        print('Error decoding token:', e)
+
     if not ':/' in args.database:
         if args.database[0] != '/':
             dburl = 'sqlite:///' + os.path.join(os.getcwd(), args.database)
