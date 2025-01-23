@@ -59,6 +59,7 @@ class Authentication():
         self.scope = None
         self.user_agent = None
         self.use_cae = False
+        self.device_code_mfa = False
 
         # For cert based app auth
         self.appprivkey = None
@@ -184,6 +185,8 @@ class Authentication():
         }
         if self.scope:
             data['scope'] = self.scope
+        if self.device_code_mfa:
+            data['amr_values'] = "ngcmfa"
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/devicecode", data=data)
@@ -231,6 +234,8 @@ class Authentication():
             "client_id": self.client_id,
             "scope": self.scope,
         }
+        if self.device_code_mfa:
+            data['claims'] = '{"access_token":{"amr":{"values":["ngcmfa"]}}}'
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/devicecode", data=data)
@@ -1223,6 +1228,9 @@ class Authentication():
         auth_parser.add_argument('--device-code',
                                  action='store_true',
                                  help='Authenticate using a device code')
+        auth_parser.add_argument('--device-code-mfa',
+                                 action='store_true',
+                                 help='Authenticate using a device code, force MFA prompt, request ngcmfa claim')
         auth_parser.add_argument('--access-token',
                                  action='store',
                                  help='Access token (JWT)')
@@ -1487,6 +1495,7 @@ class Authentication():
         self.scope = args.scope
         self.set_user_agent(args.user_agent)
         self.use_cae = args.cae
+        self.device_code_mfa = args.device_code_mfa
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
@@ -1531,7 +1540,7 @@ class Authentication():
                 if self.scope:
                     return self.authenticate_as_app_native_v2()
                 return self.authenticate_as_app_native()
-            if args.device_code:
+            if args.device_code or args.device_code_mfa:
                 if self.scope:
                     return self.authenticate_device_code_native_v2()
                 return self.authenticate_device_code_native()
