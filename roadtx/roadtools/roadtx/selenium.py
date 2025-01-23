@@ -78,12 +78,13 @@ class SeleniumAuthentication():
                     'https': f'{self.proxy_type}://{self.proxy}',
                     'no_proxy': 'localhost,127.0.0.1'
                 },
-                'request_storage': 'memory'
+                'request_storage': 'memory',
+                'exclude_hosts':['cdn.office.net','res-1.cdn.office.net','aadcdn.msauth.net','cdn.mozilla.net','amcdn.msftauth.net']
             }
             # Force intercept to add proxy
             intercept = True
         else:
-            options = {'request_storage': 'memory'}
+            options = {'request_storage': 'memory','exclude_hosts':['cdn.office.net','res-1.cdn.office.net','aadcdn.msauth.net','cdn.mozilla.net','amcdn.msftauth.net']}
             if self.redir_has_custom_scheme():
                 intercept = True
         if intercept and self.headless:
