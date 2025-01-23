@@ -11,7 +11,7 @@ import aiohttp
 import requests
 import roadtools.roadlib.metadef.database as database
 #from roadlib.metadef.database import Domain
-from roadtools.roadlib.auth import Authentication
+from roadtools.roadlib.auth import Authentication, AuthenticationException
 from roadtools.roadlib.metadef.database import (
     AdministrativeUnit, Application, ApplicationRef, AppRoleAssignment,
     AuthorizationPolicy, Contact, Device, DirectoryRole, DirectorySetting,
@@ -62,20 +62,31 @@ async def dumphelper(url, method=requests.get):
         try:
             urlcounter += 1
             async with method(nexturl, headers=headers) as req:
-                # Hold off when rate limit is reached
-                if req.status == 429:
-                    if tokencounter > 0:
-                        tokencounter -= 10*MAX_REQ_PER_SEC
-                        print('Sleeping because of rate-limit hit')
-                    continue
                 if req.status != 200:
-                    # Ignore default users role not being found
-                    if req.status == 404 and 'a0b1b346-4d3e-4e8b-98f8-753987be4970' in url:
+                    if req.status == 401:
+                        # The token is invalid.
+                        try:
+                            body = await req.json()
+                            error = body.get('odata.error', {}).get('code')
+                        except json.decoder.JSONDecodeError:
+                            error = req.content
+
+                        raise AuthenticationException("request failed with %d: %s (%s)" % (req.status, error, nexturl))
+                    elif req.status == 404 and 'a0b1b346-4d3e-4e8b-98f8-753987be4970' in url:
+                        # Ignore default users role not being found
                         return
+                    elif req.status == 429:
+                        # Hold off when rate limit is reached
+                        if tokencounter > 0:
+                            tokencounter -= 10 * MAX_REQ_PER_SEC
+                            print('Sleeping because of rate-limit hit')
+                        continue
+
                     print('Error %d for URL %s' % (req.status, nexturl))
                     # print(await req.text())
                     # print(req.headers)
                     print('')
+
                 try:
                     objects = await req.json()
                 except json.decoder.JSONDecodeError:
@@ -94,6 +105,8 @@ async def dumphelper(url, method=requests.get):
                 except KeyError:
                     # print(objects)
                     pass
+        except AuthenticationException:
+            raise
         except Exception as exc:
             print(exc)
             return
