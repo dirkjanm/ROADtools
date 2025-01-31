@@ -59,6 +59,7 @@ class Authentication():
         self.scope = None
         self.user_agent = None
         self.use_cae = False
+        self.claims = None
 
         # For cert based app auth
         self.appprivkey = None
@@ -112,6 +113,44 @@ class Authentication():
         res = self.requests_get(f"{authority_uri}/UserRealm/{user}?api-version=2.0")
         response = res.json()
         return response
+
+    def add_claim(self, token, claim, values=None, value=None, essential=None):
+        """
+        Add desired claim to authentication flow, for example CAE or MFA
+        """
+        if not self.claims:
+            self.claims = {}
+        if not token in self.claims:
+            self.claims[token] = {}
+        self.claims[token][claim] = {}
+        if value:
+            self.claims[token][claim]['value'] = value
+        elif values:
+            self.claims[token][claim]['values'] = values
+        if essential:
+            self.claims[token][claim]['essential'] = essential
+
+    def set_cae(self):
+        """
+        Request a Continuous Access Evaluation token
+        """
+        self.add_claim('access_token', 'xms_cc', values=['CP1'])
+
+    def set_force_mfa(self):
+        """
+        Force MFA during auth
+        """
+        self.add_claim('access_token', 'amr', values=['mfa'])
+
+    def has_force_mfa(self):
+        """
+        Check whether MFA enforcement is set
+        """
+        try:
+            values = self.claims['access_token']['amr']['values']
+        except (KeyError, ValueError, TypeError):
+            return False
+        return values == ['mfa']
 
     def loadappcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
         """
@@ -186,6 +225,8 @@ class Authentication():
             data['scope'] = self.scope
         if additionaldata:
             data = {**data, **additionaldata}
+        if self.has_force_mfa():
+            data['amr_values'] = 'ngcmfa'
         res = self.requests_post(f"{authority_uri}/oauth2/devicecode", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -233,6 +274,10 @@ class Authentication():
         }
         if additionaldata:
             data = {**data, **additionaldata}
+        if self.use_cae:
+            self.set_cae()
+        if self.claims:
+            data['claims'] = json.dumps(self.claims)
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/devicecode", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -316,7 +361,9 @@ class Authentication():
         if additionaldata:
             data = {**data, **additionaldata}
         if self.use_cae:
-            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
+            self.set_cae()
+        if self.claims:
+            data['claims'] = json.dumps(self.claims)
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -387,7 +434,9 @@ class Authentication():
         if additionaldata:
             data = {**data, **additionaldata}
         if self.use_cae:
-            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
+            self.set_cae()
+        if self.claims:
+            data['claims'] = json.dumps(self.claims)
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -504,8 +553,6 @@ class Authentication():
         tokenreply = res.json()
         if returnreply:
             return tokenreply
-        access_token = tokenreply['access_token']
-        tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         if self.origin:
             self.tokendata['originheader'] = self.origin
@@ -527,7 +574,9 @@ class Authentication():
         if client_secret:
             data['client_secret'] = client_secret
         if self.use_cae:
-            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
+            self.set_cae()
+        if self.claims:
+            data['claims'] = json.dumps(self.claims)
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
@@ -588,7 +637,9 @@ class Authentication():
         if additionaldata:
             data = {**data, **additionaldata}
         if self.use_cae:
-            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
+            self.set_cae()
+        if self.claims:
+            data['claims'] = json.dumps(self.claims)
         if pkce_secret:
             raise NotImplementedError
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
@@ -658,7 +709,9 @@ class Authentication():
             "scope": self.scope,
         }
         if self.use_cae:
-            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
+            self.set_cae()
+        if self.claims:
+            data['claims'] = json.dumps(self.claims)
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
@@ -806,7 +859,9 @@ class Authentication():
         if scope:
             # Add CAE support parameters
             if self.use_cae:
-                urlt_v2 = urlt_v2 + '&claims={0}'.format(quote_plus('{"access_token":{"xms_cc":{"values":["cp1"]}}}'))
+                self.set_cae()
+            if self.claims:
+                urlt_v2 = urlt_v2 + '&claims=' + quote_plus(json.dumps(self.claims))
             # v2
             return urlt_v2.format(
                 quote_plus(self.client_id),
@@ -816,6 +871,8 @@ class Authentication():
                 quote_plus(response_type),
                 quote_plus(state)
             )
+        if self.has_force_mfa():
+            urlt_v1 += '&amr_values=ngcmfa'
         # Else default to v1 identity endpoint
         return urlt_v1.format(
             quote_plus(self.client_id),
@@ -1266,6 +1323,9 @@ class Authentication():
         auth_parser.add_argument('--cae',
                                  action='store_true',
                                  help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+        auth_parser.add_argument('--force-mfa',
+                                 action='store_true',
+                                 help='Force MFA during authentication')
         auth_parser.add_argument('-f',
                                  '--tokenfile',
                                  action='store',
@@ -1486,7 +1546,10 @@ class Authentication():
         self.set_resource_uri(args.resource)
         self.scope = args.scope
         self.set_user_agent(args.user_agent)
-        self.use_cae = args.cae
+        if args.cae:
+            self.set_cae()
+        if args.force_mfa:
+            self.set_force_mfa()
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
