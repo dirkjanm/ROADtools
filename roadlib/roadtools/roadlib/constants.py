@@ -107,3 +107,12 @@ DSSO_BODY_USERPASS = '''<?xml version='1.0' encoding='UTF-8'?>
   </s:Body>
 </s:Envelope>
 '''
+
+SAML_TOKEN_TYPE_V1 = 'urn:oasis:names:tc:SAML:1.0:assertion'
+SAML_TOKEN_TYPE_V2 = 'urn:oasis:names:tc:SAML:2.0:assertion'
+GRANT_TYPE_SAML1_1 = 'urn:ietf:params:oauth:grant-type:saml1_1-bearer'
+GRANT_TYPE_SAML2 = "urn:ietf:params:oauth:grant-type:saml2-bearer"
+
+# http://docs.oasis-open.org/wss-m/wss/v1.1.1/os/wss-SAMLTokenProfile-v1.1.1-os.html#_Toc307397288
+WSS_SAML_TOKEN_PROFILE_V1_1 = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1"
+WSS_SAML_TOKEN_PROFILE_V2 = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0"

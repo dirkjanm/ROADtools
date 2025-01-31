@@ -22,7 +22,9 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography import x509
 from roadtools.roadlib.constants import WELLKNOWN_RESOURCES, WELLKNOWN_CLIENTS, WELLKNOWN_USER_AGENTS, \
-    DSSO_BODY_KERBEROS, DSSO_BODY_USERPASS
+    DSSO_BODY_KERBEROS, DSSO_BODY_USERPASS, SAML_TOKEN_TYPE_V1, SAML_TOKEN_TYPE_V2, GRANT_TYPE_SAML1_1, \
+    WSS_SAML_TOKEN_PROFILE_V1_1, WSS_SAML_TOKEN_PROFILE_V2, GRANT_TYPE_SAML2
+from roadtools.roadlib.wstrust import Mex, build_rst, parse_wstrust_response
 import requests
 import adal
 import jwt
@@ -103,7 +105,18 @@ class Authentication():
         #pylint: disable=protected-access
         adal.oauth2_client._REQ_OPTION['headers']['User-Agent'] = self.user_agent
 
-    def user_discovery(self, username):
+    def user_discovery_v1(self, username):
+        """
+        Discover whether this is a federated user
+        """
+        # Tenant specific endpoint seems to not work for this?
+        authority_uri = 'https://login.microsoftonline.com/common'
+        user = quote_plus(username)
+        res = self.requests_get(f"{authority_uri}/UserRealm/{user}?api-version=1.0")
+        response = res.json()
+        return response
+
+    def user_discovery_v2(self, username):
         """
         Discover whether this is a federated user
         """
@@ -113,6 +126,12 @@ class Authentication():
         res = self.requests_get(f"{authority_uri}/UserRealm/{user}?api-version=2.0")
         response = res.json()
         return response
+
+    def user_discovery(self, username):
+        """
+        This function is for backwards compatibility
+        """
+        return self.user_discovery_v2(username)
 
     def add_claim(self, token, claim, values=None, value=None, essential=None):
         """
@@ -312,6 +331,54 @@ class Authentication():
             return tokenreply
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
+
+    def find_federation_endpoint(self, mex_endpoint):
+        mex_resp = self.requests_get(mex_endpoint)
+        try:
+            return Mex(mex_resp.text).get_wstrust_username_password_endpoint()
+        except ET.ParseError:
+            print("Malformed MEX document: %s, %s", mex_resp.status_code, mex_resp.text)
+            raise
+
+    def authenticate_username_password_federation_native(self, federationdata, additionaldata=None, returnreply=False):
+        wstrust_endpoint = self.find_federation_endpoint(federationdata['federation_metadata_url'])
+        cloud_audience_urn = wstrust_endpoint.get("cloud_audience_urn", "urn:federation:MicrosoftOnline")
+        endpoint_address =  wstrust_endpoint.get("address", federationdata.get("federation_active_auth_url"))
+        soap_action = wstrust_endpoint.get("action")
+        if soap_action is None:
+            if '/trust/2005/usernamemixed' in endpoint_address:
+                soap_action = Mex.ACTION_2005
+            elif '/trust/13/usernamemixed' in endpoint_address:
+                soap_action = Mex.ACTION_13
+        if soap_action not in (Mex.ACTION_13, Mex.ACTION_2005):
+            raise ValueError("Unsupported soap action: %s. "
+                "Contact your administrator to check your ADFS's MEX settings." % soap_action)
+        data = build_rst( self.username, self.password, cloud_audience_urn, endpoint_address, soap_action)
+        headers = {
+            'Content-type':'application/soap+xml; charset=utf-8',
+            'SOAPAction': soap_action,
+        }
+        resp = self.requests_post(endpoint_address, data=data, headers=headers)
+        if resp.status_code >= 400:
+            print(f"Unsuccessful federation server response received: {resp.text}")
+        # It turns out ADFS uses 5xx status code even with client-side incorrect password error
+        # resp.raise_for_status()
+        wstrust_result = parse_wstrust_response(resp.text)
+        if not ("token" in wstrust_result and "type" in wstrust_result):
+            raise AuthenticationException("Unsuccessful authentication against the federation server. %s" % wstrust_result)
+
+        grant_type = {
+            SAML_TOKEN_TYPE_V1: GRANT_TYPE_SAML1_1,
+            SAML_TOKEN_TYPE_V2: GRANT_TYPE_SAML2,
+            WSS_SAML_TOKEN_PROFILE_V1_1: GRANT_TYPE_SAML1_1,
+            WSS_SAML_TOKEN_PROFILE_V2: GRANT_TYPE_SAML2
+            }.get(wstrust_result.get("type"))
+        if not grant_type:
+            raise AuthenticationException(
+                "RSTR returned unknown token type: %s", wstrust_result.get("type"))
+        if self.scope:
+            return self.authenticate_with_saml_native_v2(wstrust_result['token'], grant_type=grant_type, additionaldata=additionaldata, returnreply=returnreply)
+        return self.authenticate_with_saml_native(wstrust_result['token'], grant_type=grant_type, additionaldata=additionaldata, returnreply=returnreply)
 
     def authenticate_username_password_native(self, client_secret=None, additionaldata=None, returnreply=False):
         """
@@ -672,7 +739,7 @@ class Authentication():
         data = self.decrypt_auth_response(prtdata, sessionkey, asjson=True)
         return data
 
-    def authenticate_with_saml_native(self, saml_token, additionaldata=None, returnreply=False):
+    def authenticate_with_saml_native(self, saml_token, additionaldata=None, returnreply=False, grant_type=GRANT_TYPE_SAML1_1):
         """
         Authenticate with a SAML token from the Federation Server
         Native ROADlib implementation without adal requirement
@@ -680,7 +747,7 @@ class Authentication():
         authority_uri = self.get_authority_url()
         data = {
             "client_id": self.client_id,
-            "grant_type": "urn:ietf:params:oauth:grant-type:saml1_1-bearer",
+            "grant_type": grant_type,
             "assertion": base64.b64encode(saml_token.encode('utf-8')).decode('utf-8'),
             "resource": self.resource_uri,
         }
@@ -695,16 +762,16 @@ class Authentication():
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
-    def authenticate_with_saml_native_v2(self, saml_token, additionaldata=None, returnreply=False):
+    def authenticate_with_saml_native_v2(self, saml_token, additionaldata=None, returnreply=False, grant_type=GRANT_TYPE_SAML1_1):
         """
         Authenticate with a SAML token from the Federation Server
         Native ROADlib implementation without adal requirement
         This function calls identity platform v2 and thus requires a scope instead of resource
         """
-        authority_uri = self.get_authority_url()
+        authority_uri = self.get_authority_url('organizations')
         data = {
             "client_id": self.client_id,
-            "grant_type": "urn:ietf:params:oauth:grant-type:saml1_1-bearer",
+            "grant_type": grant_type,
             "assertion": base64.b64encode(saml_token.encode('utf-8')).decode('utf-8'),
             "scope": self.scope,
         }
@@ -1575,9 +1642,10 @@ class Authentication():
                 self.tokendata, _ = self.parse_accesstoken(self.access_token)
                 return self.tokendata
             if self.username and self.password:
-                if self.user_discovery(self.username)['NameSpaceType'] == 'Federated':
-                    # Fall back to adal until we have support for this
-                    return self.authenticate_username_password()
+                discovery = self.user_discovery_v1(self.username)
+                if discovery['account_type'] == 'Federated':
+                    # Use the federation flow
+                    return self.authenticate_username_password_federation_native(discovery)
                 # Use native implementation
                 if self.scope:
                     return self.authenticate_username_password_native_v2()
@@ -1632,7 +1700,7 @@ class Authentication():
             try:
                 error_data = json.loads(str(ex))
                 print(f"Error during authentication: {error_data['error_description']}")
-            except TypeError:
+            except (TypeError, json.decoder.JSONDecodeError):
                 # No json
                 print(str(ex))
             sys.exit(1)
