@@ -333,6 +333,9 @@ class Authentication():
         return self.tokendata
 
     def find_federation_endpoint(self, mex_endpoint):
+        """
+        Finder usernamemixed endpoint on the federation server
+        """
         mex_resp = self.requests_get(mex_endpoint)
         try:
             return Mex(mex_resp.text).get_wstrust_username_password_endpoint()
@@ -341,6 +344,11 @@ class Authentication():
             raise
 
     def authenticate_username_password_federation_native(self, federationdata, additionaldata=None, returnreply=False):
+        """
+        Authenticate using user w/ username + password in federated environments
+        This doesn't work for users or tenants that have multi-factor authentication required.
+        Native version without adal
+        """
         wstrust_endpoint = self.find_federation_endpoint(federationdata['federation_metadata_url'])
         cloud_audience_urn = wstrust_endpoint.get("cloud_audience_urn", "urn:federation:MicrosoftOnline")
         endpoint_address =  wstrust_endpoint.get("address", federationdata.get("federation_active_auth_url"))
@@ -362,7 +370,7 @@ class Authentication():
         if resp.status_code >= 400:
             print(f"Unsuccessful federation server response received: {resp.text}")
         # It turns out ADFS uses 5xx status code even with client-side incorrect password error
-        # resp.raise_for_status()
+        # so we ignore the 5xx error and parse the XML instead
         wstrust_result = parse_wstrust_response(resp.text)
         if not ("token" in wstrust_result and "type" in wstrust_result):
             raise AuthenticationException("Unsuccessful authentication against the federation server. %s" % wstrust_result)
