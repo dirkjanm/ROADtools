@@ -512,6 +512,9 @@ def main():
     intauth_parser.add_argument('--cae',
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    intauth_parser.add_argument('--force-mfa',
+                                action='store_true',
+                                help='Force MFA during authentication')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
@@ -566,6 +569,9 @@ def main():
     kdbauth_parser.add_argument('--cae',
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    kdbauth_parser.add_argument('--force-mfa',
+                                action='store_true',
+                                help='Force MFA during authentication')
 
 
 
@@ -623,6 +629,9 @@ def main():
     browserprtauth_parser.add_argument('--cae',
                                        action='store_true',
                                        help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    browserprtauth_parser.add_argument('--force-mfa',
+                                       action='store_true',
+                                       help='Force MFA during authentication')
 
     # Interactive auth using Selenium - inject PRT to other user
     injauth_parser = subparsers.add_parser('browserprtinject', help='Selenium based auth with automatic PRT injection. Can be used with other users to add device state to session')
@@ -679,6 +688,10 @@ def main():
     injauth_parser.add_argument('--cae',
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    injauth_parser.add_argument('--force-mfa',
+                                action='store_true',
+                                help='Force MFA during authentication')
+
 
     # Interactive auth using Selenium - enrich PRT
     enrauth_parser = subparsers.add_parser('prtenrich', help='Interactive authentication to add MFA claim to a PRT')
@@ -742,6 +755,9 @@ def main():
     cliauth_parser.add_argument('--cae',
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    cliauth_parser.add_argument('--force-mfa',
+                                action='store_true',
+                                help='Force MFA during authentication')
 
     # OWA Login with token
     owalogin_parser = subparsers.add_parser('owalogin', help='Login to OWA with token')
@@ -863,7 +879,8 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.scope = args.scope
-        auth.use_cae = args.cae
+        if args.cae:
+            auth.set_cae()
         auth.tenant = args.tenant
         auth.outfile = args.tokenfile
         if not args.tokens_stdout:
@@ -891,7 +908,8 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.scope = args.scope
-        auth.use_cae = args.cae
+        if args.cae:
+            auth.set_cae()
         auth.tenant = args.tenant
         auth.outfile = args.tokenfile
         if not args.tokens_stdout:
@@ -992,7 +1010,8 @@ def main():
             deviceauth.saveprt(prtdata, args.prt_file)
     elif args.command == 'prtauth':
         auth.set_user_agent(args.user_agent)
-        auth.use_cae = args.cae
+        if args.cae:
+            auth.set_cae()
         auth.set_client_id(args.client)
         auth.scope = args.scope
         if args.redirect_url:
@@ -1068,7 +1087,7 @@ def main():
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
         if args.cae:
-            auth.use_cae = args.cae
+            auth.set_cae()
         if args.scope:
             # Switch to identity platform v2 and use scope instead of resource
             auth.scope = args.scope
@@ -1111,7 +1130,10 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        auth.use_cae = args.cae
+        if args.cae:
+            auth.set_cae()
+        if args.force_mfa:
+            auth.set_force_mfa()
         if args.scope:
             auth.scope = args.scope
         # Intercept if custom UA is set
@@ -1152,7 +1174,10 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.tenant = args.tenant
-        auth.use_cae = args.cae
+        if args.cae:
+            auth.set_cae()
+        if args.force_mfa:
+            auth.set_force_mfa()
         if args.scope:
             auth.scope = args.scope
         if args.redirect_url:
@@ -1198,7 +1223,10 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        auth.use_cae = args.cae
+        if args.cae:
+            auth.set_cae()
+        if args.force_mfa:
+            auth.set_force_mfa()
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
         if args.redirect_url:
@@ -1232,7 +1260,10 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        auth.use_cae = args.cae
+        if args.cae:
+            auth.set_cae()
+        if args.force_mfa:
+            auth.set_force_mfa()
         auth.scope = args.scope
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
@@ -1283,7 +1314,10 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        auth.use_cae = args.cae
+        if args.cae:
+            auth.set_cae()
+        if args.force_mfa:
+            auth.set_force_mfa()
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_cookie:
@@ -1622,7 +1656,6 @@ def main():
         cookie = auth.create_prt_cookie_kdf_ver_2(deviceauth.prt, deviceauth.session_key, challenge)
         print(f"PRT cookie: {cookie}")
         print("Can be used in external browsers using the x-ms-RefreshTokenCredential header or cookie. Note that a PRT cookie is only valid for 5 minutes.")
-
     elif args.command == 'owalogin':
         auth.set_user_agent(args.user_agent)
         if args.access_token:
