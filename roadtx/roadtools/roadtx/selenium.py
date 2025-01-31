@@ -132,6 +132,26 @@ class SeleniumAuthentication():
                     newredir += f'#{parsed.fragment}'
                 del response.headers['Location']
                 response.headers['Location'] = newredir
+            if request.url.startswith('https://login.microsoftonline.com/appverify'):
+                body = encoding.decode(response.body, response.headers.get('Content-Encoding', 'identity'))
+                if b'document.location.replace' in body:
+                    # url replace with javascript :(
+                    startstring = b'document.location.replace("'
+                    index = body.find(startstring) + len(startstring)
+                    endstring = b'")'
+                    endindex = body[index:].find(endstring) + index
+                    urlstring = body[index:endindex].decode('utf-8')
+                    if urlstring.lower().startswith(self.redirurl.lower()):
+                        parsed = urlparse(urlstring)
+                        newredir = "https://login.microsoftonline.com/common/oauth2/nativeclient"
+                        if parsed.query:
+                            newredir += f'?{parsed.query}'
+                        if parsed.fragment:
+                            newredir += f'#{parsed.fragment}'
+                        body = body.replace(urlstring.encode('utf-8'), newredir.encode('utf-8'))
+                        response.body = encoding.encode(body, response.headers.get('Content-Encoding', 'identity'))
+                        del response.headers['Content-Length']
+                        response.headers['Content-Length'] = len(response.body)
 
     def get_keepass_cred(self, identity, filepath, password):
         '''
@@ -488,7 +508,7 @@ class SeleniumAuthentication():
                     "session_state": "56f4cbb9-6cc9-4150-a4b3-5b2865f916c9",
                     "correlation_id": "2c13357a-eab7-97ed-bd48-8b50a6979bfc"
                 }
-                res = requests.post(req_url, allow_redirects=False, headers=req_headers, cookies=req_cookies, data=req_data, timeout=30.0)
+                res = self.auth.requests_post(req_url, allow_redirects=False, headers=req_headers, cookies=req_cookies, data=req_data)
                 request.create_response(
                     status_code=res.status_code,
                     headers=dict(res.headers),
