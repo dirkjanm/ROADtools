@@ -940,7 +940,7 @@ class DeviceAuthentication():
         prtdata['session_key'] = binascii.hexlify(self.session_key).decode('utf-8')
         return prtdata
 
-    def aad_brokerplugin_prt_auth(self, client_id, resource, renew_prt=False, redirect_uri=None):
+    def aad_brokerplugin_prt_auth(self, client_id, resource=None, renew_prt=False, redirect_uri=None):
         """
         Auth using a PRT emulating the AAD Brokerplugin (WAM) client
         """
@@ -950,7 +950,6 @@ class DeviceAuthentication():
         payload = {
             "win_ver": "10.0.19041.1620",
             "scope": "openid",
-            "resource": authlib.lookup_resource_uri(resource),
             "request_nonce": challenge,
             "refresh_token": self.prt,
             "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client}",
@@ -961,6 +960,9 @@ class DeviceAuthentication():
             "iat": str(int(time.time())),
             "exp": str(int(time.time())+(3600)),
         }
+        # Resource is required to request an access token, but if we just want an id token and refresh token its optional
+        if resource:
+            payload['resource'] = authlib.lookup_resource_uri(resource)
         # Request a new PRT, otherwise normal refresh token will be issued
         if renew_prt:
             payload['scope'] = "openid aza"
