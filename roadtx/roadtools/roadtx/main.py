@@ -1227,6 +1227,8 @@ def main():
             auth.set_cae()
         if args.force_mfa:
             auth.set_force_mfa()
+        if args.scope:
+            auth.scope = args.scope
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
         if args.redirect_url:
