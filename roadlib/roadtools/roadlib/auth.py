@@ -26,7 +26,6 @@ from roadtools.roadlib.constants import WELLKNOWN_RESOURCES, WELLKNOWN_CLIENTS, 
     WSS_SAML_TOKEN_PROFILE_V1_1, WSS_SAML_TOKEN_PROFILE_V2, GRANT_TYPE_SAML2
 from roadtools.roadlib.wstrust import Mex, build_rst, parse_wstrust_response
 import requests
-import adal
 import jwt
 
 def get_data(data):
@@ -88,7 +87,6 @@ class Authentication():
         Sets Origin header to use
         """
         self.origin = origin
-        adal.oauth2_client._REQ_OPTION['headers']['Origin'] = self.origin
 
     def set_resource_uri(self, uri):
         """
@@ -101,9 +99,6 @@ class Authentication():
         Overrides user agent (accepts aliases)
         """
         self.user_agent = self.lookup_user_agent(useragent)
-        # Patch it in adal too in case we fall back to that
-        #pylint: disable=protected-access
-        adal.oauth2_client._REQ_OPTION['headers']['User-Agent'] = self.user_agent
 
     def user_discovery_v1(self, username):
         """
@@ -209,26 +204,9 @@ class Authentication():
     def authenticate_device_code(self):
         """
         Authenticate the end-user using device auth.
+        Wrapper for native method
         """
-
-        authority_host_uri = self.get_authority_url()
-
-        context = adal.AuthenticationContext(authority_host_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
-        code = context.acquire_user_code(self.resource_uri, self.client_id)
-        print(code['message'])
-        self.tokendata = context.acquire_token_with_device_code(self.resource_uri, code, self.client_id)
-        return self.tokendata
-
-    def authenticate_username_password(self):
-        """
-        Authenticate using user w/ username + password.
-        This doesn't work for users or tenants that have multi-factor authentication required.
-        """
-        authority_uri = self.get_authority_url()
-        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
-        self.tokendata = context.acquire_token_with_username_password(self.resource_uri, self.username, self.password, self.client_id)
-
-        return self.tokendata
+        return self.authenticate_device_code_native()
 
     def authenticate_device_code_native(self, additionaldata=None, returnreply=False):
         """
@@ -332,6 +310,14 @@ class Authentication():
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
+    def authenticate_username_password(self):
+        """
+        Authenticate using user w/ username + password.
+        This doesn't work for users or tenants that have multi-factor authentication required.
+        Wrapper for native method
+        """
+        return self.authenticate_username_password_native()
+
     def find_federation_endpoint(self, mex_endpoint):
         """
         Finder usernamemixed endpoint on the federation server
@@ -343,11 +329,9 @@ class Authentication():
             print("Malformed MEX document: %s, %s", mex_resp.status_code, mex_resp.text)
             raise
 
-    def authenticate_username_password_federation_native(self, federationdata, additionaldata=None, returnreply=False):
+    def get_saml_token_with_username_password(self, federationdata):
         """
-        Authenticate using user w/ username + password in federated environments
-        This doesn't work for users or tenants that have multi-factor authentication required.
-        Native version without adal
+        Fetch saml token from usernamemixed endpoint on the federation server
         """
         wstrust_endpoint = self.find_federation_endpoint(federationdata['federation_metadata_url'])
         cloud_audience_urn = wstrust_endpoint.get("cloud_audience_urn", "urn:federation:MicrosoftOnline")
@@ -384,6 +368,15 @@ class Authentication():
         if not grant_type:
             raise AuthenticationException(
                 "RSTR returned unknown token type: %s", wstrust_result.get("type"))
+        return wstrust_result, grant_type
+
+    def authenticate_username_password_federation_native(self, federationdata, additionaldata=None, returnreply=False):
+        """
+        Authenticate using user w/ username + password in federated environments
+        This doesn't work for users or tenants that have multi-factor authentication required.
+        Native version without adal
+        """
+        wstrust_result, grant_type = self.get_saml_token_with_username_password(federationdata)
         if self.scope:
             return self.authenticate_with_saml_native_v2(wstrust_result['token'], grant_type=grant_type, additionaldata=additionaldata, returnreply=returnreply)
         return self.authenticate_with_saml_native(wstrust_result['token'], grant_type=grant_type, additionaldata=additionaldata, returnreply=returnreply)
@@ -452,11 +445,7 @@ class Authentication():
         """
         Authenticate with an APP id + secret (password credentials assigned to app or service principal)
         """
-        authority_uri = self.get_authority_url()
-
-        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
-        self.tokendata = context.acquire_token_with_client_credentials(self.resource_uri, self.client_id, self.password)
-        return self.tokendata
+        return self.authenticate_as_app_native()
 
     def authenticate_as_app_native(self, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
         """
@@ -575,16 +564,6 @@ class Authentication():
         }
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
-    def authenticate_with_code(self, code, redirurl, client_secret=None):
-        """
-        Authenticate with a code plus optional secret in case of a non-public app (authorization grant)
-        """
-        authority_uri = self.get_authority_url()
-
-        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
-        self.tokendata = context.acquire_token_with_authorization_code(code, redirurl, self.resource_uri, self.client_id, client_secret)
-        return self.tokendata
-
     def authenticate_with_refresh(self, oldtokendata):
         """
         Authenticate with a refresh token, refreshes the refresh token
@@ -664,6 +643,13 @@ class Authentication():
         if self.origin:
             self.tokendata['originheader'] = self.origin
         return self.tokendata
+
+    def authenticate_with_code(self, code, redirurl, client_secret=None):
+        """
+        Authenticate with a code plus optional secret in case of a non-public app (authorization grant)
+        Wrapper for native method
+        """
+        return self.authenticate_with_code_native(code, redirurl, client_secret)
 
     def authenticate_with_code_native(self, code, redirurl, client_secret=None, pkce_secret=None, additionaldata=None, returnreply=False):
         """
@@ -1696,14 +1682,6 @@ class Authentication():
                     return self.authenticate_with_prt(prt, None, sessionkey=sessionkey)
                 else:
                     return self.authenticate_with_prt_v2(prt, sessionkey)
-
-        except adal.adal_error.AdalError as ex:
-            try:
-                print(f"Error during authentication: {ex.error_response['error_description']}")
-            except TypeError:
-                # Not all errors are objects
-                print(str(ex))
-            sys.exit(1)
         except AuthenticationException as ex:
             try:
                 error_data = json.loads(str(ex))
