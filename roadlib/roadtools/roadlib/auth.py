@@ -569,21 +569,7 @@ class Authentication():
         Authenticate with a refresh token, refreshes the refresh token
         and obtains an access token
         """
-        authority_uri = self.get_authority_url()
-
-        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
-        newtokendata = context.acquire_token_with_refresh_token(oldtokendata['refreshToken'], self.client_id, self.resource_uri)
-        # Overwrite fields
-        for ikey, ivalue in newtokendata.items():
-            self.tokendata[ikey] = ivalue
-        access_token = newtokendata['accessToken']
-        tokens = access_token.split('.')
-        inputdata = json.loads(base64.b64decode(tokens[1]+('='*(len(tokens[1])%4))))
-        self.tokendata['_clientId'] = self.client_id
-        self.tokendata['tenantId'] = inputdata['tid']
-        if self.origin:
-            self.tokendata['originheader'] = self.origin
-        return self.tokendata
+        return self.authenticate_with_refresh_native(oldtokendata['refreshToken'])
 
     def authenticate_with_refresh_native(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
         """
@@ -981,7 +967,7 @@ class Authentication():
         """
         KDF version 2 PRT auth
         """
-        nonce = self.get_prt_cookie_nonce()
+        nonce = self.get_srv_challenge()
         if not nonce:
             return False
 
@@ -1000,7 +986,7 @@ class Authentication():
         headers = {
             'ctx': base64.b64encode(context).decode('utf-8'),
         }
-        nonce = self.get_prt_cookie_nonce()
+        nonce = self.get_srv_challenge()
         if not nonce:
             return False
         payload = {
@@ -1167,7 +1153,7 @@ class Authentication():
         jdata = jwt.decode(cookie, options={"verify_signature":False}, algorithms=['HS256'])
         # Does it have a nonce?
         if not 'request_nonce' in jdata:
-            nonce = self.get_prt_cookie_nonce()
+            nonce = self.get_srv_challenge()
             if not nonce:
                 return False
             print('Requested nonce from server to use with ROADtoken: %s' % nonce)
@@ -1198,7 +1184,7 @@ class Authentication():
                 # Don't verify JWT, just load it
                 jdata = jwt.decode(cookie, sdata, options={"verify_signature":False}, algorithms=['HS256'])
             # Since a derived key was specified, we get a new nonce
-            nonce = self.get_prt_cookie_nonce()
+            nonce = self.get_srv_challenge()
             jdata['request_nonce'] = nonce
             if context:
                 # Resign with custom context, should be in base64
@@ -1661,7 +1647,7 @@ class Authentication():
                     return self.authenticate_device_code_native_v2()
                 return self.authenticate_device_code_native()
             if args.prt_init:
-                nonce = self.get_prt_cookie_nonce()
+                nonce = self.get_srv_challenge()
                 if nonce:
                     print(f'Requested nonce from server to use with ROADtoken: {nonce}')
                 return False
