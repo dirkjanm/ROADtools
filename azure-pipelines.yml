@@ -32,7 +32,7 @@ jobs:
     displayName: 'Install pip'
 
   - script: |
-      pip install .
+      pip install ".[async]"
       find roadtools/ -name '*.py' -exec python -m py_compile {} \;
     displayName: 'Install ROADlib'
     workingDirectory: roadlib

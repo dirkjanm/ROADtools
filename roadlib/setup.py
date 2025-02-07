@@ -18,5 +18,8 @@ setup(name='roadlib',
       ],
       packages=find_namespace_packages(include=['roadtools.*']),
       install_requires=['requests', 'cryptography', 'sqlalchemy>=1.4', 'pyjwt>=2.0'],
+      extras_require={
+        "async": ["aiohttp"],
+      },
       zip_safe=False
       )
