@@ -1382,6 +1382,9 @@ class Authentication():
         auth_parser.add_argument('--force-mfa',
                                  action='store_true',
                                  help='Force MFA during authentication')
+        auth_parser.add_argument('--force-ngcmfa',
+                                 action='store_true',
+                                 help='Force NGC MFA (fresh MFA) during authentication')
         auth_parser.add_argument('-f',
                                  '--tokenfile',
                                  action='store',
@@ -1606,6 +1609,8 @@ class Authentication():
             self.set_cae()
         if args.force_mfa:
             self.set_force_mfa()
+        if args.force_ngcmfa:
+            self.set_force_ngcmfa()
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
