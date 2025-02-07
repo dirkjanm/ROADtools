@@ -756,8 +756,8 @@ class DeviceAuthentication():
         }
         if self.auth.use_cae:
             self.auth.set_cae()
-        if self.claims:
-            token_request_data['claims'] = json.dumps(self.claims)
+        if self.auth.claims:
+            token_request_data['claims'] = json.dumps(self.auth.claims)
         if reqtgt:
             token_request_data['tgt'] = True
         res = self.auth.requests_post(f'{authority_uri}/oauth2/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
