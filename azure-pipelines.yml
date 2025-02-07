@@ -112,7 +112,10 @@ jobs:
   - script: |
       pip install pytest pytest-flask
       py.test tests/
-    displayName: 'Run ROADrecon API tests'
+    displayName: 'Run ROADrecon API tests and roadlib async tests'
+    env:
+      rtuser: $(rtuser)
+      rtpass: $(rtpass)
 
 - job: Build
   dependsOn: Tests
