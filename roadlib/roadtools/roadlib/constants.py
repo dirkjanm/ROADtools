@@ -9,7 +9,8 @@ WELLKNOWN_RESOURCES = {
     "drs": "urn:ms-drs:enterpriseregistration.windows.net",
     "azrm": "https://management.core.windows.net/",
     "azurerm": "https://management.core.windows.net/",
-    "outlook": "https://outlook.office.com/"
+    "outlook": "https://outlook.office.com/",
+    "sharepoint": "00000003-0000-0ff1-ce00-000000000000"
 }
 
 WELLKNOWN_CLIENTS = {
