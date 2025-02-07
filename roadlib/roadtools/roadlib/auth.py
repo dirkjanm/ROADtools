@@ -156,6 +156,12 @@ class Authentication():
         """
         self.add_claim('access_token', 'amr', values=['mfa'])
 
+    def set_force_ngcmfa(self):
+        """
+        Force NGC MFA during auth
+        """
+        self.add_claim('access_token', 'amr', values=['ngcmfa','mfa'])
+
     def has_force_mfa(self):
         """
         Check whether MFA enforcement is set
@@ -164,7 +170,7 @@ class Authentication():
             values = self.claims['access_token']['amr']['values']
         except (KeyError, ValueError, TypeError):
             return False
-        return values == ['mfa']
+        return 'mfa' in values or 'ngcmfa' in values
 
     def loadappcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
         """
@@ -967,7 +973,7 @@ class Authentication():
         """
         KDF version 2 PRT auth
         """
-        nonce = self.get_srv_challenge()
+        nonce = self.get_srv_challenge_nonce()
         if not nonce:
             return False
 
@@ -986,7 +992,7 @@ class Authentication():
         headers = {
             'ctx': base64.b64encode(context).decode('utf-8'),
         }
-        nonce = self.get_srv_challenge()
+        nonce = self.get_srv_challenge_nonce()
         if not nonce:
             return False
         payload = {
@@ -1076,23 +1082,26 @@ class Authentication():
     def get_srv_challenge(self):
         """
         Request server challenge (nonce) to use with a PRT
+        Returns Nonce as a dict {'Nonce':data}
         """
         data = {'grant_type':'srv_challenge'}
         res = self.requests_post('https://login.microsoftonline.com/common/oauth2/token', data=data)
         return res.json()
+
+    def get_srv_challenge_nonce(self):
+        """
+        Request server challenge (nonce) to use with a PRT
+        Returns Nonce as string
+        """
+        return self.get_srv_challenge()['Nonce']
 
     def get_prt_cookie_nonce(self):
         """
         Request a nonce to sign in with. This nonce is taken from the sign-in page, which
         is how Chrome processes it, but it could probably also be obtained using the much
         simpler request from the get_srv_challenge function.
+        This function is not used anymore but is still here for compatibility purposes
         """
-        ses = requests.session()
-        ses.proxies = self.proxies
-        ses.verify = self.verify
-        if self.user_agent:
-            headers = {'User-Agent': self.user_agent}
-            ses.headers = headers
         params = {
             'resource': self.resource_uri,
             'client_id': self.client_id,
@@ -1111,7 +1120,7 @@ class Authentication():
             'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E)',
             'UA-CPU': 'AMD64',
         }
-        res = ses.get('https://login.microsoftonline.com/Common/oauth2/authorize', params=params, headers=headers, allow_redirects=False)
+        res = self.requests_get('https://login.microsoftonline.com/Common/oauth2/authorize', params=params, headers=headers, allow_redirects=False)
         if self.debug:
             with open('roadtools.debug.html','w') as outfile:
                 outfile.write(str(res.headers))
@@ -1153,7 +1162,7 @@ class Authentication():
         jdata = jwt.decode(cookie, options={"verify_signature":False}, algorithms=['HS256'])
         # Does it have a nonce?
         if not 'request_nonce' in jdata:
-            nonce = self.get_srv_challenge()
+            nonce = self.get_srv_challenge_nonce()
             if not nonce:
                 return False
             print('Requested nonce from server to use with ROADtoken: %s' % nonce)
@@ -1184,7 +1193,7 @@ class Authentication():
                 # Don't verify JWT, just load it
                 jdata = jwt.decode(cookie, sdata, options={"verify_signature":False}, algorithms=['HS256'])
             # Since a derived key was specified, we get a new nonce
-            nonce = self.get_srv_challenge()
+            nonce = self.get_srv_challenge_nonce()
             jdata['request_nonce'] = nonce
             if context:
                 # Resign with custom context, should be in base64
@@ -1647,7 +1656,7 @@ class Authentication():
                     return self.authenticate_device_code_native_v2()
                 return self.authenticate_device_code_native()
             if args.prt_init:
-                nonce = self.get_srv_challenge()
+                nonce = self.get_srv_challenge_nonce()
                 if nonce:
                     print(f'Requested nonce from server to use with ROADtoken: {nonce}')
                 return False
