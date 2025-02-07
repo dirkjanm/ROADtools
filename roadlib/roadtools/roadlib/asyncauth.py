@@ -692,7 +692,7 @@ class AsyncAuthentication(Authentication):
         jdata = jwt.decode(cookie, options={"verify_signature":False}, algorithms=['HS256'])
         # Does it have a nonce?
         if not 'request_nonce' in jdata:
-            nonce = await self.get_srv_challenge()
+            nonce = await self.get_srv_challenge_nonce()
             if not nonce:
                 return False
             print('Requested nonce from server to use with ROADtoken: %s' % nonce)
@@ -723,7 +723,7 @@ class AsyncAuthentication(Authentication):
                 # Don't verify JWT, just load it
                 jdata = jwt.decode(cookie, sdata, options={"verify_signature":False}, algorithms=['HS256'])
             # Since a derived key was specified, we get a new nonce
-            nonce = self.get_srv_challenge()
+            nonce = await self.get_srv_challenge_nonce()
             jdata['request_nonce'] = nonce
             if context:
                 # Resign with custom context, should be in base64
@@ -937,7 +937,7 @@ class AsyncAuthentication(Authentication):
                     return await self.authenticate_device_code_native_v2()
                 return await self.authenticate_device_code_native()
             if args.prt_init:
-                nonce = await self.get_srv_challenge()
+                nonce = await self.get_srv_challenge_nonce()
                 if nonce:
                     print(f'Requested nonce from server to use with ROADtoken: {nonce}')
                 return False
