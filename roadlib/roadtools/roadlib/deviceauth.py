@@ -689,7 +689,7 @@ class DeviceAuthentication():
                 prt_request_data['client_info'] = '1'
             url = f'{authority_uri}/oauth2/v2.0/token'
 
-        res = self.auth.requests_post(url, data=prt_request_data, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post(url, data=prt_request_data)
 
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -705,13 +705,12 @@ class DeviceAuthentication():
 
         prtdata['session_key'] = binascii.hexlify(uwk).decode('utf-8')
         # Decrypt Kerberos keys
-        authlib = Authentication()
         for tgt in ['tgt_ad', 'tgt_cloud']:
             if tgt in prtdata:
                 tgtdata = json.loads(prtdata[tgt])
                 if tgtdata['keyType'] != 0:
                     # There is a key
-                    tgt_sessionkey = authlib.decrypt_auth_response(tgtdata['clientKey'], uwk)
+                    tgt_sessionkey = self.auth.decrypt_auth_response(tgtdata['clientKey'], uwk)
                     prtdata[tgt + '_sessionkey'] = binascii.hexlify(tgt_sessionkey).decode('utf-8')
 
         return prtdata
@@ -756,7 +755,9 @@ class DeviceAuthentication():
             'client_info':'1'
         }
         if self.auth.use_cae:
-            token_request_data['claims'] = '{"access_token":{"xms_cc":{"values":["CP1"]}}}'
+            self.auth.set_cae()
+        if self.claims:
+            token_request_data['claims'] = json.dumps(self.claims)
         if reqtgt:
             token_request_data['tgt'] = True
         res = self.auth.requests_post(f'{authority_uri}/oauth2/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
@@ -871,8 +872,7 @@ class DeviceAuthentication():
         return self.request_token_with_devicecert_signed_payload(payload)
 
     def get_prt_with_samltoken(self, samltoken):
-        authlib = Authentication()
-        challenge = authlib.get_srv_challenge()['Nonce']
+        challenge = self.auth.get_srv_challenge_nonce()
         # Construct request payload
         payload = {
             "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
@@ -887,7 +887,7 @@ class DeviceAuthentication():
         return self.request_token_with_devicecert_signed_payload(payload)
 
     def get_token_for_device(self, client_id, resource, redirect_uri=None):
-        challenge = self.auth.get_srv_challenge()['Nonce']
+        challenge = self.auth.get_srv_challenge_nonce()
         # Construct request payload
         payload = {
           "resource": resource,
@@ -904,9 +904,7 @@ class DeviceAuthentication():
         return self.request_token_with_devicecert_signed_payload(payload, reqtgt=False, reqclientinfo=False, returnreply=True)
 
     def get_prt_with_refresh_token(self, refresh_token):
-        authlib = Authentication()
-        challenge = authlib.get_srv_challenge()['Nonce']
-
+        challenge = self.auth.get_srv_challenge_nonce()
         payload = {
             "client_id": "29d9ed98-a469-4536-ade2-f981bc1d605e",
             "request_nonce": challenge,
@@ -919,10 +917,24 @@ class DeviceAuthentication():
         }
         return self.request_token_with_devicecert_signed_payload(payload)
 
-    def renew_prt(self):
-        authlib = Authentication()
-        challenge = authlib.get_srv_challenge()['Nonce']
+    def get_prt_with_refresh_token_v3(self, refresh_token):
+        '''
+        Request a PRT using a special refresh token using
+        prt_protocol_version v3
+        '''
+        challenge = self.auth.get_srv_challenge_nonce()
+        payload = {
+            "client_id": "29d9ed98-a469-4536-ade2-f981bc1d605e",
+            "request_nonce": challenge,
+            "scope": "openid aza",
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+        }
+        # payload['client_id'] = '38aa3b87-a06d-4817-b275-7a316988d93b'
+        return self.request_token_with_devicecert_signed_payload(payload, use_v3=True)
 
+    def renew_prt(self):
+        challenge = self.auth.get_srv_challenge_nonce()
         payload = {
             "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
             "request_nonce": challenge,
@@ -936,7 +948,7 @@ class DeviceAuthentication():
             "win_ver": "10.0.19041.868",
         }
         responsedata = self.request_token_with_sessionkey_signed_payload(payload)
-        prtdata = authlib.decrypt_auth_response(responsedata, self.session_key, True)
+        prtdata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
         prtdata['session_key'] = binascii.hexlify(self.session_key).decode('utf-8')
         return prtdata
 
@@ -944,9 +956,8 @@ class DeviceAuthentication():
         """
         Auth using a PRT emulating the AAD Brokerplugin (WAM) client
         """
-        authlib = Authentication()
-        challenge = authlib.get_srv_challenge()['Nonce']
-        client = authlib.lookup_client_id(client_id).lower()
+        challenge = self.auth.get_srv_challenge_nonce()
+        client = self.auth.lookup_client_id(client_id).lower()
         payload = {
             "win_ver": "10.0.19041.1620",
             "scope": "openid",
@@ -962,7 +973,7 @@ class DeviceAuthentication():
         }
         # Resource is required to request an access token, but if we just want an id token and refresh token its optional
         if resource:
-            payload['resource'] = authlib.lookup_resource_uri(resource)
+            payload['resource'] = self.auth.lookup_resource_uri(resource)
         # Request a new PRT, otherwise normal refresh token will be issued
         if renew_prt:
             payload['scope'] = "openid aza"
