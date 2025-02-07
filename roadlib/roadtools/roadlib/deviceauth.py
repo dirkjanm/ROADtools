@@ -240,8 +240,7 @@ class DeviceAuthentication():
         return reqjwt
 
     def get_prt_with_hello_key(self, username, assertion=None):
-        authlib = self.auth
-        challenge = authlib.get_srv_challenge()['Nonce']
+        challenge = self.auth.get_srv_challenge_nonce()
         if not assertion:
             assertion = self.create_hello_prt_assertion(username)
         # Construct
@@ -855,8 +854,7 @@ class DeviceAuthentication():
         return self.auth.decrypt_auth_response_derivedkey(headerdata, ciphertext, iv, authtag, derived_key)
 
     def get_prt_with_password(self, username, password):
-        authlib = Authentication()
-        challenge = authlib.get_srv_challenge()['Nonce']
+        challenge = self.auth.get_srv_challenge_nonce()
         # Construct
         payload = {
             "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
@@ -983,5 +981,5 @@ class DeviceAuthentication():
         elif client == '1b730954-1685-4b74-9bfd-dac224a7b894':
             payload['redirect_uri'] = 'https://login.microsoftonline.com/common/oauth2/nativeclient'
         responsedata = self.request_token_with_sessionkey_signed_payload(payload, False)
-        tokendata = authlib.decrypt_auth_response(responsedata, self.session_key, True)
+        tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
         return tokendata
