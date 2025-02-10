@@ -765,6 +765,13 @@ def main():
     owalogin_parser.add_argument('-ua', '--user-agent', action='store',
                                  help='Custom user agent to use. By default the user agent from FireFox is used without modification')
 
+    # SPO Login with token
+    spologin_parser = subparsers.add_parser('sharepointlogin', help='Login to SharePoint with token')
+    spologin_parser.add_argument('--access-token', action='store', help='Access token for SharePoint / OneDrive. If not specified, taken from .roadtools_auth')
+    spologin_parser.add_argument('-ua', '--user-agent', action='store',
+                                 help='Custom user agent to use. By default the user agent from FireFox is used without modification')
+    spologin_parser.add_argument('--host', action='store', help='SharePoint host to use, for example: https://mycompany-my.sharepoint.com if unspecified, taken from access token')
+
     # ADFS Encrypted blob decrypt
     adfsdec_parser = subparsers.add_parser('decryptadfskey', help='Decrypt Encrypted PFX blob from ADFSpoof into PEM or PFX file')
     adfsdec_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', default='roadtx_adfs.pem', help='Certificate file to save ADFS cert (default: roadtx_adfs.pem)')
@@ -1681,6 +1688,36 @@ def main():
             return
         selauth.driver = selauth.get_webdriver(service, intercept=True)
         selauth.selenium_login_owatoken(tokenobject['accessToken'])
+    elif args.command == 'sharepointlogin':
+        auth.set_user_agent(args.user_agent)
+        if args.access_token:
+            tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
+        else:
+            try:
+                with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                    tokenobject = json.load(infile)
+                _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+            except FileNotFoundError:
+                print('No auth data found. Ether supply an access token with --access-token or make sure a token is present on disk in .roadtools_auth')
+                return
+        if tokendata['aud'] == '00000003-0000-0ff1-ce00-000000000000' and not args.host:
+            print('You must specify the SharePoint host to use with this token. Example --host https://company-my.sharepoint.com')
+            return
+        if tokendata['aud'] != '00000003-0000-0ff1-ce00-000000000000' and not tokendata['aud'].endswith('sharepoint.com'):
+            print(f"Wrong token audience, got {tokendata['aud']} but expected an audience ending with sharepoint.com")
+            print("Make sure to request a token with -r https://mycompany-my.sharepoint.com")
+            return
+        auth.set_user_agent(args.user_agent)
+        selauth = SeleniumAuthentication(auth, deviceauth, None, proxy=args.proxy, proxy_type=args.proxy_type)
+        service = selauth.get_service(None)
+        if not service:
+            return
+        selauth.driver = selauth.get_webdriver(service, intercept=True)
+        if args.host:
+            spohost = args.host.rstrip('/')
+        else:
+            spohost = tokendata['aud']
+        selauth.selenium_login_spotoken(tokenobject['accessToken'], spohost)
 
 if __name__ == '__main__':
     main()
