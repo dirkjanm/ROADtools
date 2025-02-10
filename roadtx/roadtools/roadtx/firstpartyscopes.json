@@ -142,6 +142,62 @@
                 ]
             }
         },
+        "04045bf5-8e9f-4019-8613-af68af46ff56": {
+            "foci": false,
+            "name": "Vision Studio",
+            "preferred_interactive_redirurl": "https://uvs-portal-new-prod-staging.azurewebsites.net",
+            "preferred_noninteractive_redirurl": "https://localhost:44302",
+            "redirect_uris": [
+                "https://uvs-portal-new-prod-staging.azurewebsites.net",
+                "https://uvs-portal-preview-prod-staging.azurewebsites.net",
+                "https://visionstudio-dev-11.azurewebsites.net",
+                "https://visionstudio-eastus-dev-1.azurewebsites.net",
+                "https://ppe.vision.cognitive.azure.com",
+                "https://preview.vision.cognitive.azure.com",
+                "https://portal.vision.cognitive.azure.com",
+                "https://localhost:44302",
+                "https://localhost:44300",
+                "https://visionstudio-dev-10.azurewebsites.net",
+                "https://visionstudio-dev-9.azurewebsites.net",
+                "https://visionstudio-dev-8.azurewebsites.net",
+                "https://visionstudio-dev-7.azurewebsites.net",
+                "https://visionstudio-dev-6.azurewebsites.net",
+                "https://visionstudio-dev-5.azurewebsites.net",
+                "https://visionstudio-dev-4.azurewebsites.net",
+                "https://visionstudio-dev-3.azurewebsites.net",
+                "https://visionstudio-dev-2.azurewebsites.net",
+                "https://visionstudio-dev-1.azurewebsites.net",
+                "https://vision.cognitive.azure.com/private",
+                "https://vision.cognitive.azure.com/public",
+                "https://vision.cognitive.azure.com/studio",
+                "https://vision.cognitive.azure.com",
+                "https://preview.vision.azure.com",
+                "https://vision-dev.cognitive.azure.com/studio",
+                "https://vision-dev.cognitive.azure.com/dev",
+                "https://vision-dev.cognitive.azure.com/public",
+                "https://vision-dev.cognitive.azure.com/private",
+                "https://uvs-portal-prod.westus2.cloudapp.azure.com/public",
+                "https://uvs-portal-prod.westus2.cloudapp.azure.com/private",
+                "https://visionstudio-portal-staging.azurewebsites.net",
+                "https://visionstudio-portal-ppe.azurewebsites.net",
+                "https://visionstudio-portal.azurewebsites.net"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ]
+            }
+        },
         "041e4c2d-ba3e-46a1-9347-5bc4054c8af4": {
             "foci": false,
             "name": "Power Automate Desktop GCC",
@@ -1062,6 +1118,66 @@
                 ]
             }
         },
+        "16f9b8e9-d20b-45a1-ab9e-db2e8254508b": {
+            "foci": false,
+            "name": "Azure Data Factory",
+            "preferred_interactive_redirurl": "https://portal.trident.analysis.windows-int.net",
+            "preferred_noninteractive_redirurl": "https://localhost",
+            "redirect_uris": [
+                "https://portal.trident.analysis.windows-int.net",
+                "https://trident-harness.azurewebsites.net",
+                "https://adf.azure.com",
+                "https://madrid-staging.azure.com",
+                "https://ms-adf.azure.com",
+                "https://localhost",
+                "https://localhost:4200",
+                "https://atlas-preview.cloudapp.net/accesstoken.html",
+                "https://madrid-ci.azure.com/accesstoken.html",
+                "https://adf-extension.azurewebsites.net",
+                "https://madrid-ci2.azurewebsites.net",
+                "https://atlas-preview.cloudapp.net",
+                "https://madrid-ci.azure.com",
+                "https://web.azuresynapse.net",
+                "https://adf.azure.us",
+                "https://datafactory-int.azure.com",
+                "https://datafactory.azure.com",
+                "https://datafactoryv2.azure.com"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Application.Read.All",
+                    "GroupMember.Read.All",
+                    "User.Read",
+                    "User.ReadBasic.All"
+                ],
+                "00000009-0000-0000-c000-000000000000": [
+                    "Lakehouse.Read.All",
+                    "Warehouse.Read.All",
+                    "Workspace.Read.All"
+                ],
+                "1ac05c7e-12d2-4605-bf9d-549d7041c6b3": [
+                    "workspaceartifacts.management"
+                ],
+                "499b84ac-1321-427f-aa17-267ca6975798": [
+                    "vso.code_manage",
+                    "vso.profile",
+                    "vso.project"
+                ],
+                "73c2949e-da2d-457a-9607-fcc665198967": [
+                    "default"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ]
+            }
+        },
         "17d5e35f-655b-4fb0-8ae6-86356e9a49f5": {
             "foci": false,
             "name": "Office Online Maker SSO",
@@ -1081,6 +1197,49 @@
                 ],
                 "62fd1447-0ef3-4ab7-a956-7dd05232ecc1": [
                     "Service.Functionality"
+                ]
+            }
+        },
+        "18e271e7-a818-46ad-8e73-07cb0ae64328": {
+            "foci": false,
+            "name": "Form Recognizer Studio",
+            "preferred_interactive_redirurl": "https://documentintelligence-test.ai.azure.com/studio",
+            "preferred_noninteractive_redirurl": "https://localhost:5001/studio",
+            "redirect_uris": [
+                "https://documentintelligence-test.ai.azure.com/studio",
+                "https://documentintelligence-dogfood.ai.azure.com/studio",
+                "https://documentintelligence-staging.ai.azure.com/studio",
+                "https://documentintelligence.ai.azure.com/studio",
+                "https://documentintelligence-test.ai.azure.com",
+                "https://documentintelligence-dogfood.ai.azure.com",
+                "https://documentintelligence-staging.ai.azure.com",
+                "https://documentintelligence.ai.azure.com",
+                "https://formrecognizerstudio-dev.azurewebsites.net/studio",
+                "https://formrecognizerstudio-dev.azurewebsites.net",
+                "https://formrecognizer.appliedai.azure.com/studio",
+                "https://formrecognizer-test.appliedai.azure.com/studio",
+                "https://formrecognizer-dogfood.appliedai.azure.com/studio",
+                "https://formrecognizer-staging.appliedai.azure.com/studio",
+                "https://localhost:5001/studio",
+                "https://formrecognizer-staging.appliedai.azure.com",
+                "https://formrecognizer-dogfood.appliedai.azure.com",
+                "https://formrecognizer-test.appliedai.azure.com",
+                "https://formrecognizer.appliedai.azure.com",
+                "https://localhost:5001"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
                 ]
             }
         },
@@ -1923,6 +2082,35 @@
                     "Group.ReadWrite.All",
                     "Tasks.ReadWrite",
                     "User.ReadWrite"
+                ]
+            }
+        },
+        "22d27567-b3f0-4dc2-9ec2-46ed368ba538": {
+            "foci": false,
+            "name": "Reading Assignments",
+            "preferred_interactive_redirurl": "https://127.0.0.1",
+            "preferred_noninteractive_redirurl": "https://127.0.0.1",
+            "redirect_uris": [
+                "https://127.0.0.1",
+                "https://aka.ms/skillingui-emulator-local",
+                "https://readalongauthenticator.azurewebsites.net",
+                "https://aka.ms/readingprogress-localv2"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "EduAssignments.ReadBasic",
+                    "GroupMember.Read.All",
+                    "Notes.Read.All",
+                    "Sites.Manage.All",
+                    "Sites.ReadWrite.All",
+                    "User.Read"
                 ]
             }
         },
@@ -4748,7 +4936,7 @@
             "foci": false,
             "name": "M365 Dev Portals - Authentication flow",
             "preferred_interactive_redirurl": "https://developer.microsoft-int.com/en-us/microsoft-365/dev-program/",
-            "preferred_noninteractive_redirurl": "https://developer.microsoft-int.com/en-us/microsoft-365/dev-program/",
+            "preferred_noninteractive_redirurl": "https://localhost:20444/en-us/microsoft-365/profile",
             "redirect_uris": [
                 "https://developer.microsoft-int.com/en-us/microsoft-365/dev-program/",
                 "https://developer.microsoft-int.com/en-us/microsoft-365/dev-program",
@@ -5092,6 +5280,40 @@
                 ]
             }
         },
+        "6a8b4b39-c021-437c-b060-5a14a3fd65f3": {
+            "foci": false,
+            "name": "Verifiable Credentials Service Admin",
+            "preferred_interactive_redirurl": null,
+            "preferred_noninteractive_redirurl": "http://localhost:3000/",
+            "redirect_uris": [
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://entra.microsoftonline.cn",
+                "brk-c836cbdb-7a5b-44cc-a54f-564b4b486fc6://entra.microsoft.us",
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://entra.microsoft.com",
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://df-entra.onecloud.azure-test.net",
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://canary-ms.portal.azure.com",
+                "http://localhost:3000/",
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://rc.portal.azure.com",
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://ms.portal.azure.com",
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://preview.portal.azure.com",
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://canary.portal.azure.com",
+                "brk-c44b4083-3bb0-49c1-b47d-974e53cbdf3c://portal.azure.com"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Organization.Read.All",
+                    "Reports.Read.All",
+                    "ServicePrincipalEndpoint.Read.All",
+                    "User.Read"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ]
+            }
+        },
         "6af07558-09e0-40fd-8af6-7759d010cf82": {
             "foci": false,
             "name": "HDIUX_APP",
@@ -5323,7 +5545,7 @@
             "foci": false,
             "name": "Teams-Toolkit",
             "preferred_interactive_redirurl": "https://vscode.dev/redirect",
-            "preferred_noninteractive_redirurl": "https://vscode.dev/redirect",
+            "preferred_noninteractive_redirurl": "http://localhost",
             "redirect_uris": [
                 "https://vscode.dev/redirect",
                 "http://localhost",
@@ -6263,6 +6485,26 @@
                 ],
                 "c82e1b1b-5ab6-48fb-b4f8-890a5b27b181": [
                     "AttendanceReport.Read"
+                ]
+            }
+        },
+        "9bb724a5-4639-438c-969b-e184b2b1e264": {
+            "foci": false,
+            "name": "KaizalaActionsPlatform",
+            "preferred_interactive_redirurl": null,
+            "preferred_noninteractive_redirurl": "http://localhost",
+            "redirect_uris": [
+                "http://localhost"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Application.ReadWrite.All",
+                    "GroupMember.Read.All",
+                    "User.Read.All"
                 ]
             }
         },
@@ -9541,6 +9783,42 @@
                 ]
             }
         },
+        "d9ce8cfa-8bd8-4ff1-b39b-5e5dd5742935": {
+            "foci": false,
+            "name": "Omnichannel for CS CRM ClientApp Primary",
+            "preferred_interactive_redirurl": "https://provisioning-ocprod-nam.omnichannelengagementhub.com/",
+            "preferred_noninteractive_redirurl": "https://localhost:8804",
+            "redirect_uris": [
+                "https://provisioning-ocprod-nam.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-eur.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-jpn.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-oce.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-apj.omnichannelengagementhub.com/",
+                "https://provisioning-ocuae-uae.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-gbr.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-ind.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-che.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-ger.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-fra.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-sam.omnichannelengagementhub.com/",
+                "https://provisioning-ocprod-can.omnichannelengagementhub.com/",
+                "https://fpi.oc.crmlivetie.com/fpi/Auth/v2/authRedirect.html",
+                "https://fpi-dev.oc.crmlivetie.com/fpi/Auth/v2/authRedirect.html",
+                "https://localhost:8804",
+                "https://omnichannelengagementhub.com"
+            ],
+            "result": "ok",
+            "scopes": {
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ],
+                "7df0a125-d3be-4c96-aa54-591f83ff541c": [
+                    "Flows.Manage.All",
+                    "Flows.Read.All",
+                    "User"
+                ]
+            }
+        },
         "da7b2a48-99e4-4e2b-a492-06d19a39ca57": {
             "foci": false,
             "name": "XSync Server Agent",
@@ -9889,6 +10167,38 @@
             ],
             "result": "ok",
             "scopes": {}
+        },
+        "e8e8fc40-94d5-4ed6-89f2-9e5ec6c1e11e": {
+            "foci": false,
+            "name": "MM_Reactions_PME_PROD",
+            "preferred_interactive_redirurl": "https://www.bing.com/entitydetails",
+            "preferred_noninteractive_redirurl": "https://localhost/shop/deals",
+            "redirect_uris": [
+                "https://www.bing.com/entitydetails",
+                "https://www.bing.com/msal/ssosilent",
+                "https://www.bing.com/profile/community",
+                "https://bing.com/shop/deals/blank",
+                "https://www.bing.com/myprofile",
+                "https://www.bing.com/shop/productpage",
+                "https://localhost/shop/deals",
+                "https://localhost/shop",
+                "https://bing.com/shop/deals",
+                "https://bing.com/shop",
+                "https://www.bing.com/images/search",
+                "https://www.bing.com",
+                "https://www.bing.com/images/blank",
+                "https://www.bing.com/images/blank.html",
+                "https://localhost/images/blank",
+                "https://localhost/images/blank.html",
+                "https://localhost/images/feed",
+                "https://www.bing.com/images/feed"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ]
+            }
         },
         "e9b154d0-7658-433b-bb25-6b8e0a8a7c59": {
             "foci": true,
@@ -10602,11 +10912,144 @@
                 ]
             }
         },
+        "f7691d3f-18be-4a7b-8639-efbb9ff02349": {
+            "foci": false,
+            "name": "Microsoft Reflect and Insights",
+            "preferred_interactive_redirurl": "https://reflect-ppe.trafficmanager.net/redirect.html",
+            "preferred_noninteractive_redirurl": "https://localhost:44301/redirect.html",
+            "redirect_uris": [
+                "https://reflect-ppe.trafficmanager.net/redirect.html",
+                "https://reflect-prod.trafficmanager.net/redirect.html",
+                "brk-multihub://reflect.microsoft.com",
+                "brk-multihub://reflect.ppe.microsoft.com",
+                "brk-multihub://eduinsights.microsoft.com",
+                "brk-multihub://eduinsights.ppe.microsoft.com",
+                "https://activelearning.cloud.microsoft/spark/redirect.html",
+                "https://activelearning.ppe.cloud.microsoft.com/spark/redirect.html",
+                "https://activelearning.int.cloud.microsoft.com/spark/redirect.html",
+                "https://activelearning.cloud.microsoft/blank.html",
+                "https://activelearning.cloud.microsoft/redirect.html",
+                "https://activelearning.ppe.cloud.microsoft.com/blank.html",
+                "https://activelearning.ppe.cloud.microsoft.com/redirect.html",
+                "https://activelearning.int.cloud.microsoft.com/blank.html",
+                "https://activelearning.int.cloud.microsoft.com/redirect.html",
+                "https://eduinsights.ppe.microsoft.com/blank.html",
+                "https://eduinsights.ppe.microsoft.com/redirect.html",
+                "https://eduinsights.int.microsoft.com/blank.html",
+                "https://eduinsights.int.microsoft.com/redirect.html",
+                "https://reflect.ppe.microsoft.com/blank.html",
+                "https://reflect.int.microsoft.com/blank.html",
+                "https://reflect.ppe.microsoft.com/redirect.html",
+                "https://reflect.int.microsoft.com/redirect.html",
+                "https://activelearning.cloud.microsoft.com/blank.html",
+                "https://activelearning.cloud.microsoft.com/redirect.html",
+                "https://edu-activelearning-prod.trafficmanager.net/blank.html",
+                "https://edu-activelearning-prod.trafficmanager.net/redirect.html",
+                "https://edu-activelearning-int.trafficmanager.net/blank.html",
+                "https://edu-activelearning-int.trafficmanager.net/redirect.html",
+                "https://localhost:44301/redirect.html",
+                "https://localhost:44301/blank.html",
+                "https://localhost:8080/blank.html",
+                "https://localhost:8080/redirect.html",
+                "https://eduta-ppe.trafficmanager.net/blank.html",
+                "https://eduta-ppe.trafficmanager.net/redirect.html",
+                "https://eduinsights.microsoft.com/blank.html",
+                "https://eduinsights.microsoft.com/redirect.html",
+                "https://eduta-reflect-int.trafficmanager.net/blank.html",
+                "https://eduta-reflect-int.trafficmanager.net/redirect.html",
+                "https://eduta-int.trafficmanager.net/blank.html",
+                "https://eduta-int.trafficmanager.net/redirect.html",
+                "https://eduta-int.westus2.cloudapp.azure.com/blank.html",
+                "https://eduta-int.westus2.cloudapp.azure.com/redirect.html",
+                "https://eduta-reflect-prod.trafficmanager.net/blank.html",
+                "https://eduta-reflect-prod.trafficmanager.net/redirect.html",
+                "https://eduta-reflect-ppe.trafficmanager.net/blank.html",
+                "https://eduta-reflect-ppe.trafficmanager.net/redirect.html",
+                "https://reflect.microsoft.com/blank.html",
+                "https://reflect.microsoft.com/redirect.html",
+                "https://reflect.microsoft.com/?auth=redirect",
+                "https://eduta-reflect-prod.trafficmanager.net/?auth=redirect",
+                "https://eduta-reflect-ppe.trafficmanager.net/?auth=redirect",
+                "https://eduta-reflect-int.trafficmanager.net/?auth=redirect",
+                "https://localhost:44301/?auth=redirect",
+                "https://localhost:8080/transparencyreport/",
+                "https://localhost:44301/transparencyreport/",
+                "https://eduta-ppe.trafficmanager.net/transparencyreport/",
+                "https://eduta-ppe.trafficmanager.net/transparencyreport",
+                "https://eduta-int.trafficmanager.net/transparencyreport/",
+                "https://eduinsights.microsoft.com/transparencyreport/",
+                "https://eduta-int.westus2.cloudapp.azure.com/transparencyreport/",
+                "https://localhost:8080/transparencyreport",
+                "https://localhost:44301/transparencyreport",
+                "https://eduta-int.trafficmanager.net/transparencyreport",
+                "https://eduta-int.westus2.cloudapp.azure.com/transparencyreport",
+                "https://eduinsights.microsoft.com/transparencyreport",
+                "https://reflect.microsoft.com/",
+                "https://reflect.microsoft.com",
+                "https://eduta-reflect-ppe.trafficmanager.net/",
+                "https://eduta-reflect-ppe.trafficmanager.net",
+                "https://eduta-reflect-prod.trafficmanager.net/",
+                "https://eduta-reflect-prod.trafficmanager.net",
+                "https://eduta-int.westus2.cloudapp.azure.com/",
+                "https://eduta-int.westus2.cloudapp.azure.com",
+                "https://localhost:8080/",
+                "https://localhost:8080",
+                "https://eduta-int.trafficmanager.net",
+                "https://eduta-int.trafficmanager.net/",
+                "https://localhost:44301",
+                "https://localhost:44301/",
+                "https://eduta-reflect-int.trafficmanager.net",
+                "https://eduta-reflect-int.trafficmanager.net/"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000002-0000-0000-c000-000000000000": [
+                    "user_impersonation"
+                ],
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "ChannelMessage.Delete",
+                    "ChannelMessage.ReadWrite",
+                    "ChannelMessage.Send",
+                    "Chat.Create",
+                    "ChatMessage.Send",
+                    "EduAssignments.ReadBasic",
+                    "EduAssignments.ReadWrite",
+                    "EduAssignments.ReadWriteBasic",
+                    "EduRoster.ReadBasic",
+                    "Group.Read.All",
+                    "Notes.Read",
+                    "Policy.Read.All",
+                    "RoleManagement.Read.Directory",
+                    "TeamsActivity.Send",
+                    "TeamsAppInstallation.ReadWriteForTeam",
+                    "User.ReadBasic.All"
+                ],
+                "22d27567-b3f0-4dc2-9ec2-46ed368ba538": [
+                    "ReadingAssignments.ReadWrite"
+                ],
+                "2d4d3d8e-2be3-4bef-9f87-7875a61c29de": [
+                    "Notes.ReadWrite",
+                    "Notes.ReadWrite.All"
+                ],
+                "8f348934-64be-4bb2-bc16-c54c96789f43": [
+                    "EduAssignments.Read",
+                    "EduAssignments.ReadWrite",
+                    "EduCurricula.Read",
+                    "EduCurricula.ReadWrite"
+                ],
+                "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
+                    "UserPolicies.Read"
+                ]
+            }
+        },
         "fa3d58b1-f3bc-489e-954e-119d58a29bae": {
             "foci": false,
             "name": "Office Scripts",
             "preferred_interactive_redirurl": "https://fa000000043.mro1cdnstorage.gcc.cdn.office.net/mro1cdnstorage/033f92d3-bc6d-439a-858a-a17acf70360a/SDX/fa000000043/1.0.2307.31003/en-us_web/login.html",
-            "preferred_noninteractive_redirurl": "brk-multihub://localhost:3003",
+            "preferred_noninteractive_redirurl": "https://localhost:3003/login.html",
             "redirect_uris": [
                 "brk-multihub://localhost:3003",
                 "brk-multihub://fa000000043.mro1cdnstorage.public.cdn.office.net",
@@ -10666,6 +11109,28 @@
                     "AdminApi.AccessAsUser.All",
                     "FfoPowerShell.AccessAsUser.All",
                     "RemotePowerShell.AccessAsUser.All"
+                ]
+            }
+        },
+        "fc03f97a-9db0-4627-a216-ec98ce54e018": {
+            "foci": false,
+            "name": "Azure AD Notification",
+            "preferred_interactive_redirurl": "https://ww.notify.iga.azure.net",
+            "preferred_noninteractive_redirurl": "http://localhost",
+            "redirect_uris": [
+                "https://ww.notify.iga.azure.net",
+                "http://localhost"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "TransportHttpSubmission-Internal.Post"
                 ]
             }
         },
