@@ -1011,6 +1011,52 @@
                 ]
             }
         },
+        "14638111-3389-403d-b206-a6a71d9f8f16": {
+            "foci": true,
+            "name": "Copilot App",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "ms-appx-web://microsoft.aad.brokerplugin/14638111-3389-403d-b206-a6a71d9f8f16",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient",
+                "https://brave-dune-0636b2e1e.5.azurestaticapps.net",
+                "https://delightful-bush-09571621e.5.azurestaticapps.net",
+                "https://wonderful-rock-04c91730f.5.azurestaticapps.net",
+                "brk-82864fa0-ed49-4711-8395-a0e6003dca1f://copilot.microsoft.com",
+                "msauth.com.microsoft.copilot.staging://auth",
+                "msauth.com.microsoft.copilot.development://auth",
+                "brk-cf36b471-5b44-428c-9ce7-313bf84528de://127.0.0.1",
+                "brk-00000000-0000-0000-0000-000040170455://127.0.0.1",
+                "https://localhost:1881",
+                "msauth://com.microsoft.copilot.beta/zt2%2BYar5zG3qg0f%2FYMP5kzeOXko%3D",
+                "msauth://com.microsoft.copilot.developer/bFonEZ7LmpWleM2NFb2B%2Ft0JwpQ%3D",
+                "msauth.com.microsoft.copilot.beta://auth",
+                "https://localhost:3000",
+                "https://copilot.microsoft.com",
+                "https://studious-adventure-mz3g24o.pages.github.io",
+                "https://127.0.0.1:3000",
+                "msauth://com.microsoft.sapphire.copilot.daily/qwwkUetCqNFBphcppeVsmJNS6Lw%3D",
+                "msauth://com.microsoft.copilot/KeLaDRo4w1LmRziuiOl7Co29IVs%3D",
+                "msauth://com.microsoft.copilot/iw4IWJDDbgvNLA5y9qmmOwmF9Ro%3D",
+                "https://copilotstaging.microsoft.com/conversations",
+                "msauth.com.microsoft.copilot-df://auth",
+                "msauth.com.microsoft.copilot://auth",
+                "msauth.com.microsoft.copilotn://auth",
+                "msauth.com.microsoft.copilotn-dev://auth",
+                "msauth.com.microsoft.copilotn-df://auth",
+                "https://login.live.com/oauth20_desktop.srf"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "ProfilePhoto.Read.All",
+                    "User.Read"
+                ]
+            }
+        },
         "15ddab63-ba81-45db-9bb6-6f8bc445c459": {
             "foci": false,
             "name": "Clipchamp Classic",
@@ -3607,6 +3653,29 @@
                 ]
             }
         },
+        "46da2f7e-b5ef-422a-88d4-2a7f9de6a0b2": {
+            "foci": false,
+            "name": "Dev Tunnels Service",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "https://tunnels.api.visualstudio.com/auth/aad/signin",
+                "https://global.rel.tunnels.api.visualstudio.com/auth/aad/signin",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Group.Read.All",
+                    "Organization.Read.All",
+                    "People.Read",
+                    "User.ReadBasic.All"
+                ]
+            }
+        },
         "47a4f6b2-25dc-4851-8524-fffe7360e8d4": {
             "foci": false,
             "name": "Surface App",
@@ -3813,6 +3882,31 @@
                     "Contacts.ReadWrite",
                     "Group.Read.All",
                     "Mail.ReadWrite"
+                ]
+            }
+        },
+        "4e09c6ac-4372-45b7-a977-e9f89e673e32": {
+            "foci": false,
+            "name": "Custom Speech AI Portal",
+            "preferred_interactive_redirurl": "https://tip.speech-test.microsoft.com/portal",
+            "preferred_noninteractive_redirurl": "https://localhost:44321/portal",
+            "redirect_uris": [
+                "https://tip.speech-test.microsoft.com/portal",
+                "https://speech.microsoft.com/portal",
+                "https://localhost:44321/portal"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read",
+                    "User.Read.All",
+                    "User.ReadBasic.All"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
                 ]
             }
         },
@@ -4026,6 +4120,32 @@
                 "b8066b99-6e67-41be-abfa-75db1a2c8809": [
                     "Devices.Read",
                     "UserOSRecoveryProfiles.Read"
+                ]
+            }
+        },
+        "4f547b5f-c3f7-4d2c-a14f-0f8f1286d7d5": {
+            "foci": false,
+            "name": "OneDriveLTI",
+            "preferred_interactive_redirurl": "https://edu-onedrivelti-prod.westus3.cloudapp.azure.com",
+            "preferred_noninteractive_redirurl": "https://localhost/registration",
+            "redirect_uris": [
+                "https://edu-onedrivelti-prod.westus3.cloudapp.azure.com",
+                "https://edu-onedrivelti-prod.westus3.cloudapp.azure.com/admin",
+                "https://localhost/registration",
+                "https://eduonedrivelti.ppe.microsoft.com/admin",
+                "https://eduonedrivelti.ppe.microsoft.com",
+                "https://onedrivelti.microsoft.com/admin",
+                "https://onedrivelti.microsoft.com",
+                "https://localhost/admin",
+                "https://localhost"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read.All"
                 ]
             }
         },
@@ -4654,6 +4774,58 @@
                 ],
                 "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
                     "SubstrateSearch-Internal.ReadWrite"
+                ]
+            }
+        },
+        "5a9cece4-4e66-4a74-9286-da0f62578dd8": {
+            "foci": false,
+            "name": "Engagement Insights",
+            "preferred_interactive_redirurl": "https://ariams-wus-staging.azurewebsites.net/frame-redirect.html",
+            "preferred_noninteractive_redirurl": "https://localhost:44300",
+            "redirect_uris": [
+                "https://ariams-wus-staging.azurewebsites.net/frame-redirect.html",
+                "https://ariams-ppe-staging.azurewebsites.net/frame-redirect.html",
+                "https://ariams-ppe-verify.azurewebsites.net/frame-redirect.html",
+                "https://ariams-neu.azurewebsites.net/frame-redirect.html",
+                "https://ariams-wus.azurewebsites.net/frame-redirect.html",
+                "https://ariams-neu-staging.azurewebsites.net/frame-redirect.html",
+                "https://int.aria.ms/frame-redirect.html",
+                "https://eu.ppe.aria.ms/frame-redirect.html",
+                "https://ppe.aria.ms/frame-redirect.html",
+                "https://eu.portal.aria.ms/frame-redirect.html",
+                "https://portal.aria.ms/frame-redirect.html",
+                "https://aria-ms-tst-five.azurewebsites.net/frame-redirect.html",
+                "https://aria-ms-tst-four.azurewebsites.net/frame-redirect.html",
+                "https://aria-ms-tst-three.azurewebsites.net/frame-redirect.html",
+                "https://aria-ms-tst-two.azurewebsites.net/frame-redirect.html",
+                "https://aria-ms-tst.azurewebsites.net/frame-redirect.html",
+                "https://aria-ms-tst.azurewebsites.net",
+                "https://aria-ms-tst.azurewebsites.net/",
+                "https://localhost:44300",
+                "https://dev.pi.dynamics.com:44300",
+                "https://ppe.pi.dynamics.com",
+                "https://pi.dynamics.com",
+                "https://int.pi.dynamics.com",
+                "https://dev.pi.dynamics.com",
+                "https://dev.ei.dynamics.com:44300",
+                "https://dev.ei.dynamics.com",
+                "https://int.ei.dynamics.com",
+                "https://preview.ei.dynamics.com",
+                "https://ppe.ei.dynamics.com",
+                "https://ei.dynamics.com"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "People.Read",
+                    "User.ReadBasic.All"
+                ],
+                "cd34d57a-a3ef-48b1-b84b-9686f0f7c099": [
+                    "All",
+                    "user_impersonation"
                 ]
             }
         },
@@ -6929,6 +7101,35 @@
                 ]
             }
         },
+        "9ee7b58d-f9db-45bc-ad7b-c2b97bbc3337": {
+            "foci": false,
+            "name": "Defender Experts for XDR",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "https://login.microsoftonline.com/common/oauth2/nativeclient"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Channel.Create",
+                    "Channel.ReadBasic.All",
+                    "ChannelMember.ReadWrite.All",
+                    "Team.Create",
+                    "Team.ReadBasic.All",
+                    "TeamsAppInstallation.ReadWriteAndConsentSelfForTeam",
+                    "TeamsAppInstallation.ReadWriteSelfForTeam",
+                    "User.Read",
+                    "User.Read.All"
+                ],
+                "fcd92efb-cd45-4652-9844-a3973dba245d": [
+                    "Aobo.Onboard"
+                ]
+            }
+        },
         "a25dbca8-4e60-48e5-80a2-0664fdb5c9b6": {
             "foci": false,
             "name": "Microsoft.MileIQ",
@@ -7024,6 +7225,122 @@
                 ],
                 "394866fc-eedb-4f01-8536-3ff84b16be2a": [
                     "User.Read.All"
+                ]
+            }
+        },
+        "a522f059-bb65-47c0-8934-7db6e5286414": {
+            "foci": false,
+            "name": "Copilot Studio - Dogfood",
+            "preferred_interactive_redirurl": "https://copilotstudio.local.microsoft.com:44300/auth-redirect.html",
+            "preferred_noninteractive_redirurl": "https://localhost:4200/",
+            "redirect_uris": [
+                "brk-multihub://copilotstudio.preprod.microsoft.com",
+                "brk-multihub://copilotstudio.test.microsoft.com",
+                "brk-multihub://copilotstudio.local.microsoft.com",
+                "https://copilotstudio.local.microsoft.com:44300/auth-redirect.html",
+                "https://copilotstudio.local.microsoft.com:44300/auth",
+                "https://copilotstudio.local.microsoft.com/auth-redirect.html",
+                "https://copilotstudio.local.microsoft.com/auth",
+                "https://copilotstudio.preprod.microsoft.com/auth-redirect.html",
+                "https://copilotstudio.preprod.microsoft.com/auth",
+                "https://copilotstudio.test.microsoft.com/auth-redirect.html",
+                "https://copilotstudio.test.microsoft.com/auth",
+                "https://localhost:4200/",
+                "https://web.test.powerva.microsoft.com/auth",
+                "https://web.test.powerva.microsoft.com/auth-redirect.html",
+                "https://web.preprod.powerva.microsoft.com/auth",
+                "https://web.preprod.powerva.microsoft.com/auth-redirect.html",
+                "https://web.local.powerva.microsoft.com/auth-redirect.html",
+                "https://web.local.powerva.microsoft.com/auth",
+                "https://pva.us-cm100.gateway.test.cm.powerapps.com/auth-redirect.html",
+                "https://pva.us-cm100.gateway.test.cm.powerapps.com/auth",
+                "https://pva.us-cm100.gateway.test.cm.powerapps.com/"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "AppCatalog.ReadWrite.All",
+                    "Application.Read.All",
+                    "Calendars.Read",
+                    "Channel.ReadBasic.All",
+                    "Chat.ReadBasic",
+                    "ExternalItem.Read.All",
+                    "Files.Read.All",
+                    "Files.ReadWrite",
+                    "Files.ReadWrite.All",
+                    "FileStorageContainer.Selected",
+                    "Group.Read.All",
+                    "Organization.Read.All",
+                    "Sites.Read.All",
+                    "Sites.ReadWrite.All",
+                    "Team.ReadBasic.All",
+                    "TeamsAppInstallation.ReadForTeam",
+                    "TeamsAppInstallation.ReadWriteForTeam",
+                    "User.Read.All"
+                ],
+                "00000003-0000-0ff1-ce00-000000000000": [
+                    "AllSites.Read",
+                    "AllSites.Write",
+                    "MyFiles.Read",
+                    "MyFiles.Write"
+                ],
+                "394866fc-eedb-4f01-8536-3ff84b16be2a": [
+                    "User.Read.All"
+                ],
+                "39aaf054-81a5-48c7-a4f8-0293012095b9": [
+                    "Media.ReadWrite.All",
+                    "Messaging.ReadWrite.All"
+                ],
+                "4439d626-9bfa-41ca-805d-5c264263bc71": [
+                    "TenantFeedback.Read",
+                    "TenantFeedback.Write"
+                ],
+                "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
+                    "Media.ReadWrite.All",
+                    "Messaging.ReadWrite.All"
+                ],
+                "56c1da01-2129-48f7-9355-af6d59d42766": [
+                    "ExternalConnection.ReadWrite.All"
+                ],
+                "5e2795e3-ce8c-4cfb-b302-35fe5cd01597": [
+                    "designerappservice.all"
+                ],
+                "5f09333a-842c-47da-a157-57da27fcbca5": [
+                    "ShellInfo.Read"
+                ],
+                "66a88757-258c-4c72-893c-3e8bed4d6899": [
+                    "SubstrateSearch-Internal.ReadWrite"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ],
+                "7df0a125-d3be-4c96-aa54-591f83ff541c": [
+                    "Flows.Manage.All",
+                    "Flows.Read.All"
+                ],
+                "b4bddae8-ab25-483e-8670-df09b9f1d0ea": [
+                    "License.Assign"
+                ],
+                "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
+                    "Authorization.ReadWrite",
+                    "Region.ReadWrite",
+                    "user_impersonation"
+                ],
+                "e8bdeda8-b4a3-4eed-b307-5e2456238a77": [
+                    "ShellInfo.Read"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "KnowledgeGraph-Internal.ReadWrite"
+                ],
+                "fb8d773d-7ef8-4ec0-a117-179f88add510": [
+                    "M365Chat.Read",
+                    "sydney.readwrite"
+                ],
+                "fe053c5f-3692-4f14-aef2-ee34fc081cae": [
+                    "Runtime.All"
                 ]
             }
         },
@@ -7198,6 +7515,42 @@
                 ]
             }
         },
+        "a6943a7f-5ba0-4a34-bf91-ab439efdda3f": {
+            "foci": false,
+            "name": "Azure HDInsight on AKS Client",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "https://identityapp.hdinsight-stable.azure-test.net/api/v1/MicrosoftIdentity/signin-oidc",
+                "https://localhost/api/v1/MicrosoftIdentity/signin-oidc",
+                "https://identityapp.hdiproxytipeastus2euap.hdinsightservices.net/api/v1/MicrosoftIdentity/signin-oidc",
+                "https://identityapp.hdiproxyprodcentralindia.hdinsightservices.net/api/v1/MicrosoftIdentity/Redirect",
+                "https://identityapp.hdiproxyprodwesteurope.hdinsightservices.net/api/v1/MicrosoftIdentity/Redirect",
+                "https://identityapp.hdiproxyprodeastus.hdinsightservices.net/api/v1/MicrosoftIdentity/Redirect",
+                "https://identityapp.hdinsightservices.net/api/v1/MicrosoftIdentity/Redirect",
+                "https://identityapp.hdiproxytipcentralindia.hdinsightservices.net/api/v1/MicrosoftIdentity/signin-oidc",
+                "https://identityapp.hdiproxytipwesteurope.hdinsightservices.net/api/v1/MicrosoftIdentity/signin-oidc",
+                "https://identityapp.hdiproxyprodeastus.hdinsightservices.net/api/v1/MicrosoftIdentity/signin-oidc",
+                "https://identityapp.hdinsightservices.net/api/v1/MicrosoftIdentity/signin-oidc",
+                "https://identityapp.hdiproxytipeastus2.hdinsightservices.net/api/v1/MicrosoftIdentity/Redirect",
+                "https://identityapp.hdiproxytipeastus2.hdinsightservices.net/api/v1/MicrosoftIdentity/signin-oidc",
+                "https://localhost",
+                "http://localhost",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read"
+                ],
+                "d3d1a4fe-edb2-4b09-bc39-e41d342323d6": [
+                    "Cluster.ReadWrite"
+                ]
+            }
+        },
         "a69788c6-1d43-44ed-9ca3-b83e194da255": {
             "foci": false,
             "name": "Azure Data Studio",
@@ -7246,6 +7599,68 @@
             "scopes": {
                 "00000006-0000-0ff1-ce00-000000000000": [
                     "M365AdminPortal.IntegratedApps.ReadWrite"
+                ]
+            }
+        },
+        "a85cf173-4192-42f8-81fa-777a763e6e2c": {
+            "foci": false,
+            "name": "Azure Virtual Desktop Client",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "msauth://com.microsoft.mixedreality.RemoteClient/9Ouj21JmhF55Ves6IzBaQ%2Bl5r44%3D",
+                "msauth://com.microsoft.mixedreality.RemoteClient/EcT%2F2Bz%2FXydS7bxSxJMxa9OJCxs%3D",
+                "msauth://com.microsoft.rdc.androidx/EUvr8Znq2S0AZ0wNol2WoZr4ru0%3D",
+                "https://rdweb.wvd.microsoft.com/arm/webclient/v2/index.html",
+                "https://client.wvd.microsoft.com/arm/webclient/v2/index.html",
+                "https://client.wvd.microsoft.com/arm/webclient/aadj.html",
+                "https://rdweb-r0.wvd.microsoft.com/arm/webclient/aadj.html",
+                "https://rdweb.wvd.microsoft.com/arm/webclient/aadj.html",
+                "https://client-r0.wvd.microsoft.com/arm/webclient/index.html",
+                "https://rdweb-r0.wvd.microsoft.com/arm/webclient/index.html",
+                "https://rdweb.wvd.microsoft.com/arm/webclient/index.html",
+                "https://rdweb.wvd.microsoft.com/arm/webclient",
+                "https://client.wvd.microsoft.com/arm/webclient",
+                "https://client.wvd.microsoft.com/arm/webclient/index.html",
+                "https://client.wvd.azure.us/arm/webclient/index.html",
+                "https://www.wvd.azure.us/webclient",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/S-1-15-2-686020023-2349071793-2774346826-2752276492-1693791511-490746106-1038017628",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/S-1-15-2-1675141024-1003855329-915403128-1652244152-3721706001-1815751561-448073730",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugIn/S-1-15-2-1351064824-1747509879-3343020337-936898558-3022384538-2153969374-721259951",
+                "https://rdweb.wvd.microsoft.com/RDWeb/ConsentCallback",
+                "https://www.wvd.microsoft.com/webclient",
+                "https://www.wvd.microsoft.com/webclient/index.html",
+                "https://rdweb.wvd.microsoft.com/webclient",
+                "x-msauth-rdcios://com.microsoft.rdc.ios",
+                "msauth://code/x-msauth-rdcios%3A%2F%2Fcom.microsoft.rdc.ios",
+                "x-msauth-rdcios-beta://com.microsoft.rdc.ios.beta",
+                "msauth://code/x-msauth-rdcios-beta%3A%2F%2Fcom.microsoft.rdc.ios.beta",
+                "x-msauth-rdcios-df://com.microsoft.rdc.ios.beta-df",
+                "msauth://code/x-msauth-rdcios-df%3A%2F%2Fcom.microsoft.rdc.ios.beta-df",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/a85cf173-4192-42f8-81fa-777a763e6e2c",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient",
+                "msauth://com.microsoft.rdc.androidx/AAXfoSjc4WJkquYRQfLtK2iKoU0%3d",
+                "msauth://com.microsoft.rdc.macos",
+                "msauth://com.microsoft.rdc.osx.beta"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read"
+                ],
+                "0a5f63c0-b750-4f38-a71c-4fc0d58b89e2": [
+                    "Intune.MAM.Registrations.Read.All",
+                    "Intune.MAM.Registrations.Write.All"
+                ],
+                "7c0a6aea-533c-458c-9f81-15568f10f6e4": [
+                    "EndUser.Access"
+                ],
+                "9cdead84-a844-4324-93f2-b2e6bb768d07": [
+                    "User.Access",
+                    "user_impersonation"
                 ]
             }
         },
@@ -8062,6 +8477,46 @@
                 ]
             }
         },
+        "bed12bc0-3a62-470d-998c-e47546e7b039": {
+            "foci": false,
+            "name": "NucleusDesktop",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "https://login.windows.net/common/oauth2/nativeclient",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient",
+                "ms-appx-web://microsoft.aad.brokerplugin/bed12bc0-3a62-470d-998c-e47546e7b039",
+                "msauth.com.microsoft.SharePoint-mac://auth"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Channel.ReadBasic.All",
+                    "Files.Read",
+                    "User.Read"
+                ],
+                "00000003-0000-0ff1-ce00-000000000000": [
+                    "Files.ReadWrite.All",
+                    "Sites.ReadWrite.All"
+                ],
+                "66a88757-258c-4c72-893c-3e8bed4d6899": [
+                    "SubstrateSearch-Internal.ReadWrite"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "CoreItem-Internal.Read.All",
+                    "Files.Read.All",
+                    "Files.ReadWrite.Shared",
+                    "OfficeFeed-Internal.ReadWrite",
+                    "People.Read",
+                    "PeoplePredictions-Internal.Read",
+                    "SharePointSmartCache.ReadWrite",
+                    "SubstrateSearch-Internal.ReadWrite"
+                ]
+            }
+        },
         "c00e9d32-3c8d-4a7d-832b-029040e7db99": {
             "foci": false,
             "name": "Microsoft Azure Information Protection",
@@ -8184,6 +8639,32 @@
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
+                ]
+            }
+        },
+        "c632b3df-fb67-4d84-bdcf-b95ad541b5c8": {
+            "foci": false,
+            "name": "Azure VPN",
+            "preferred_interactive_redirurl": "https://ms.portal.azure.com/",
+            "preferred_noninteractive_redirurl": "ms-appx-web://Microsoft.AAD.BrokerPlugin/S-1-15-2-2168773981-2726701853-2716731249-3753896863-3427320139-1943468417-4280244893",
+            "redirect_uris": [
+                "http://localhost:2024",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/S-1-15-2-2168773981-2726701853-2716731249-3753896863-3427320139-1943468417-4280244893",
+                "http://localhost:2023",
+                "https://ms.portal.azure.com/",
+                "msauth.com.microsoft.AzureVpnMac.PacketTunnel://auth",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/S-1-15-2-3059960481-3753488440-2049713862-611081954-3066129221-1922791749-282546604",
+                "msauth.com.microsoft.AzureVpnMac://auth",
+                "https://portal.azure.com/"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read",
+                    "User.ReadBasic.All"
                 ]
             }
         },
@@ -8388,6 +8869,43 @@
                 ],
                 "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
                     "UserPolicies.Read"
+                ]
+            }
+        },
+        "cde6adac-58fd-4b78-8d6d-9beaf1b0d668": {
+            "foci": true,
+            "name": "Global Secure Access Client",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin/cde6adac-58fd-4b78-8d6d-9beaf1b0d668",
+                "msauth.com.microsoft.globalsecureaccess://auth",
+                "ms-appx-web://Microsoft.AAD.BrokerPlugin",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient",
+                "msauth://com.microsoft.scmx/NWqSx9JK3Ly%2B0ESmwagRdphJMsA%3D",
+                "msauth://com.microsoft.scmx/fcg80qvoM1YMKJZibjBwQcDfOno%3d",
+                "msauth.com.microsoft.naas.globalsecure-df://auth",
+                "msauth.com.microsoft.scmx://auth",
+                "msauth.com.microsoft.scmx-df://auth",
+                "msauth.com.microsoft.scmx.tunnel://auth",
+                "msauth.com.microsoft.scmx-df.tunnel://auth"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "User.Read"
+                ],
+                "5dc48733-b5df-475c-a49b-fa307ef00853": [
+                    "NetworkProfile.Internet"
+                ],
+                "c08f52c9-8f03-4558-a0ea-9a4c878cf343": [
+                    "NetworkProfile.M365"
+                ],
+                "e92b9b37-1b47-4c01-9fbc-91d84450870e": [
+                    "NetworkProfile.Private"
                 ]
             }
         },
@@ -9914,6 +10432,51 @@
                 ]
             }
         },
+        "dc807dec-d211-4b3f-bc8a-43b3443c4874": {
+            "foci": false,
+            "name": "Azure OpenAI Studio",
+            "preferred_interactive_redirurl": "https://oai.azure.com/sunset",
+            "preferred_noninteractive_redirurl": "https://localhost:44321/portal",
+            "redirect_uris": [
+                "https://oai.azure.com/sunset",
+                "https://canary.oai.azure.com/sunset",
+                "https://openai.studio-ppe.azure.com/sunset",
+                "https://openai.studio-ppe.azure.com/resource/oauth",
+                "https://oai.azure.com/resource/oauth",
+                "https://canary.oai.azure.com/resource/oauth",
+                "https://dev.oai.azure.com/resource/oauth",
+                "https://canary.oai.azure.com/resource",
+                "https://dev.oai.azure.com/resource",
+                "https://openai.studio-ppe.azure.com/resource",
+                "https://oai.azure.com/resource",
+                "https://canary.oai.azure.com",
+                "https://openai.studio-ppe.azure.com",
+                "https://oai.azure.com",
+                "https://canary.oai.azure.com/legacy",
+                "https://canary.oai.azure.com/portal",
+                "https://dev.oai.azure.com",
+                "https://openai.studio-ppe.azure.com/legacy",
+                "https://oai.azure.com/legacy",
+                "https://oai.azure.com/portal",
+                "https://openai.studio-ppe.azure.com/portal",
+                "https://localhost:44321/portal"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Application.ReadWrite.All",
+                    "Files.Read.All",
+                    "Sites.Read.All",
+                    "User.Read"
+                ],
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
+                ]
+            }
+        },
         "dcceb79b-67c2-4b15-a03e-2299d8b413bb": {
             "foci": false,
             "name": "Microsoft_Azure_Linux",
@@ -10153,6 +10716,30 @@
                 ]
             }
         },
+        "e2ef5054-0287-4db6-afa3-013d96881fd3": {
+            "foci": false,
+            "name": "Microsoft OneDrive desktop sync client",
+            "preferred_interactive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "preferred_noninteractive_redirurl": "https://login.microsoftonline.com/common/oauth2/nativeclient",
+            "redirect_uris": [
+                "ms-appx-web://microsoft.aad.brokerplugin/e2ef5054-0287-4db6-afa3-013d96881fd3",
+                "https://login.microsoftonline.com/common/oauth2/nativeclient"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Contacts.ReadWrite",
+                    "Files.ReadWrite",
+                    "User.Read"
+                ],
+                "66a88757-258c-4c72-893c-3e8bed4d6899": [
+                    "SubstrateSearch-Internal.ReadWrite"
+                ]
+            }
+        },
         "e68ae87f-5acd-403b-a8f5-40a0dd42f6b5": {
             "foci": false,
             "name": "Dynamics 365 Business Central Mobile Client",
@@ -10357,6 +10944,39 @@
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
+                ]
+            }
+        },
+        "ea82ed9a-5efb-4911-877e-ef6896bf3586": {
+            "foci": false,
+            "name": "Viva Glint",
+            "preferred_interactive_redirurl": "https://glint.cloud.microsoft/session/",
+            "preferred_noninteractive_redirurl": "http://localhost:8000/session/",
+            "redirect_uris": [
+                "https://glint.cloud.microsoft/session/",
+                "https://feedback.us1.glint.cloud.microsoft/session/",
+                "https://feedback.eu1.glint.cloud.microsoft/session/",
+                "https://app.eu1stage.glint.cloud.microsoft/session/",
+                "https://app.us1stage.glint.cloud.microsoft/session/",
+                "https://app.eu1.glint.cloud.microsoft/session/",
+                "https://app.us1.glint.cloud.microsoft/session/",
+                "http://localhost:8000/session/"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Organization.Read.All",
+                    "User.Read",
+                    "User.ReadBasic.All"
+                ],
+                "5f09333a-842c-47da-a157-57da27fcbca5": [
+                    "ShellInfo.Read"
+                ],
+                "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
+                    "UserPolicies.Read"
                 ]
             }
         },
@@ -10639,6 +11259,164 @@
                 ],
                 "aad3e70f-aa64-4fde-82aa-c9d97a4501dc": [
                     "Machine.ReadWrite"
+                ]
+            }
+        },
+        "ef47e344-4bff-4e28-87da-6551a21ffbe0": {
+            "foci": false,
+            "name": "Bing Test",
+            "preferred_interactive_redirurl": "https://work.bing.com/keepalive/default.aspx",
+            "preferred_noninteractive_redirurl": "https://localhost/signin-oidc",
+            "redirect_uris": [
+                "https://work.bing.com/keepalive/default.aspx",
+                "https://copilotstaging.microsoft.com/signout-callback-oidc",
+                "https://www.staging-bing-int.com/signout-callback-oidc",
+                "https://copilotstaging.microsoft.com/identity/idtokenv2",
+                "https://copilotstaging.microsoft.com/orgid/idtoken/silent",
+                "https://binglocal/api/v2/authtools/gettokenfromlocal",
+                "https://www.staging-bing-int.com/work/api/v2/authtools/gettoken",
+                "https://localhost/signin-oidc",
+                "https://localhost/orgid/idtoken/silent",
+                "https://localhost/orgid/idtoken/nosignin",
+                "https://localhost/orgid/idtoken/conditional",
+                "https://localhost/orgid/idtoken",
+                "https://localhost/keepalive/default.aspx",
+                "https://localhost/api/v2/authtools/gettoken",
+                "https://binglocal/signin-oidc",
+                "https://binglocal/orgid/idtoken/silent",
+                "https://binglocal/orgid/idtoken/nosignin",
+                "https://binglocal/orgid/idtoken/conditional",
+                "https://binglocal/orgid/idtoken",
+                "https://binglocal/keepalive/default.aspx",
+                "https://binglocal/api/v2/authtools/gettoken",
+                "https://copilotstaging.microsoft.com/orgid/idtoken",
+                "https://www.staging-bing-int.com/identity/idtokenv2",
+                "https://snrproxywest.binginternal.com/identity/idtokenv2",
+                "https://snrproxyeast.binginternal.com/identity/idtokenv2",
+                "https://snrproxync.binginternal.com/identity/idtokenv2",
+                "https://cetowest.binginternal.com/identity/idtokenv2",
+                "https://cetoeast.binginternal.com/identity/idtokenv2",
+                "https://cetonc.binginternal.com/identity/idtokenv2",
+                "https://akam.staging-bing-int.com/identity/idtokenv2",
+                "https://akamproxyeast.staging-bing-int.com/identity/idtokenv2",
+                "https://akamproxywest.staging-bing-int.com/identity/idtokenv2",
+                "https://akamproxync.staging-bing-int.com/identity/idtokenv2",
+                "https://www.staging-bing-int.com/search",
+                "https://localhost/search",
+                "https://akamproxync.staging-bing-int.com/orgid/idtoken/nosignin",
+                "https://akamproxync.staging-bing-int.com/orgid/idtoken/silent",
+                "https://akamproxync.staging-bing-int.com/orgid/idtoken",
+                "https://akamproxync.staging-bing-int.com/keepalive/default.aspx",
+                "https://akamproxync.staging-bing-int.com/orgid/idtoken/conditional",
+                "https://akamproxywest.staging-bing-int.com/orgid/idtoken/nosignin",
+                "https://akamproxywest.staging-bing-int.com/orgid/idtoken/silent",
+                "https://akamproxywest.staging-bing-int.com/orgid/idtoken",
+                "https://akamproxywest.staging-bing-int.com/keepalive/default.aspx",
+                "https://akamproxywest.staging-bing-int.com/orgid/idtoken/conditional",
+                "https://akamproxyeast.staging-bing-int.com/orgid/idtoken/nosignin",
+                "https://akamproxyeast.staging-bing-int.com/orgid/idtoken/silent",
+                "https://akamproxyeast.staging-bing-int.com/orgid/idtoken",
+                "https://akamproxyeast.staging-bing-int.com/keepalive/default.aspx",
+                "https://akamproxyeast.staging-bing-int.com/orgid/idtoken/conditional",
+                "https://akam.staging-bing-int.com/orgid/idtoken/nosignin",
+                "https://akam.staging-bing-int.com/orgid/idtoken/silent",
+                "https://akam.staging-bing-int.com/orgid/idtoken",
+                "https://akam.staging-bing-int.com/keepalive/default.aspx",
+                "https://akam.staging-bing-int.com/orgid/idtoken/conditional",
+                "https://cetonc.binginternal.com/orgid/idtoken/nosignin",
+                "https://cetonc.binginternal.com/orgid/idtoken/silent",
+                "https://cetonc.binginternal.com/orgid/idtoken",
+                "https://cetonc.binginternal.com/keepalive/default.aspx",
+                "https://cetonc.binginternal.com/orgid/idtoken/conditional",
+                "https://cetoeast.binginternal.com/orgid/idtoken/nosignin",
+                "https://cetoeast.binginternal.com/orgid/idtoken/silent",
+                "https://cetoeast.binginternal.com/orgid/idtoken",
+                "https://cetoeast.binginternal.com/keepalive/default.aspx",
+                "https://cetoeast.binginternal.com/orgid/idtoken/conditional",
+                "https://cetowest.binginternal.com/orgid/idtoken/nosignin",
+                "https://cetowest.binginternal.com/orgid/idtoken/silent",
+                "https://cetowest.binginternal.com/orgid/idtoken",
+                "https://cetowest.binginternal.com/keepalive/default.aspx",
+                "https://cetowest.binginternal.com/orgid/idtoken/conditional",
+                "https://snrproxync.binginternal.com/orgid/idtoken/nosignin",
+                "https://snrproxync.binginternal.com/orgid/idtoken/silent",
+                "https://snrproxync.binginternal.com/orgid/idtoken",
+                "https://snrproxync.binginternal.com/keepalive/default.aspx",
+                "https://snrproxync.binginternal.com/orgid/idtoken/conditional",
+                "https://snrproxyeast.binginternal.com/orgid/idtoken/nosignin",
+                "https://snrproxyeast.binginternal.com/orgid/idtoken/silent",
+                "https://snrproxyeast.binginternal.com/orgid/idtoken",
+                "https://snrproxyeast.binginternal.com/keepalive/default.aspx",
+                "https://snrproxyeast.binginternal.com/orgid/idtoken/conditional",
+                "https://snrproxywest.binginternal.com/orgid/idtoken/nosignin",
+                "https://snrproxywest.binginternal.com/orgid/idtoken/silent",
+                "https://snrproxywest.binginternal.com/orgid/idtoken",
+                "https://snrproxywest.binginternal.com/keepalive/default.aspx",
+                "https://snrproxywest.binginternal.com/orgid/idtoken/conditional",
+                "https://www.staging-bing-int.com/orgid/idtoken/conditional",
+                "https://www.staging-bing-int.com/keepalive/default.aspx",
+                "https://www.staging-bing-int.com/orgid/idtoken/nosignin",
+                "https://www.staging-bing-int.com/orgid/idtoken/silent",
+                "https://www.staging-bing-int.com/orgid/idtoken"
+            ],
+            "result": "ok",
+            "scopes": {
+                "00000003-0000-0000-c000-000000000000": [
+                    "email",
+                    "openid",
+                    "profile",
+                    "Calendars.Read",
+                    "Calendars.Read.Shared",
+                    "EduAssignments.Read",
+                    "EduRoster.ReadBasic",
+                    "GroupMember.Read.All",
+                    "Presence.Read.All",
+                    "User.Read",
+                    "User.Read.All"
+                ],
+                "00000003-0000-0ff1-ce00-000000000000": [
+                    "Sites.FullControl.All"
+                ],
+                "394866fc-eedb-4f01-8536-3ff84b16be2a": [
+                    "User.Read.All"
+                ],
+                "4439d626-9bfa-41ca-805d-5c264263bc71": [
+                    "TenantFeedback.Write"
+                ],
+                "4f550ec4-347e-412f-9119-ed6fdab0a63f": [
+                    "access_as_user"
+                ],
+                "66a88757-258c-4c72-893c-3e8bed4d6899": [
+                    "SubstrateSearch-Internal.ReadWrite"
+                ],
+                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
+                    "CopilotEligibility.Read",
+                    "CopilotSettings.ReadWrite"
+                ],
+                "e8bdeda8-b4a3-4eed-b307-5e2456238a77": [
+                    "ShellSettings.Read"
+                ],
+                "e8be65d6-d430-4289-a665-51bf2a194bda": [
+                    "AuthConfig.Read",
+                    "Title.ReadWrite"
+                ],
+                "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
+                    "CoreItem-Internal.Read.All",
+                    "Files.Read.All",
+                    "Files.ReadWrite.Shared",
+                    "Group.Read.Shared",
+                    "Group.ReadWrite.Shared",
+                    "OfficeFeed-Internal.ReadWrite",
+                    "PeoplePredictions-Internal.Read",
+                    "RoamingUserSettings.ReadWrite",
+                    "SubstrateSearch-Internal.ReadWrite"
+                ],
+                "f3a218b7-5c8f-460b-93af-56b072788c15": [
+                    "User.Read.All"
+                ],
+                "fb8d773d-7ef8-4ec0-a117-179f88add510": [
+                    "M365Chat.Read",
+                    "sydney.readwrite"
                 ]
             }
         },
@@ -11615,6 +12393,7 @@
         "https://analysis.windows.net/powerbi/api-management": "00000009-0000-0000-c000-000000000000",
         "https://analysis.windows.net/powerbi/connector/*": "00000009-0000-0000-c000-000000000000",
         "https://analytics.dev.azure.com/": "499b84ac-1321-427f-aa17-267ca6975798",
+        "https://aobo-egress.sitops-internal.com": "fcd92efb-cd45-4652-9844-a3973dba245d",
         "https://apac.presence-interop.teams.microsoft.com/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://apac.presence.interop.services.sfb.trafficmanager.net/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://apac.presence.teams.microsoft.com/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
@@ -11802,6 +12581,7 @@
         "https://clients.config.office.net": "c2ada927-a9e2-4564-aae2-70775a2fa0af",
         "https://clients.config.office.net/": "c2ada927-a9e2-4564-aae2-70775a2fa0af",
         "https://clients.config.office.net/*": "c2ada927-a9e2-4564-aae2-70775a2fa0af",
+        "https://clusteraccess.hdinsightaks.net": "d3d1a4fe-edb2-4b09-bc39-e41d342323d6",
         "https://cn.bing.com": "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7",
         "https://collab.mixedreality.azure.com": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
         "https://collab.mixedreality.microsoft.com": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
@@ -12077,6 +12857,7 @@
         "https://high.analysis.usgovcloudapi.net/powerbi/api": "fc4979e5-0aa5-429f-b13a-5d1365be5566",
         "https://high.analysis.usgovcloudapi.net/powerbi/api-management": "fc4979e5-0aa5-429f-b13a-5d1365be5566",
         "https://high.service.flow.microsoft.us/": "470d0752-cb06-49b2-ac83-5023fc23adae",
+        "https://hilo.azurehdinsight.net": "d3d1a4fe-edb2-4b09-bc39-e41d342323d6",
         "https://home.office.com/": "4345a7b9-9a63-4910-a426-35363201d503",
         "https://ic3-testing.teams.office.com": "55bdc56c-2b15-4538-aa37-d0c008c8c430",
         "https://ic3.teams.office.com": "39aaf054-81a5-48c7-a4f8-0293012095b9",
