@@ -531,5 +531,87 @@ class SeleniumAuthentication():
 
         driver = self.driver
         driver.get("https://outlook.office.com/owa/?init")
-        el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='div[name="youshouldquit"]'))
-        driver.close()
+        try:
+            WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='div[name="youshouldquit"]'))
+            return False
+        except TimeoutException:
+            pass
+
+    @selenium_wrap
+    def selenium_login_spotoken(self, spotoken, spourlbase):
+        def interceptor(request):
+            if request.url == f'{spourlbase}/?init':
+                # Replace with SPO login request
+                parsed = urlparse(spourlbase)
+                spohost = parsed.hostname
+                req_url = f"{spourlbase}/_layouts/15/filebrowser.aspx"
+                # req_url += "?app=TeamsFile&fileBrowser={%22sdk%22:%228.0%22,%22messaging%22:{%22origin%22:%22https://teams.microsoft.com%22,%22channelId%22:%220.47249827%22,%22identifyParent%22:true},%22authentication%22:{},%22entry%22:{%22oneDrive%22:{%22recent%22:{}}}}&scenario=OneDriveFiles&auth=none&locale=en-us&hostName=TeamsModern&preWarmFB=true&dataFetchOnIdle=true"
+                req_headers = {
+                    "Cache-Control": "max-age=0",
+                    "Origin": "https://teams.microsoft.com",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Upgrade-Insecure-Requests": "1",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0 Teams/24295.605.3225.8804/49",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                    "Sec-Fetch-Site": "cross-site",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-User": "?1",
+                    "Sec-Fetch-Dest": "document",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Priority": "u=0, i",
+                }
+                req_data = {
+                    "access_token": spotoken,
+                }
+                # First request, get auth cookie
+                req2_url = f"https://{spohost}/_api/SP.OAuth.NativeClient/Authenticate"
+                req2_cookies = {
+                    "FeatureOverrides_experiments": "[]"
+                }
+                req2_headers = {
+                    "Authorization": f"Bearer {spotoken}",
+                    "Collectspperfmetrics": "SPSQLQueryCount",
+                    "X-Featureversion": "2",
+                    "Accept": "application/json;odata=verbose",
+                    "Content-Type": "application/json;odata=verbose",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0 Teams/24295.605.3225.8804/49",
+                    "Origin": spohost,
+                    "Sec-Fetch-Site": "same-origin",
+                    "Sec-Fetch-Mode": "cors",
+                    "Sec-Fetch-Dest": "empty",
+                    "Referer": req_url,
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Priority": "u=1, i",
+                }
+                res2 = self.auth.requests_post(req2_url, headers=req2_headers, cookies=req2_cookies)
+                if res2.status_code != 200:
+                    data = res2.json()
+                    raise AuthenticationException(f'Failed to obtain SPO cookie. Error: {data["error_description"]}')
+                res = self.auth.requests_post(req_url, allow_redirects=False, headers=req_headers, data=req_data)
+
+                response_headers = dict(res.headers)
+                response_headers['Set-Cookie'] = res2.headers['Set-Cookie']
+                response_headers['Location'] = '/'
+                request.create_response(
+                    status_code=302,
+                    headers=response_headers,
+                    body=res.content
+                )
+            if request.url.startswith('https://login.microsoftonline.com'):
+                request.create_response(
+                    status_code=200,
+                    body="No."
+                )
+
+
+        self.driver.request_interceptor = interceptor
+
+        driver = self.driver
+        driver.get(f"{spourlbase}/?init")
+        try:
+            WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='div[name="youshouldquit"]'))
+            return False
+        except TimeoutException:
+            pass

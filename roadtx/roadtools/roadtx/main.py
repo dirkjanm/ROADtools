@@ -1687,7 +1687,14 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service, intercept=True)
-        selauth.selenium_login_owatoken(tokenobject['accessToken'])
+        res = selauth.selenium_login_owatoken(tokenobject['accessToken'])
+        if res is False:
+            return
+        try:
+            time.sleep(99999)
+        except KeyboardInterrupt:
+            return
+        return
     elif args.command == 'sharepointlogin':
         auth.set_user_agent(args.user_agent)
         if args.access_token:
@@ -1717,7 +1724,14 @@ def main():
             spohost = args.host.rstrip('/')
         else:
             spohost = tokendata['aud']
-        selauth.selenium_login_spotoken(tokenobject['accessToken'], spohost)
+        res = selauth.selenium_login_spotoken(tokenobject['accessToken'], spohost)
+        if res is False:
+            return
+        try:
+            time.sleep(99999)
+        except KeyboardInterrupt:
+            return
+        return
 
 if __name__ == '__main__':
     main()
