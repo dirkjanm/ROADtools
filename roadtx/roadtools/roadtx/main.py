@@ -67,6 +67,9 @@ def main():
     rttsauth_parser.add_argument('--cae',
                                  action='store_true',
                                  help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    rttsauth_parser.add_argument('--origin',
+                                 action='store',
+                                 help='Origin header to use in refresh token redemption (for single page app flows)')
 
     # Construct device module
     device_parser = subparsers.add_parser('device', help='Register or join devices to Azure AD')
@@ -365,6 +368,12 @@ def main():
                                  help="Code to auth with that you got from Azure AD")
     codeauth_parser.add_argument('-ua', '--user-agent', action='store',
                                  help='Custom user agent to use. Default: Python requests user agent')
+    codeauth_parser.add_argument('--pkce-secret',
+                                 action='store',
+                                 help='PKCE secret to redeem the code')
+    codeauth_parser.add_argument('--origin',
+                                 action='store',
+                                 help='Origin header to use in code redemption (for single page app flows)')
 
     # Bulk enrollment token
     bulkenrollment_parser = subparsers.add_parser('bulkenrollmenttoken', help='Request / use bulk enrollment tokens')
@@ -515,6 +524,12 @@ def main():
     intauth_parser.add_argument('--force-mfa',
                                 action='store_true',
                                 help='Force MFA during authentication')
+    intauth_parser.add_argument('--pkce',
+                                action='store_true',
+                                help='Use PKCE during authentication')
+    intauth_parser.add_argument('--origin',
+                                action='store',
+                                help='Origin header to use in code redemption (for single page app flows)')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
@@ -572,8 +587,12 @@ def main():
     kdbauth_parser.add_argument('--force-mfa',
                                 action='store_true',
                                 help='Force MFA during authentication')
-
-
+    kdbauth_parser.add_argument('--pkce',
+                                action='store_true',
+                                help='Use PKCE during authentication')
+    kdbauth_parser.add_argument('--origin',
+                                action='store',
+                                help='Origin header to use in code redemption (for single page app flows)')
 
     # Interactive auth using Selenium - inject PRT
     browserprtauth_parser = subparsers.add_parser('browserprtauth', help='Selenium based auth with automatic PRT usage. Emulates Edge browser with PRT')
@@ -632,6 +651,12 @@ def main():
     browserprtauth_parser.add_argument('--force-mfa',
                                        action='store_true',
                                        help='Force MFA during authentication')
+    browserprtauth_parser.add_argument('--pkce',
+                                       action='store_true',
+                                       help='Use PKCE during authentication')
+    browserprtauth_parser.add_argument('--origin',
+                                       action='store',
+                                       help='Origin header to use in code redemption (for single page app flows)')
 
     # Interactive auth using Selenium - inject PRT to other user
     injauth_parser = subparsers.add_parser('browserprtinject', help='Selenium based auth with automatic PRT injection. Can be used with other users to add device state to session')
@@ -691,6 +716,12 @@ def main():
     injauth_parser.add_argument('--force-mfa',
                                 action='store_true',
                                 help='Force MFA during authentication')
+    injauth_parser.add_argument('--pkce',
+                                action='store_true',
+                                help='Use PKCE during authentication')
+    injauth_parser.add_argument('--origin',
+                                action='store',
+                                help='Origin header to use in code redemption (for single page app flows)')
 
 
     # Interactive auth using Selenium - enrich PRT
@@ -758,6 +789,12 @@ def main():
     cliauth_parser.add_argument('--force-mfa',
                                 action='store_true',
                                 help='Force MFA during authentication')
+    cliauth_parser.add_argument('--pkce',
+                                action='store_true',
+                                help='Use PKCE during authentication')
+    cliauth_parser.add_argument('--origin',
+                                action='store',
+                                help='Origin header to use in code redemption (for single page app flows)')
 
     # OWA Login with token
     owalogin_parser = subparsers.add_parser('owalogin', help='Login to OWA with token')
@@ -853,6 +890,10 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.outfile = args.tokenfile
+        if args.origin:
+            auth.set_origin_value(args.origin)
+        elif 'originheader' in tokenobject:
+            auth.set_origin_value(tokenobject['originheader'])
         # Tenant from arguments or from tokenfile
         if args.tenant:
             auth.tenant = args.tenant
@@ -1093,6 +1134,11 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        if args.pkce_secret:
+            auth.use_pkce = True
+            auth.pkce_secret = args.pkce_secret
+        if args.origin:
+            auth.set_origin_value(args.origin, args.redirect_url)
         if args.cae:
             auth.set_cae()
         if args.scope:
@@ -1137,6 +1183,9 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        auth.use_pkce = args.pkce
+        if args.origin:
+            auth.set_origin_value(args.origin, args.redirect_url)
         if args.cae:
             auth.set_cae()
         if args.force_mfa:
@@ -1181,6 +1230,9 @@ def main():
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.tenant = args.tenant
+        auth.use_pkce = args.pkce
+        if args.origin:
+            auth.set_origin_value(args.origin, args.redirect_url)
         if args.cae:
             auth.set_cae()
         if args.force_mfa:
@@ -1230,6 +1282,9 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        auth.use_pkce = args.pkce
+        if args.origin:
+            auth.set_origin_value(args.origin, args.redirect_url)
         if args.cae:
             auth.set_cae()
         if args.force_mfa:
@@ -1269,6 +1324,9 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        auth.use_pkce = args.pkce
+        if args.origin:
+            auth.set_origin_value(args.origin, args.redirect_url)
         if args.cae:
             auth.set_cae()
         if args.force_mfa:
@@ -1323,6 +1381,9 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
+        auth.use_pkce = args.pkce
+        if args.origin:
+            auth.set_origin_value(args.origin, args.redirect_url)
         if args.cae:
             auth.set_cae()
         if args.force_mfa:
