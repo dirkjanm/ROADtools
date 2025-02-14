@@ -8,6 +8,8 @@ import uuid
 import binascii
 import time
 import codecs
+import string
+import secrets
 from urllib.parse import urlparse, parse_qs, quote_plus
 from urllib3.util import SKIP_HEADER
 from xml.sax.saxutils import escape as xml_escape
@@ -61,6 +63,8 @@ class Authentication():
         self.user_agent = None
         self.use_cae = False
         self.claims = None
+        self.use_pkce = False
+        self.pkce_secret = None
 
         # For cert based app auth
         self.appprivkey = None
@@ -82,10 +86,13 @@ class Authentication():
         """
         self.client_id = self.lookup_client_id(clid)
 
-    def set_origin_value(self, origin):
+    def set_origin_value(self, origin, redirect_uri=None):
         """
         Sets Origin header to use
+        If the value "ru" is used, we take it from the redirect URL
         """
+        if origin is not None and origin.lower() == 'ru' and redirect_uri is not None:
+            origin = redirect_uri
         self.origin = origin
 
     def set_resource_uri(self, uri):
@@ -171,6 +178,23 @@ class Authentication():
         except (KeyError, ValueError, TypeError):
             return False
         return 'mfa' in values or 'ngcmfa' in values
+
+    def gen_pkce_secret(self):
+        """
+        Generate a secret for PKCE
+        """
+        alphabet = string.ascii_letters + string.digits
+        self.pkce_secret = ''.join(secrets.choice(alphabet) for i in range(43))
+
+    def get_pkce_challenge(self):
+        """
+        Get PKCE challenge (sha256 hash) of the generated secret
+        """
+        digest = hashes.Hash(hashes.SHA256())
+        digest.update(self.pkce_secret.encode('utf-8'))
+        hashoutput = digest.finalize()
+        challenge = base64.urlsafe_b64encode(hashoutput).decode('utf-8').rstrip('=')
+        return challenge
 
     def loadappcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
         """
@@ -660,8 +684,10 @@ class Authentication():
             data['client_secret'] = client_secret
         if additionaldata:
             data = {**data, **additionaldata}
+        if not pkce_secret and self.use_pkce:
+            pkce_secret = self.pkce_secret
         if pkce_secret:
-            raise NotImplementedError
+            data['code_verifier'] = pkce_secret
         res = self.requests_post(f"{authority_uri}/oauth2/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -693,8 +719,10 @@ class Authentication():
             self.set_cae()
         if self.claims:
             data['claims'] = json.dumps(self.claims)
+        if not pkce_secret and self.use_pkce:
+            pkce_secret = self.pkce_secret
         if pkce_secret:
-            raise NotImplementedError
+            data['code_verifier'] = pkce_secret
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -903,6 +931,12 @@ class Authentication():
         '''
         urlt_v2 = 'https://login.microsoftonline.com/{3}/oauth2/v2.0/authorize?response_type={4}&client_id={0}&scope={2}&redirect_uri={1}&state={5}'
         urlt_v1 = 'https://login.microsoftonline.com/{3}/oauth2/authorize?response_type={4}&client_id={0}&resource={2}&redirect_uri={1}&state={5}'
+        if self.use_pkce:
+            if not self.pkce_secret:
+                self.gen_pkce_secret()
+            urlt_v2 = urlt_v2 + '&code_challenge_method=S256&code_challenge=' + quote_plus(self.get_pkce_challenge())
+            urlt_v1 = urlt_v1 + '&code_challenge_method=S256&code_challenge=' + quote_plus(self.get_pkce_challenge())
+
         if not state:
             state = str(uuid.uuid4())
         if not self.tenant:
@@ -915,6 +949,9 @@ class Authentication():
                 self.set_cae()
             if self.claims:
                 urlt_v2 = urlt_v2 + '&claims=' + quote_plus(json.dumps(self.claims))
+            if self.use_pkce:
+                if not self.pkce_secret:
+                    self.gen_pkce_secret()
             # v2
             return urlt_v2.format(
                 quote_plus(self.client_id),
