@@ -741,7 +741,7 @@ class DeviceAuthentication():
         # Sign with random key just to get jwt body in right encoding
         tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
         jbody = tempjwt.split('.')[1]
-        jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
+        jwtbody = base64.urlsafe_b64decode(jbody+('='*(len(jbody)%4)))
 
         # Now calculate the derived key based on random context plus jwt body
         _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)

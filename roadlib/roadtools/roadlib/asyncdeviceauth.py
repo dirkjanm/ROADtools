@@ -364,7 +364,7 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
             deviceid = attr.value
         print(f"Device ID (from certificate): {deviceid}")
         print('Registering device')
-        res = await self.requests_put(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = await self.auth.requests_put(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = await res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -477,8 +477,7 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
         # Sign with random key just to get jwt body in right encoding
         tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
         jbody = tempjwt.split('.')[1]
-        jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
-
+        jwtbody = base64.urlsafe_b64decode(jbody+('='*(len(jbody)%4)))
         # Now calculate the derived key based on random context plus jwt body
         _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)
         reqjwt = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
