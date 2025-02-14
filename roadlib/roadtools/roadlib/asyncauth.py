@@ -431,8 +431,10 @@ class AsyncAuthentication(Authentication):
             data['client_secret'] = client_secret
         if additionaldata:
             data = {**data, **additionaldata}
+        if not pkce_secret and self.use_pkce:
+            pkce_secret = self.pkce_secret
         if pkce_secret:
-            raise NotImplementedError
+            data['code_verifier'] = pkce_secret
         res = await self.requests_post(f"{authority_uri}/oauth2/token", data=data)
         if res.status != 200:
             raise AuthenticationException(await res.text())
@@ -464,8 +466,10 @@ class AsyncAuthentication(Authentication):
             self.set_cae()
         if self.claims:
             data['claims'] = json.dumps(self.claims)
+        if not pkce_secret and self.use_pkce:
+            pkce_secret = self.pkce_secret
         if pkce_secret:
-            raise NotImplementedError
+            data['code_verifier'] = pkce_secret
         res = await self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
         if res.status != 200:
             raise AuthenticationException(await res.text())
