@@ -38,6 +38,8 @@ class AsyncAuthentication(Authentication):
     def __init__(self, username=None, password=None, tenant=None, client_id='1b730954-1685-4b74-9bfd-dac224a7b894'):
         super().__init__(username, password, tenant, client_id)
         self.ahsession = None
+        self.requestcounter = 0
+        self.proxies = {}
 
     async def user_discovery_v1(self, username):
         """
@@ -834,8 +836,9 @@ class AsyncAuthentication(Authentication):
             headers = kwargs.get('headers',{})
             headers['User-Agent'] = self.user_agent
             kwargs['headers'] = headers
-        async with self.ahsession.get(*args, timeout=30.0, **kwargs) as response:
+        async with self.ahsession.get(*args, **kwargs) as response:
             await response.read()
+        self.requestcounter += 1
         return response
 
     async def requests_post(self, *args, **kwargs):
@@ -857,8 +860,9 @@ class AsyncAuthentication(Authentication):
             headers = kwargs.get('headers',{})
             headers['Origin'] = self.origin
             kwargs['headers'] = headers
-        async with self.ahsession.post(*args, timeout=30.0, **kwargs) as response:
+        async with self.ahsession.post(*args, **kwargs) as response:
             await response.read()
+        self.requestcounter += 1
         return response
 
     async def requests_put(self, *args, **kwargs):
@@ -880,8 +884,9 @@ class AsyncAuthentication(Authentication):
             headers = kwargs.get('headers',{})
             headers['Origin'] = self.origin
             kwargs['headers'] = headers
-        async with self.ahsession.put(*args, timeout=30.0, **kwargs) as response:
+        async with self.ahsession.put(*args, **kwargs) as response:
             await response.read()
+        self.requestcounter += 1
         return response
 
     async def close_session(self):
