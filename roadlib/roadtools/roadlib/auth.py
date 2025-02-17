@@ -1520,7 +1520,8 @@ class Authentication():
             'access_token': 'accessToken',
             'refresh_token': 'refreshToken',
             'id_token': 'idToken',
-            'token_type': 'tokenType'
+            'token_type': 'tokenType',
+            'expires_in': 'expiresIn'
         }
         for newname, oldname in translate_map.items():
             if newname in tokenreply:
