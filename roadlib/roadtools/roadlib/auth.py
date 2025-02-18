@@ -86,6 +86,14 @@ class Authentication():
         """
         self.client_id = self.lookup_client_id(clid)
 
+    def set_scope(self, scope):
+        """
+        Sets scope to use (accepts aliases for resource part)
+        """
+        if not scope:
+            return
+        self.scope = self.lookup_scope_resource(scope)
+
     def set_origin_value(self, origin, redirect_uri=None):
         """
         Sets Origin header to use
@@ -1576,6 +1584,30 @@ class Authentication():
             return uri
 
     @staticmethod
+    def lookup_scope_resource(scopes):
+        """
+        Translate resource URI aliases in a scope
+        Supports multiple scopes, eg "msgraph/.default offline_access"
+        """
+        outscopes = []
+        for scope in scopes.split(' '):
+            if '/' in scope:
+                # Full specifier
+                resource, rscope = scope.rsplit('/', 1)
+                try:
+                    resolved = WELLKNOWN_RESOURCES[resource.lower()]
+                    # Strip trailing / if there for aliases
+                    if resolved[-1] == '/':
+                        resolved = resolved[:-1]
+                except KeyError:
+                    resolved = resource
+                outscopes.append('/'.join([resolved, rscope]))
+            else:
+                # Just a scope, no resource
+                outscopes.append(scope)
+        return ' '.join(outscopes)
+
+    @staticmethod
     def lookup_client_id(clid):
         """
         Translate client ID aliases
@@ -1641,7 +1673,7 @@ class Authentication():
         self.outfile = args.tokenfile
         self.debug = args.debug
         self.set_resource_uri(args.resource)
-        self.scope = args.scope
+        self.set_scope(args.scope)
         self.set_user_agent(args.user_agent)
         if args.cae:
             self.set_cae()
