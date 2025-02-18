@@ -585,12 +585,10 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
         """
         Auth using a PRT emulating the AAD Brokerplugin (WAM) client
         """
-        challenge = await self.auth.get_srv_challenge_nonce()
         client = self.auth.lookup_client_id(client_id).lower()
         payload = {
             "win_ver": "10.0.19041.1620",
             "scope": "openid",
-            "request_nonce": challenge,
             "refresh_token": self.prt,
             "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client}",
             "iss": "aad:brokerplugin",
@@ -606,6 +604,7 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
         # Request a new PRT, otherwise normal refresh token will be issued
         if renew_prt:
             payload['scope'] = "openid aza"
+        payload['request_nonce'] = await self.auth.get_srv_challenge_nonce()
         # Custom redirect_uri if needed
         if redirect_uri:
             payload['redirect_uri'] = redirect_uri

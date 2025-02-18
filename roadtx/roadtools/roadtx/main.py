@@ -910,7 +910,7 @@ def main():
                 print(f'Requesting token for resource {auth.resource_uri}')
         try:
             if args.scope:
-                auth.scope = args.scope
+                auth.set_scope(args.scope)
                 auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password)
             else:
                 auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password)
@@ -926,7 +926,7 @@ def main():
     elif args.command == 'appauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
-        auth.scope = args.scope
+        auth.set_scope(args.scope)
         if args.cae:
             auth.set_cae()
         auth.tenant = args.tenant
@@ -955,7 +955,7 @@ def main():
     elif args.command == 'federatedappauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
-        auth.scope = args.scope
+        auth.set_scope(args.scope)
         if args.cae:
             auth.set_cae()
         auth.tenant = args.tenant
@@ -1061,7 +1061,7 @@ def main():
         if args.cae:
             auth.set_cae()
         auth.set_client_id(args.client)
-        auth.scope = args.scope
+        auth.set_scope(args.scope)
         if args.redirect_url:
             redirect_url = args.redirect_url
         else:
@@ -1143,7 +1143,7 @@ def main():
             auth.set_cae()
         if args.scope:
             # Switch to identity platform v2 and use scope instead of resource
-            auth.scope = args.scope
+            auth.set_scope(args.scope)
             auth.authenticate_with_code_native_v2(args.code, args.redirect_url, client_secret=args.password)
         else:
             auth.authenticate_with_code_native(args.code, args.redirect_url, client_secret=args.password)
@@ -1167,7 +1167,7 @@ def main():
         print('Well-known clients. Can be used as alias with -c or --client')
         print()
         for alias, clientid in WELLKNOWN_CLIENTS.items():
-            print(f"{alias:<10} - {clientid}")
+            print(f"{alias:<14} - {clientid}")
         print()
         print('Well-known resources. Can be used as alias with -r or --resource')
         print()
@@ -1191,7 +1191,7 @@ def main():
         if args.force_mfa:
             auth.set_force_mfa()
         if args.scope:
-            auth.scope = args.scope
+            auth.set_scope(args.scope)
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
         if args.redirect_url:
@@ -1238,7 +1238,7 @@ def main():
         if args.force_mfa:
             auth.set_force_mfa()
         if args.scope:
-            auth.scope = args.scope
+            auth.set_scope(args.scope)
         if args.redirect_url:
             redirect_url = args.redirect_url
         else:
@@ -1290,7 +1290,7 @@ def main():
         if args.force_mfa:
             auth.set_force_mfa()
         if args.scope:
-            auth.scope = args.scope
+            auth.set_scope(args.scope)
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
         if args.redirect_url:
@@ -1331,7 +1331,7 @@ def main():
             auth.set_cae()
         if args.force_mfa:
             auth.set_force_mfa()
-        auth.scope = args.scope
+        auth.set_scope(args.scope)
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_cookie:
