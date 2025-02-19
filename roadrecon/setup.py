@@ -30,6 +30,9 @@ setup(name='roadrecon',
           'aiohttp',
           'openpyxl'
       ],
+      extras_require={
+          'road2timeline': ['pyyaml', 'numpy', 'pandas']
+      },
       zip_safe=False,
       include_package_data=True,
       entry_points={
