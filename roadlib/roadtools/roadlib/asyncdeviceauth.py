@@ -123,6 +123,8 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
                 os_version = "14.5.0"
             elif device_type.lower() == "android":
                 os_version = "13.0"
+            else:
+                os_version = "1"
 
         if not device_domain:
             device_domain = "iminyour.cloud"
