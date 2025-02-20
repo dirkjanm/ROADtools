@@ -70,6 +70,14 @@ def main():
     rttsauth_parser.add_argument('--origin',
                                  action='store',
                                  help='Origin header to use in refresh token redemption (for single page app flows)')
+    rttsauth_parser.add_argument('-bc',
+                                 '--broker-client',
+                                 action='store',
+                                 help='Broker client ID (for Nested App Auth)')
+    rttsauth_parser.add_argument('-bru',
+                                 '--broker-redirect-url',
+                                 action='store',
+                                 help='Broker redirect URL (for Nested App Auth)')
 
     # Construct device module
     device_parser = subparsers.add_parser('device', help='Register or join devices to Azure AD')
@@ -889,6 +897,7 @@ def main():
         auth.set_client_id(tokenobject['_clientId'])
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
+        auth.set_scope(args.scope)
         auth.outfile = args.tokenfile
         if args.origin:
             auth.set_origin_value(args.origin)
@@ -905,15 +914,21 @@ def main():
             auth.use_cae = args.cae
         if not args.tokens_stdout:
             if args.scope:
-                print(f'Requesting token with scope {args.scope}')
+                print(f'Requesting token with scope {auth.scope}')
             else:
                 print(f'Requesting token for resource {auth.resource_uri}')
         try:
-            if args.scope:
-                auth.set_scope(args.scope)
-                auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password)
+            if args.broker_client:
+                additionaldata = {
+                    'brk_client_id': args.broker_client,
+                    'redirect_uri': args.broker_redirect_url
+                }
             else:
-                auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password)
+                additionaldata = None
+            if args.scope:
+                auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password, additionaldata=additionaldata)
+            else:
+                auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password, additionaldata=additionaldata)
             auth.save_tokens(args)
         except AuthenticationException as ex:
             try:
