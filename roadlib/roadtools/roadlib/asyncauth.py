@@ -297,8 +297,8 @@ class AsyncAuthentication(Authentication):
 
     async def authenticate_as_app_native(self, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
         """
-        Authenticate with an APP id + secret
-        Native ROADlib implementation
+        Authenticate with a client id + secret or assertion
+        Essentially an implementation of the oauth2 client credentials grant on the v1 auth endpoint
         """
         authority_uri = self.get_authority_url()
         data = {
@@ -327,7 +327,8 @@ class AsyncAuthentication(Authentication):
 
     async def authenticate_as_app_native_v2(self, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
         """
-        Authenticate with an APP id + secret (password credentials assigned to serviceprinicpal)
+        Authenticate with a client id + secret or assertion
+        Essentially an implementation of the oauth2 client credentials grant on the v2 auth endpoint
         """
         authority_uri = self.get_authority_url()
         data = {
@@ -357,6 +358,76 @@ class AsyncAuthentication(Authentication):
             return tokenreply
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
+
+    async def authenticate_on_behalf_of_native(self, token, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate on-behalf-of a user, providing their token
+        plus a middle tier app client id + secret (client secret or certificate based assertion)
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            "resource": self.resource_uri,
+            "assertion": token,
+            "requested_token_use": "on_behalf_of"
+        }
+        if assertion:
+            data['client_assertion_type'] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+            data['client_assertion'] = assertion
+        else:
+            if client_secret:
+                data['client_secret'] = client_secret
+            else:
+                data['client_secret'] = self.password
+        if additionaldata:
+            data = {**data, **additionaldata}
+        res = await self.requests_post(f"{authority_uri}/oauth2/token", data=data)
+        if res.status != 200:
+            raise AuthenticationException(await res.text())
+        tokenreply = await res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    async def authenticate_on_behalf_of_native_v2(self, token, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
+        """
+        Authenticate on-behalf-of a user, providing their token
+        plus a middle tier app client id + secret (client secret or certificate based assertion)
+        v2 endpoint implementation which uses a scope instead of a resource
+        """
+        authority_uri = self.get_authority_url()
+        data = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            "scope": self.scope,
+            "assertion": token,
+            "requested_token_use": "on_behalf_of"
+        }
+        if assertion:
+            data['client_assertion_type'] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+            data['client_assertion'] = assertion
+        else:
+            if client_secret:
+                data['client_secret'] = client_secret
+            else:
+                data['client_secret'] = self.password
+        if additionaldata:
+            data = {**data, **additionaldata}
+        if self.use_cae:
+            self.set_cae()
+        if self.claims:
+            data['claims'] = json.dumps(self.claims)
+        res = await self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
+        if res.status != 200:
+            raise AuthenticationException(await res.text())
+        tokenreply = await res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
 
     async def authenticate_with_refresh_native(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
         """
