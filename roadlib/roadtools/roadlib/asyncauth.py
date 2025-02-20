@@ -40,6 +40,9 @@ class AsyncAuthentication(Authentication):
         self.ahsession = None
         self.requestcounter = 0
         self.proxies = {}
+        self.cache_nonce = False
+        self.nonce = None
+        self.nonce_request_time = 0
 
     async def user_discovery_v1(self, username):
         """
@@ -679,6 +682,15 @@ class AsyncAuthentication(Authentication):
         Returns Nonce as a dict {'Nonce':'data'}
         """
         data = {'grant_type':'srv_challenge'}
+        if self.cache_nonce:
+            # Return cached nonce when we use that and it's fresh enough
+            if self.nonce_request_time + 180 > time.time():
+                return self.nonce
+            # Not fresh, request new one
+            self.nonce_request_time = time.time()
+            res = await self.requests_post('https://login.microsoftonline.com/common/oauth2/token', data=data)
+            self.nonce = await res.json(content_type=None)
+            return self.nonce
         res = await self.requests_post('https://login.microsoftonline.com/common/oauth2/token', data=data)
         return await res.json(content_type=None)
 
