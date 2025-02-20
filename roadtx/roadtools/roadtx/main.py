@@ -246,6 +246,52 @@ def main():
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
+    # Application auth - on behalf of
+    oboauth_parser = subparsers.add_parser('appauthobo', help='Authenticate with the on-behalf-of flow')
+    oboauth_parser.add_argument('-c',
+                                '--client',
+                                action='store',
+                                help='Client ID (application ID) to use when authenticating.',
+                                required=True)
+    oboauth_parser.add_argument('-p',
+                                '--password',
+                                action='store',
+                                help="Client secret or password credential for the application, if not using certificates")
+    oboauth_parser.add_argument('-r',
+                                '--resource',
+                                action='store',
+                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
+                                default='https://graph.windows.net')
+    oboauth_parser.add_argument('-s',
+                                '--scope',
+                                action='store',
+                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
+    oboauth_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='Tenant ID or domain to auth to',
+                                required=True)
+    oboauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with Application certificate')
+    oboauth_parser.add_argument('--key-pem', action='store', metavar='file', help='Private key file for Application')
+    oboauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Application cert and key as PFX file')
+    oboauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    oboauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    oboauth_parser.add_argument('--cae',
+                                action='store_true',
+                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
+    oboauth_parser.add_argument('-ua', '--user-agent', action='store',
+                                help='Custom user agent to use. Default: Python requests user agent')
+    oboauth_parser.add_argument('--tokenfile',
+                                action='store',
+                                help='File to store the credentials (default: .roadtools_auth)',
+                                default='.roadtools_auth')
+    oboauth_parser.add_argument('--tokens-stdout',
+                                action='store_true',
+                                help='Do not store tokens on disk, pipe to stdout instead')
+    oboauth_parser.add_argument('token',
+                                action='store',
+                                help='Token to middleware application that has the client ID as audience')
+
     # Federated application auth
     fedauth_parser = subparsers.add_parser('federatedappauth', help='Authenticate as an application with federated credentials')
     fedauth_parser.add_argument('-c',
@@ -966,6 +1012,35 @@ def main():
             else:
                 assertion = auth.generate_app_assertion(use_v2=False)
                 auth.authenticate_as_app_native(assertion=assertion)
+        auth.save_tokens(args)
+    elif args.command == 'appauthobo':
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        auth.set_scope(args.scope)
+        if args.cae:
+            auth.set_cae()
+        auth.tenant = args.tenant
+        auth.outfile = args.tokenfile
+        if not args.tokens_stdout:
+            if args.scope:
+                print(f'Requesting token with scope {auth.scope}')
+            else:
+                print(f'Requesting token for resource {auth.resource_uri}')
+        if args.password:
+            # Password based flow
+            if args.scope:
+                auth.authenticate_on_behalf_of_native_v2(token=args.token, client_secret=args.password)
+            else:
+                auth.authenticate_on_behalf_of_native(token=args.token, client_secret=args.password)
+        else:
+            if not auth.loadappcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+                return
+            if args.scope:
+                assertion = auth.generate_app_assertion(use_v2=True)
+                auth.authenticate_on_behalf_of_native_v2(token=args.token, assertion=assertion)
+            else:
+                assertion = auth.generate_app_assertion(use_v2=False)
+                auth.authenticate_on_behalf_of_native(token=args.token, assertion=assertion)
         auth.save_tokens(args)
     elif args.command == 'federatedappauth':
         auth.set_client_id(args.client)
