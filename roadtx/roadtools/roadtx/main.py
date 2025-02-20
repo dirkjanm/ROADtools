@@ -530,7 +530,7 @@ def main():
     intauth_parser.add_argument('--estscookie',
                                 action='store',
                                 help='ESTSAUTHPERSISTENT cookie from browser')
-    intauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
+    intauth_parser.add_argument('-url', '--url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     intauth_parser.add_argument('-c',
                                 '--client',
                                 action='store',
@@ -590,7 +590,7 @@ def main():
     kdbauth_parser.add_argument('-u', '--username', action='store', help='User to authenticate as (must exist as username in KeePass)')
     kdbauth_parser.add_argument('-kp', '--keepass', action='store', metavar='KPFILE', default='roadtx.kdbx', help='KeePass file (default: roadtx.kdbx)')
     kdbauth_parser.add_argument('-kpp', '--keepass-password', action='store', metavar='KPPASS', help='KeePass file password. Can also be provided via KPPASS environment variable.')
-    kdbauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
+    kdbauth_parser.add_argument('-url', '--url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     kdbauth_parser.add_argument('-c',
                                 '--client',
                                 action='store',
@@ -650,7 +650,7 @@ def main():
 
     # Interactive auth using Selenium - inject PRT
     browserprtauth_parser = subparsers.add_parser('browserprtauth', help='Selenium based auth with automatic PRT usage. Emulates Edge browser with PRT')
-    browserprtauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
+    browserprtauth_parser.add_argument('-url', '--url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     browserprtauth_parser.add_argument('-c',
                                        '--client',
                                        action='store',
@@ -718,7 +718,7 @@ def main():
     injauth_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password of the user (can be left out if using PRT, or KeePass creds)')
     injauth_parser.add_argument('-kp', '--keepass', action='store', metavar='KPFILE', default='roadtx.kdbx', help='KeePass file (default: roadtx.kdbx)')
     injauth_parser.add_argument('-kpp', '--keepass-password', action='store', metavar='KPPASS', help='KeePass file password. Can also be provided via KPPASS environment variable.')
-    injauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
+    injauth_parser.add_argument('-url', '--url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     injauth_parser.add_argument('-c',
                                 '--client',
                                 action='store',
@@ -1289,8 +1289,8 @@ def main():
         else:
             redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
         selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
-        if args.auth_url:
-            url = args.auth_url
+        if args.url:
+            url = args.url
         else:
             url = auth.build_auth_url(redirect_url, 'code', args.scope)
         service = selauth.get_service(args.driver_path)
@@ -1389,10 +1389,10 @@ def main():
             redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
         selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
         password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
-        if args.auth_url:
-            url = args.auth_url
+        if args.url:
+            url = args.url
         else:
-            url = auth.build_auth_url(redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(redirect_url, 'code', auth.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1436,8 +1436,8 @@ def main():
         else:
             redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
         selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
-        if args.auth_url:
-            url = args.auth_url
+        if args.url:
+            url = args.url
         else:
             if not args.tokens_stdout:
                 if args.scope:
@@ -1492,8 +1492,8 @@ def main():
         else:
             redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
         selauth = SeleniumAuthentication(auth, deviceauth, redirect_url)
-        if args.auth_url:
-            url = args.auth_url
+        if args.url:
+            url = args.url
         else:
             url = auth.build_auth_url(redirect_url, 'code', args.scope)
             if args.username:
