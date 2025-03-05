@@ -584,6 +584,9 @@ def main():
     intauth_parser.add_argument('--origin',
                                 action='store',
                                 help='Origin header to use in code redemption (for single page app flows)')
+    intauth_parser.add_argument('--otpseed',
+                                action='store',
+                                help='TOTP seed to calculate MFA code when prompted')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
@@ -776,7 +779,9 @@ def main():
     injauth_parser.add_argument('--origin',
                                 action='store',
                                 help='Origin header to use in code redemption (for single page app flows)')
-
+    injauth_parser.add_argument('--otpseed',
+                                action='store',
+                                help='TOTP seed to calculate MFA code when prompted')
 
     # Interactive auth using Selenium - enrich PRT
     enrauth_parser = subparsers.add_parser('prtenrich', help='Interactive authentication to add MFA claim to a PRT')
@@ -804,6 +809,9 @@ def main():
     enrauth_parser.add_argument('--tokens-stdout',
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
+    enrauth_parser.add_argument('--otpseed',
+                                action='store',
+                                help='TOTP seed to calculate MFA code when prompted')
 
     # CLI authentication with device code flow
     cliauth_parser = subparsers.add_parser('clicodeauth', help='Manual interactive authentication with external browser')
@@ -855,6 +863,7 @@ def main():
     owalogin_parser.add_argument('--access-token', action='store', help='Access token for Outlook. If not specified, taken from .roadtools_auth')
     owalogin_parser.add_argument('-ua', '--user-agent', action='store',
                                  help='Custom user agent to use. By default the user agent from FireFox is used without modification')
+    owalogin_parser.add_argument('-f', '--tokenfile', action='store', help='File to read the token from (default: .roadtools_auth)', default='.roadtools_auth')
 
     # SPO Login with token
     spologin_parser = subparsers.add_parser('sharepointlogin', help='Login to SharePoint with token')
@@ -862,6 +871,7 @@ def main():
     spologin_parser.add_argument('-ua', '--user-agent', action='store',
                                  help='Custom user agent to use. By default the user agent from FireFox is used without modification')
     spologin_parser.add_argument('--host', action='store', help='SharePoint host to use, for example: https://mycompany-my.sharepoint.com if unspecified, taken from access token')
+    spologin_parser.add_argument('-f', '--tokenfile', action='store', help='File to read the token from (default: .roadtools_auth)', default='.roadtools_auth')
 
     # ADFS Encrypted blob decrypt
     adfsdec_parser = subparsers.add_parser('decryptadfskey', help='Decrypt Encrypted PFX blob from ADFSpoof into PEM or PFX file')
@@ -1302,13 +1312,13 @@ def main():
                 krbtoken = sys.stdin.read().strip()
             else:
                 krbtoken = args.krbtoken
-            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=krbtoken, keep=args.keep_open)
+            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, otpseed=args.otpseed, capture=args.capture_code, krbdata=krbtoken, keep=args.keep_open)
         elif args.estscookie:
-            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie, keep=args.keep_open)
+            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, otpseed=args.otpseed, capture=args.capture_code, estscookie=args.estscookie, keep=args.keep_open)
         elif custom_ua:
-            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
+            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, otpseed=args.otpseed, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         else:
-            result = selauth.selenium_login_regular(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
+            result = selauth.selenium_login_regular(url, args.username, args.password, otpseed=args.otpseed, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
@@ -1505,7 +1515,7 @@ def main():
             password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         else:
             password = args.password
-            otpseed = None
+            otpseed = args.otpseed
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1548,7 +1558,7 @@ def main():
         if args.username and args.keepass and (args.keepass_password or 'KPPASS' in os.environ or args.keepass.endswith('.xml')):
             _, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         else:
-            otpseed = None
+            otpseed = args.otpseed
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1822,7 +1832,7 @@ def main():
             tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
         else:
             try:
-                with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
                     tokenobject = json.load(infile)
                 _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
             except FileNotFoundError:
@@ -1852,7 +1862,7 @@ def main():
             tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
         else:
             try:
-                with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
                     tokenobject = json.load(infile)
                 _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
             except FileNotFoundError:
