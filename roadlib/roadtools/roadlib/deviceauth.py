@@ -781,13 +781,13 @@ class DeviceAuthentication():
         # Sign with random key just to get jwt body in right encoding
         tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
         jbody = tempjwt.split('.')[1]
-        jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
+        jwtbody = base64.urlsafe_b64decode(jbody+('='*(len(jbody)%4)))
 
         # Now calculate the derived key based on random context plus jwt body
         _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)
 
         # Uncomment to use KDFv1
-        # _, derived_key = authlib.calculate_derived_key(self.session_key, context)
+        # _, derived_key = self.auth.calculate_derived_key(self.session_key, context)
         reqjwt = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
 
         token_request_data = {
@@ -798,6 +798,8 @@ class DeviceAuthentication():
         }
         if reqtgt:
             token_request_data['tgt'] = True
+        if self.auth.claims:
+            token_request_data['claims'] = json.dumps(self.auth.claims)
         res = self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/v2.0/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -983,5 +985,40 @@ class DeviceAuthentication():
         elif client == '1b730954-1685-4b74-9bfd-dac224a7b894':
             payload['redirect_uri'] = 'https://login.microsoftonline.com/common/oauth2/nativeclient'
         responsedata = self.request_token_with_sessionkey_signed_payload(payload, False)
+        tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
+        return tokendata
+
+    def aad_brokerplugin_prt_auth_v3(self, client_id, scope=None, renew_prt=False, redirect_uri=None):
+        """
+        Auth using a PRT emulating the AAD Brokerplugin client on MacOS (and Android/etc)
+        Uses PRT protocol v3
+        """
+        challenge = self.auth.get_srv_challenge_nonce()
+        client = self.auth.lookup_client_id(client_id).lower()
+        payload = {
+            "scope": "profile offline_access openid https://graph.windows.net/.default aza",
+            # "resource": self.auth.lookup_resource_uri(resource),
+            "request_nonce": challenge,
+            "refresh_token": self.prt,
+            "iss": "0ec893e0-5785-4de6-99da-4ed124e5296c",
+            "grant_type": "refresh_token",
+            "client_id": f"{client}",
+            "aud": "login.microsoftonline.com",
+
+            "redirect_uri": "msauth://Microsoft.AAD.BrokerPlugin",
+            "aud": "https://login.windows.net/common/oauth2/v2.0/token",
+            # "client_id": "29d9ed98-a469-4536-ade2-f981bc1d605e",
+            # "iss": "29d9ed98-a469-4536-ade2-f981bc1d605e"
+        }
+        payload['scope'] = 'urn:aad:tb:update:prt/.default openid profile offline_access'
+        if not scope:
+            scope = self.auth.scope
+        payload['scope'] = scope
+        # Custom redirect_uri if needed
+        if redirect_uri:
+            payload['redirect_uri'] = redirect_uri
+        # elif client == '1b730954-1685-4b74-9bfd-dac224a7b894':
+        #     payload['redirect_uri'] = 'https://login.microsoftonline.com/common/oauth2/nativeclient'
+        responsedata = self.request_token_with_sessionkey_signed_payload_prtprotocolv3(payload, False)
         tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
         return tokendata

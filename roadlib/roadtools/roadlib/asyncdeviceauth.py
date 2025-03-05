@@ -615,3 +615,68 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
         responsedata = await self.request_token_with_sessionkey_signed_payload(payload, False)
         tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
         return tokendata
+
+    async def aad_brokerplugin_prt_auth_v3(self, client_id, scope=None, renew_prt=False, redirect_uri=None):
+        """
+        Auth using a PRT emulating the AAD Brokerplugin client on MacOS (and Android/etc)
+        Uses PRT protocol v3
+        """
+        client = self.auth.lookup_client_id(client_id).lower()
+        payload = {
+            "refresh_token": self.prt,
+            "iss": "0ec893e0-5785-4de6-99da-4ed124e5296c",
+            "grant_type": "refresh_token",
+            "client_id": f"{client}",
+            "redirect_uri": "msauth://Microsoft.AAD.BrokerPlugin",
+            "aud": "https://login.windows.net/common/oauth2/v2.0/token",
+        }
+        # payload['scope'] = 'urn:aad:tb:update:prt/.default openid profile offline_access'
+        if not scope:
+            scope = self.auth.scope
+        payload['scope'] = scope
+        payload['request_nonce'] = await self.auth.get_srv_challenge_nonce()
+        # Custom redirect_uri if needed
+        if redirect_uri:
+            payload['redirect_uri'] = redirect_uri
+        responsedata = await self.request_token_with_sessionkey_signed_payload_prtprotocolv3(payload, False)
+        tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
+        return tokendata
+
+    async def request_token_with_sessionkey_signed_payload_prtprotocolv3(self, payload, reqtgt=True):
+        """
+        Request a token (access / refresh / PRT) using a payload signed
+        with the PRT session key. Uses PRT Protocol version 3
+        """
+        context = os.urandom(24)
+        headers = {
+            'ctx': base64.b64encode(context).decode('utf-8'),
+            'kdf_ver': 2
+        }
+
+        # Sign with random key just to get jwt body in right encoding
+        tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
+        jbody = tempjwt.split('.')[1]
+        jwtbody = base64.urlsafe_b64decode(jbody+('='*(len(jbody)%4)))
+
+        # Now calculate the derived key based on random context plus jwt body
+        _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)
+
+        # Uncomment to use KDFv1
+        # _, derived_key = self.auth.calculate_derived_key(self.session_key, context)
+        reqjwt = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
+
+        token_request_data = {
+            'prt_protocol_version':'3.0',
+            'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'request':reqjwt,
+            'client_info':'1'
+        }
+        if reqtgt:
+            token_request_data['tgt'] = True
+        if self.auth.claims:
+            token_request_data['claims'] = json.dumps(self.auth.claims)
+        res = await self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/v2.0/token', data=token_request_data)
+        if res.status != 200:
+            raise AuthenticationException(await res.text())
+        responsedata = await res.text()
+        return responsedata
