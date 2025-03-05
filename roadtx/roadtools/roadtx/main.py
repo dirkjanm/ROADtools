@@ -140,6 +140,8 @@ def main():
     prt_parser.add_argument('--prt', action='store', metavar='PRT', help='Primary Refresh Token (for renewal)')
     prt_parser.add_argument('-s', '--prt-sessionkey', action='store', help='Primary Refresh Token session key (as hex key)')
 
+    prt_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version 3.0')
+
     prt_parser.add_argument('-hk', '--hello-key', action='store', help='Windows Hello PEM file')
     prt_parser.add_argument('-ha', '--hello-assertion', action='store', help='Windows Hello assertion as JWT')
 
@@ -202,6 +204,12 @@ def main():
                                 action='store',
                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     prtauth_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version v3')
+    prtauth_parser.add_argument('-v4', '--prt-protocol-v4', action='store_true', help='Use PRT protocol version v4')
+    prtauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with device certificate (applies to PRTv4 only)')
+    prtauth_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for device (applies to PRTv4 only)')
+    prtauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Device cert and key as PFX file (applies to PRTv4 only)')
+    prtauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password (applies to PRTv4 only)')
+    prtauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string (applies to PRTv4 only)')
 
     # Application auth
     appauth_parser = subparsers.add_parser('appauth', help='Authenticate as an application')
@@ -1133,7 +1141,10 @@ def main():
                         return
                 else:
                     refresh_token = args.refresh_token
-                prtdata = deviceauth.get_prt_with_refresh_token(refresh_token)
+                if args.prt_protocol_v3:
+                    prtdata = deviceauth.get_prt_with_refresh_token_v3(refresh_token)
+                else:
+                    prtdata = deviceauth.get_prt_with_refresh_token(refresh_token)
 
             if args.username and deviceauth.loadhellokey(args.hello_key):
                 prtdata = deviceauth.get_prt_with_hello_key(args.username)
@@ -1175,7 +1186,10 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
-        tokendata = deviceauth.aad_brokerplugin_prt_auth(args.client, args.resource, redirect_uri=args.redirect_url)
+        if args.prt_protocol_v3:
+            tokendata = deviceauth.aad_brokerplugin_prt_auth_v3(args.client, args.resource, redirect_uri=redirect_url)
+        else:
+            tokendata = deviceauth.aad_brokerplugin_prt_auth(args.client, args.resource, redirect_uri=redirect_url)
         # We need to convert this to a token format roadlib understands
         if 'access_token' in tokendata:
             tokenobject, _ = auth.parse_accesstoken(tokendata['access_token'])
