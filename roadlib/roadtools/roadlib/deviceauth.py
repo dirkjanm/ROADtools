@@ -1014,6 +1014,9 @@ class DeviceAuthentication():
         if not scope:
             scope = self.auth.scope
         payload['scope'] = scope
+        # Request new PRT instead of access token
+        if renew_prt and not 'aza' in scope.split(' '):
+            payload['scope'] += ' aza'
         # Custom redirect_uri if needed
         if redirect_uri:
             payload['redirect_uri'] = redirect_uri

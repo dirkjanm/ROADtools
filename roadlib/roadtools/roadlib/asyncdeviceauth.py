@@ -634,6 +634,9 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
         if not scope:
             scope = self.auth.scope
         payload['scope'] = scope
+        # Request new PRT instead of access token
+        if renew_prt and not 'aza' in scope.split(' '):
+            payload['scope'] += ' aza'
         payload['request_nonce'] = await self.auth.get_srv_challenge_nonce()
         # Custom redirect_uri if needed
         if redirect_uri:
