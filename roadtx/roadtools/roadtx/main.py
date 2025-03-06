@@ -1187,7 +1187,9 @@ def main():
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
         if args.prt_protocol_v3:
-            tokendata = deviceauth.aad_brokerplugin_prt_auth_v3(args.client, args.resource, redirect_uri=redirect_url)
+            if not args.scope and args.resource is not None:
+                args.scope = f"{args.resource}/.default"
+            tokendata = deviceauth.aad_brokerplugin_prt_auth_v3(args.client, args.scope, redirect_uri=redirect_url)
         else:
             tokendata = deviceauth.aad_brokerplugin_prt_auth(args.client, args.resource, redirect_uri=redirect_url)
         # We need to convert this to a token format roadlib understands
