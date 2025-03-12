@@ -1,0 +1,49 @@
+[build-system]
+requires = [
+    "setuptools"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roadtools"
+version = "1.5.0"
+description = "Azure AD recon for red and blue"
+license = {text = "MIT"}
+classifiers = [
+    'Intended Audience :: Information Technology',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+]
+authors = [
+    {name = "Dirk-jan Mollema", email = "dirkjan@dirkjanm.io"},
+]
+dependencies = [
+    "roadlib>=0.21",
+    "flask<3",
+    "sqlalchemy>=1.4",
+    "marshmallow",
+    "flask-sqlalchemy>=2.5",
+    "flask-marshmallow",
+    "flask-cors",
+    "marshmallow-sqlalchemy>=0.29",
+    "aiohttp",
+    "openpyxl"
+]
+
+[project.urls]
+Repository = "https://github.com/dirkjanm/ROADtools/"
+
+[tool.setuptools]
+packages = ["roadtools.roadrecon", "roadtools.roadrecon.plugins"]
+
+[tool.setuptools.package-data]
+"roadtools.roadrecon.plugins" = ["*.yaml"]
+
+[project.scripts]
+roadrecon-gui = "roadtools.roadrecon.server:main"
+roadrecon = "roadtools.roadrecon.main:main"
