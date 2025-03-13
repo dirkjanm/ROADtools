@@ -28,7 +28,7 @@ def selenium_wrap(func):
                 return False
             raise exc
         except exceptions.WebDriverException as exc:
-            if 'Failed to decode response from marionette' in str(exc) or 'WebDriver session does not exist' in str(exc):
+            if 'Failed to decode response from marionette' in str(exc):
                 print('Browser window closed by the user')
                 return False
             raise exc
@@ -78,15 +78,12 @@ class SeleniumAuthentication():
                     'https': f'{self.proxy_type}://{self.proxy}',
                     'no_proxy': 'localhost,127.0.0.1'
                 },
-                'request_storage': 'memory',
-                'exclude_hosts':['cdn.office.net','res-1.cdn.office.net','aadcdn.msauth.net','cdn.mozilla.net','amcdn.msftauth.net']
+                'request_storage': 'memory'
             }
             # Force intercept to add proxy
             intercept = True
         else:
-            options = {'request_storage': 'memory','exclude_hosts':['cdn.office.net','res-1.cdn.office.net','aadcdn.msauth.net','cdn.mozilla.net','amcdn.msftauth.net']}
-            if self.redir_has_custom_scheme():
-                intercept = True
+            options = {'request_storage': 'memory'}
         if intercept and self.headless:
             firefox_options=FirefoxOptions()
             firefox_options.add_argument("-headless")
@@ -106,52 +103,6 @@ class SeleniumAuthentication():
         except StaleElementReferenceException:
             return False
         return False
-
-    def redir_has_custom_scheme(self):
-        '''
-        Check whether the redirect URL has a custom scheme
-        In this case we try to replace this during the response since Firefox otherwise bugs out
-        '''
-        if not self.redirurl:
-            return False
-        parsed = urlparse(self.redirurl)
-        return not parsed.scheme.lower() in ('http', 'https')
-
-    def redir_interceptor(self, request, response):
-        '''
-        Intercept redirect response to replace custom scheme
-        '''
-        if request.url.startswith('https://login.microsoftonline.com/'):
-            # Microsoft seems to auto-lowercase the redirect URL internally, but only the hostname
-            if response.headers['Location'] and response.headers['Location'].lower().startswith(self.redirurl.lower()):
-                parsed = urlparse(response.headers['Location'])
-                newredir = "https://login.microsoftonline.com/common/oauth2/nativeclient"
-                if parsed.query:
-                    newredir += f'?{parsed.query}'
-                if parsed.fragment:
-                    newredir += f'#{parsed.fragment}'
-                del response.headers['Location']
-                response.headers['Location'] = newredir
-            if request.url.startswith('https://login.microsoftonline.com/appverify'):
-                body = encoding.decode(response.body, response.headers.get('Content-Encoding', 'identity'))
-                if b'document.location.replace' in body:
-                    # url replace with javascript :(
-                    startstring = b'document.location.replace("'
-                    index = body.find(startstring) + len(startstring)
-                    endstring = b'")'
-                    endindex = body[index:].find(endstring) + index
-                    urlstring = body[index:endindex].decode('utf-8')
-                    if urlstring.lower().startswith(self.redirurl.lower()):
-                        parsed = urlparse(urlstring)
-                        newredir = "https://login.microsoftonline.com/common/oauth2/nativeclient"
-                        if parsed.query:
-                            newredir += f'?{parsed.query}'
-                        if parsed.fragment:
-                            newredir += f'#{parsed.fragment}'
-                        body = body.replace(urlstring.encode('utf-8'), newredir.encode('utf-8'))
-                        response.body = encoding.encode(body, response.headers.get('Content-Encoding', 'identity'))
-                        del response.headers['Content-Length']
-                        response.headers['Content-Length'] = len(response.body)
 
     def get_keepass_cred(self, identity, filepath, password):
         '''
@@ -288,16 +239,6 @@ class SeleniumAuthentication():
             del request.headers['User-Agent']
             request.headers['User-Agent'] = self.auth.user_agent
         self.driver.request_interceptor = interceptor
-        if self.redir_has_custom_scheme():
-            self.driver.response_interceptor = self.redir_interceptor
-        return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
-
-    def selenium_login_regular(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, federated=False, devicecode=None):
-        '''
-        Wrapper for plain login but with redirect URL rewrite support
-        '''
-        if self.redir_has_custom_scheme():
-            self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
 
     def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None, capture=False):
@@ -332,8 +273,6 @@ class SeleniumAuthentication():
                                                                            self.deviceauth.session_key)
                         request.headers['X-Ms-Refreshtokencredential'] = cookie
         self.driver.request_interceptor = interceptor
-        if self.redir_has_custom_scheme():
-            self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
     def selenium_login_with_kerberos(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, krbdata=None):
@@ -358,8 +297,6 @@ class SeleniumAuthentication():
                     request.headers['Authorization'] = f'Negotiate {krbdata}'
 
         self.driver.request_interceptor = interceptor
-        if self.redir_has_custom_scheme():
-            self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
     def selenium_login_with_estscookie(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, estscookie=None):
@@ -383,8 +320,6 @@ class SeleniumAuthentication():
             request.headers['Cookie'] = f'ESTSAUTHPERSISTENT={estscookie}; ' + existing
 
         self.driver.request_interceptor = interceptor
-        if self.redir_has_custom_scheme():
-            self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity, password, otpseed, keep=keep, capture=capture)
 
     @selenium_wrap
@@ -432,23 +367,12 @@ class SeleniumAuthentication():
                     del response.headers['Content-Length']
                     response.headers['Content-Length'] = len(response.body)
 
-                # Microsoft seems to auto-lowercase the redirect URL internally
-                if response.headers['Location'] and response.headers['Location'].lower().startswith(self.redirurl.lower()):
-                    parsed = urlparse(response.headers['Location'])
-                    newredir = "https://login.microsoftonline.com/common/oauth2/nativeclient"
-                    if parsed.query:
-                        newredir += f'?{parsed.query}'
-                    if parsed.fragment:
-                        newredir += f'#{parsed.fragment}'
-                    del response.headers['Location']
-                    response.headers['Location'] = newredir
-
         self.driver.request_interceptor = interceptor
         self.driver.response_interceptor = response_interceptor
 
         driver = self.driver
         driver.get(url)
-
+        
         if otpseed:
             try:
                 els = WebDriverWait(driver, 4).until(lambda d: d.find_element(By.CSS_SELECTOR, '[data-value="PhoneAppOTP"]'))
@@ -464,7 +388,7 @@ class SeleniumAuthentication():
             except TimeoutException:
                 # No MFA?
                 pass
-
+        
         el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='form[name="hiddenform"] input[name="code"]'))
         code = el.get_property("value")
         driver.close()
@@ -508,7 +432,7 @@ class SeleniumAuthentication():
                     "session_state": "56f4cbb9-6cc9-4150-a4b3-5b2865f916c9",
                     "correlation_id": "2c13357a-eab7-97ed-bd48-8b50a6979bfc"
                 }
-                res = self.auth.requests_post(req_url, allow_redirects=False, headers=req_headers, cookies=req_cookies, data=req_data)
+                res = requests.post(req_url, allow_redirects=False, headers=req_headers, cookies=req_cookies, data=req_data, timeout=30.0)
                 request.create_response(
                     status_code=res.status_code,
                     headers=dict(res.headers),
@@ -531,87 +455,6 @@ class SeleniumAuthentication():
 
         driver = self.driver
         driver.get("https://outlook.office.com/owa/?init")
-        try:
-            WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='div[name="youshouldquit"]'))
-            return False
-        except TimeoutException:
-            pass
+        el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='div[name="youshouldquit"]'))
+        driver.close()
 
-    @selenium_wrap
-    def selenium_login_spotoken(self, spotoken, spourlbase):
-        def interceptor(request):
-            if request.url == f'{spourlbase}/?init':
-                # Replace with SPO login request
-                parsed = urlparse(spourlbase)
-                spohost = parsed.hostname
-                req_url = f"{spourlbase}/_layouts/15/filebrowser.aspx"
-                # req_url += "?app=TeamsFile&fileBrowser={%22sdk%22:%228.0%22,%22messaging%22:{%22origin%22:%22https://teams.microsoft.com%22,%22channelId%22:%220.47249827%22,%22identifyParent%22:true},%22authentication%22:{},%22entry%22:{%22oneDrive%22:{%22recent%22:{}}}}&scenario=OneDriveFiles&auth=none&locale=en-us&hostName=TeamsModern&preWarmFB=true&dataFetchOnIdle=true"
-                req_headers = {
-                    "Cache-Control": "max-age=0",
-                    "Origin": "https://teams.microsoft.com",
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Upgrade-Insecure-Requests": "1",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0 Teams/24295.605.3225.8804/49",
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "Sec-Fetch-Site": "cross-site",
-                    "Sec-Fetch-Mode": "navigate",
-                    "Sec-Fetch-User": "?1",
-                    "Sec-Fetch-Dest": "document",
-                    "Accept-Encoding": "gzip, deflate, br",
-                    "Accept-Language": "en-US,en;q=0.9",
-                    "Priority": "u=0, i",
-                }
-                req_data = {
-                    "access_token": spotoken,
-                }
-                # First request, get auth cookie
-                req2_url = f"https://{spohost}/_api/SP.OAuth.NativeClient/Authenticate"
-                req2_cookies = {
-                    "FeatureOverrides_experiments": "[]"
-                }
-                req2_headers = {
-                    "Authorization": f"Bearer {spotoken}",
-                    "Collectspperfmetrics": "SPSQLQueryCount",
-                    "X-Featureversion": "2",
-                    "Accept": "application/json;odata=verbose",
-                    "Content-Type": "application/json;odata=verbose",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0 Teams/24295.605.3225.8804/49",
-                    "Origin": spohost,
-                    "Sec-Fetch-Site": "same-origin",
-                    "Sec-Fetch-Mode": "cors",
-                    "Sec-Fetch-Dest": "empty",
-                    "Referer": req_url,
-                    "Accept-Encoding": "gzip, deflate, br",
-                    "Accept-Language": "en-US,en;q=0.9",
-                    "Priority": "u=1, i",
-                }
-                res2 = self.auth.requests_post(req2_url, headers=req2_headers, cookies=req2_cookies)
-                if res2.status_code != 200:
-                    data = res2.json()
-                    raise AuthenticationException(f'Failed to obtain SPO cookie. Error: {data["error_description"]}')
-                res = self.auth.requests_post(req_url, allow_redirects=False, headers=req_headers, data=req_data)
-
-                response_headers = dict(res.headers)
-                response_headers['Set-Cookie'] = res2.headers['Set-Cookie']
-                response_headers['Location'] = '/'
-                request.create_response(
-                    status_code=302,
-                    headers=response_headers,
-                    body=res.content
-                )
-            if request.url.startswith('https://login.microsoftonline.com'):
-                request.create_response(
-                    status_code=200,
-                    body="No."
-                )
-
-
-        self.driver.request_interceptor = interceptor
-
-        driver = self.driver
-        driver.get(f"{spourlbase}/?init")
-        try:
-            WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='div[name="youshouldquit"]'))
-            return False
-        except TimeoutException:
-            pass

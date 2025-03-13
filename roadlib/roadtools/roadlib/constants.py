@@ -9,8 +9,7 @@ WELLKNOWN_RESOURCES = {
     "drs": "urn:ms-drs:enterpriseregistration.windows.net",
     "azrm": "https://management.core.windows.net/",
     "azurerm": "https://management.core.windows.net/",
-    "outlook": "https://outlook.office.com/",
-    "sharepoint": "00000003-0000-0ff1-ce00-000000000000"
+    "outlook": "https://outlook.office.com/"
 }
 
 WELLKNOWN_CLIENTS = {
@@ -22,8 +21,7 @@ WELLKNOWN_CLIENTS = {
     "msedge": "ecd6b820-32c2-49b6-98a6-444530e5a77a",
     "edge": "ecd6b820-32c2-49b6-98a6-444530e5a77a",
     "msbroker": "29d9ed98-a469-4536-ade2-f981bc1d605e",
-    "broker": "29d9ed98-a469-4536-ade2-f981bc1d605e",
-    "companyportal": "9ba1a5c7-f17a-4de9-a1f1-6178c8d51223"
+    "broker": "29d9ed98-a469-4536-ade2-f981bc1d605e"
 }
 
 WELLKNOWN_USER_AGENTS = {
@@ -108,12 +106,3 @@ DSSO_BODY_USERPASS = '''<?xml version='1.0' encoding='UTF-8'?>
   </s:Body>
 </s:Envelope>
 '''
-
-SAML_TOKEN_TYPE_V1 = 'urn:oasis:names:tc:SAML:1.0:assertion'
-SAML_TOKEN_TYPE_V2 = 'urn:oasis:names:tc:SAML:2.0:assertion'
-GRANT_TYPE_SAML1_1 = 'urn:ietf:params:oauth:grant-type:saml1_1-bearer'
-GRANT_TYPE_SAML2 = "urn:ietf:params:oauth:grant-type:saml2-bearer"
-
-# http://docs.oasis-open.org/wss-m/wss/v1.1.1/os/wss-SAMLTokenProfile-v1.1.1-os.html#_Toc307397288
-WSS_SAML_TOKEN_PROFILE_V1_1 = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1"
-WSS_SAML_TOKEN_PROFILE_V2 = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0"

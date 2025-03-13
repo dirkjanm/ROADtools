@@ -7,12 +7,11 @@ import binascii
 import base64
 import time
 from collections import defaultdict
-from urllib.parse import urlparse, parse_qs, quote_plus
-from roadtools.roadlib.auth import Authentication, get_data, AuthenticationException
+from urllib.parse import quote_plus
+from roadtools.roadlib.auth import Authentication, get_data
 from roadtools.roadlib.constants import WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES, WELLKNOWN_USER_AGENTS
 from roadtools.roadlib.deviceauth import DeviceAuthentication
 from roadtools.roadtx.selenium import SeleniumAuthentication
-from roadtools.roadtx.utils import find_redirurl_for_client
 from roadtools.roadtx.federation import EncryptedPFX, SAMLSigner, encode_object_guid
 import pyotp
 
@@ -67,17 +66,6 @@ def main():
     rttsauth_parser.add_argument('--cae',
                                  action='store_true',
                                  help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
-    rttsauth_parser.add_argument('--origin',
-                                 action='store',
-                                 help='Origin header to use in refresh token redemption (for single page app flows)')
-    rttsauth_parser.add_argument('-bc',
-                                 '--broker-client',
-                                 action='store',
-                                 help='Broker client ID (for Nested App Auth)')
-    rttsauth_parser.add_argument('-bru',
-                                 '--broker-redirect-url',
-                                 action='store',
-                                 help='Broker redirect URL (for Nested App Auth)')
 
     # Construct device module
     device_parser = subparsers.add_parser('device', help='Register or join devices to Azure AD')
@@ -139,8 +127,6 @@ def main():
     prt_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (to save or load in case of renewal)')
     prt_parser.add_argument('--prt', action='store', metavar='PRT', help='Primary Refresh Token (for renewal)')
     prt_parser.add_argument('-s', '--prt-sessionkey', action='store', help='Primary Refresh Token session key (as hex key)')
-
-    prt_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version 3.0')
 
     prt_parser.add_argument('-hk', '--hello-key', action='store', help='Windows Hello PEM file')
     prt_parser.add_argument('-ha', '--hello-assertion', action='store', help='Windows Hello assertion as JWT')
@@ -204,12 +190,6 @@ def main():
                                 action='store',
                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     prtauth_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version v3')
-    prtauth_parser.add_argument('-v4', '--prt-protocol-v4', action='store_true', help='Use PRT protocol version v4')
-    prtauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with device certificate (applies to PRTv4 only)')
-    prtauth_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for device (applies to PRTv4 only)')
-    prtauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Device cert and key as PFX file (applies to PRTv4 only)')
-    prtauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password (applies to PRTv4 only)')
-    prtauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string (applies to PRTv4 only)')
 
     # Application auth
     appauth_parser = subparsers.add_parser('appauth', help='Authenticate as an application')
@@ -253,52 +233,6 @@ def main():
     appauth_parser.add_argument('--tokens-stdout',
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
-
-    # Application auth - on behalf of
-    oboauth_parser = subparsers.add_parser('appauthobo', help='Authenticate with the on-behalf-of flow')
-    oboauth_parser.add_argument('-c',
-                                '--client',
-                                action='store',
-                                help='Client ID (application ID) to use when authenticating.',
-                                required=True)
-    oboauth_parser.add_argument('-p',
-                                '--password',
-                                action='store',
-                                help="Client secret or password credential for the application, if not using certificates")
-    oboauth_parser.add_argument('-r',
-                                '--resource',
-                                action='store',
-                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
-                                default='https://graph.windows.net')
-    oboauth_parser.add_argument('-s',
-                                '--scope',
-                                action='store',
-                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
-    oboauth_parser.add_argument('-t',
-                                '--tenant',
-                                action='store',
-                                help='Tenant ID or domain to auth to',
-                                required=True)
-    oboauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with Application certificate')
-    oboauth_parser.add_argument('--key-pem', action='store', metavar='file', help='Private key file for Application')
-    oboauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Application cert and key as PFX file')
-    oboauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
-    oboauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
-    oboauth_parser.add_argument('--cae',
-                                action='store_true',
-                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
-    oboauth_parser.add_argument('-ua', '--user-agent', action='store',
-                                help='Custom user agent to use. Default: Python requests user agent')
-    oboauth_parser.add_argument('--tokenfile',
-                                action='store',
-                                help='File to store the credentials (default: .roadtools_auth)',
-                                default='.roadtools_auth')
-    oboauth_parser.add_argument('--tokens-stdout',
-                                action='store_true',
-                                help='Do not store tokens on disk, pipe to stdout instead')
-    oboauth_parser.add_argument('token',
-                                action='store',
-                                help='Token to middleware application that has the client ID as audience')
 
     # Federated application auth
     fedauth_parser = subparsers.add_parser('federatedappauth', help='Authenticate as an application with federated credentials')
@@ -356,40 +290,6 @@ def main():
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
-    # Construct device token module
-    devauth_parser = subparsers.add_parser('deviceauth', aliases=('getdevicetokens', 'getdevicetoken'), help='Request device tokens with device cert')
-    devauth_parser.add_argument('-c', '--cert-pem', action='store', metavar='file', help='Certificate file with device certificate')
-    devauth_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file for device')
-    devauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Device cert and key as PFX file')
-    devauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
-    devauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
-    helptext = 'Client ID to use when authenticating.'
-    devauth_parser.add_argument('--client',
-                                action='store',
-                                help=helptext,
-                                default='1b730954-1685-4b74-9bfd-dac224a7b894')
-    devauth_parser.add_argument('-r',
-                                '--resource',
-                                action='store',
-                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
-                                default='https://graph.windows.net')
-    devauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                 help='Custom redirect URL used when authenticating (default: ms-appx-web://Microsoft.AAD.BrokerPlugin/<clientid>)')
-    devauth_parser.add_argument('--tokenfile',
-                                action='store',
-                                help='File to store the credentials (default: .roadtools_auth)',
-                                default='.roadtools_auth')
-    devauth_parser.add_argument('--tokens-stdout',
-                                action='store_true',
-                                help='Do not store tokens on disk, pipe to stdout instead')
-    devauth_parser.add_argument('-ua', '--user-agent', action='store',
-                                help='Custom user agent to use. Default: Python requests user agent')
-    devauth_parser.add_argument('-t',
-                                '--tenant',
-                                required=True,
-                                action='store',
-                                help='Tenant ID or domain to auth to')
-
     # Code grant flow auth
     codeauth_parser = subparsers.add_parser('codeauth', help='Code grant flow - exchange code for auth tokens')
     clienthelptext = 'Client ID (application ID) to use when authenticating. Accepts aliases (list with roadtx listaliases)'
@@ -430,12 +330,6 @@ def main():
                                  help="Code to auth with that you got from Azure AD")
     codeauth_parser.add_argument('-ua', '--user-agent', action='store',
                                  help='Custom user agent to use. Default: Python requests user agent')
-    codeauth_parser.add_argument('--pkce-secret',
-                                 action='store',
-                                 help='PKCE secret to redeem the code')
-    codeauth_parser.add_argument('--origin',
-                                 action='store',
-                                 help='Origin header to use in code redemption (for single page app flows)')
 
     # Bulk enrollment token
     bulkenrollment_parser = subparsers.add_parser('bulkenrollmenttoken', help='Request / use bulk enrollment tokens')
@@ -538,7 +432,7 @@ def main():
     intauth_parser.add_argument('--estscookie',
                                 action='store',
                                 help='ESTSAUTHPERSISTENT cookie from browser')
-    intauth_parser.add_argument('-url', '--url', '--auth-url', action='store', metavar='URL', help=urlhelp)
+    intauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     intauth_parser.add_argument('-c',
                                 '--client',
                                 action='store',
@@ -554,7 +448,8 @@ def main():
                                 action='store',
                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     intauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
+                                help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
+                                default="https://login.microsoftonline.com/common/oauth2/nativeclient")
     intauth_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. By default the user agent from FireFox is used without modification')
     intauth_parser.add_argument('-t',
@@ -583,25 +478,13 @@ def main():
     intauth_parser.add_argument('--cae',
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
-    intauth_parser.add_argument('--force-mfa',
-                                action='store_true',
-                                help='Force MFA during authentication')
-    intauth_parser.add_argument('--pkce',
-                                action='store_true',
-                                help='Use PKCE during authentication')
-    intauth_parser.add_argument('--origin',
-                                action='store',
-                                help='Origin header to use in code redemption (for single page app flows)')
-    intauth_parser.add_argument('--otpseed',
-                                action='store',
-                                help='TOTP seed to calculate MFA code when prompted')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
     kdbauth_parser.add_argument('-u', '--username', action='store', help='User to authenticate as (must exist as username in KeePass)')
     kdbauth_parser.add_argument('-kp', '--keepass', action='store', metavar='KPFILE', default='roadtx.kdbx', help='KeePass file (default: roadtx.kdbx)')
     kdbauth_parser.add_argument('-kpp', '--keepass-password', action='store', metavar='KPPASS', help='KeePass file password. Can also be provided via KPPASS environment variable.')
-    kdbauth_parser.add_argument('-url', '--url', '--auth-url', action='store', metavar='URL', help=urlhelp)
+    kdbauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     kdbauth_parser.add_argument('-c',
                                 '--client',
                                 action='store',
@@ -617,7 +500,8 @@ def main():
                                 action='store',
                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     kdbauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
+                                help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
+                                default="https://login.microsoftonline.com/common/oauth2/nativeclient")
     kdbauth_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. By default the user agent from FireFox is used without modification')
     kdbauth_parser.add_argument('-t',
@@ -649,19 +533,12 @@ def main():
     kdbauth_parser.add_argument('--cae',
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
-    kdbauth_parser.add_argument('--force-mfa',
-                                action='store_true',
-                                help='Force MFA during authentication')
-    kdbauth_parser.add_argument('--pkce',
-                                action='store_true',
-                                help='Use PKCE during authentication')
-    kdbauth_parser.add_argument('--origin',
-                                action='store',
-                                help='Origin header to use in code redemption (for single page app flows)')
+
+
 
     # Interactive auth using Selenium - inject PRT
     browserprtauth_parser = subparsers.add_parser('browserprtauth', help='Selenium based auth with automatic PRT usage. Emulates Edge browser with PRT')
-    browserprtauth_parser.add_argument('-url', '--url', '--auth-url', action='store', metavar='URL', help=urlhelp)
+    browserprtauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     browserprtauth_parser.add_argument('-c',
                                        '--client',
                                        action='store',
@@ -677,7 +554,8 @@ def main():
                                        action='store',
                                        help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     browserprtauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                       help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
+                                       help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
+                                       default="https://login.microsoftonline.com/common/oauth2/nativeclient")
     browserprtauth_parser.add_argument('-ua', '--user-agent', action='store',
                                        help='Custom user agent to use. Default: Chrome on Windows user agent')
     browserprtauth_parser.add_argument('-t',
@@ -713,15 +591,6 @@ def main():
     browserprtauth_parser.add_argument('--cae',
                                        action='store_true',
                                        help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
-    browserprtauth_parser.add_argument('--force-mfa',
-                                       action='store_true',
-                                       help='Force MFA during authentication')
-    browserprtauth_parser.add_argument('--pkce',
-                                       action='store_true',
-                                       help='Use PKCE during authentication')
-    browserprtauth_parser.add_argument('--origin',
-                                       action='store',
-                                       help='Origin header to use in code redemption (for single page app flows)')
 
     # Interactive auth using Selenium - inject PRT to other user
     injauth_parser = subparsers.add_parser('browserprtinject', help='Selenium based auth with automatic PRT injection. Can be used with other users to add device state to session')
@@ -729,7 +598,7 @@ def main():
     injauth_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password of the user (can be left out if using PRT, or KeePass creds)')
     injauth_parser.add_argument('-kp', '--keepass', action='store', metavar='KPFILE', default='roadtx.kdbx', help='KeePass file (default: roadtx.kdbx)')
     injauth_parser.add_argument('-kpp', '--keepass-password', action='store', metavar='KPPASS', help='KeePass file password. Can also be provided via KPPASS environment variable.')
-    injauth_parser.add_argument('-url', '--url', '--auth-url', action='store', metavar='URL', help=urlhelp)
+    injauth_parser.add_argument('-url', '--auth-url', action='store', metavar='URL', help=urlhelp)
     injauth_parser.add_argument('-c',
                                 '--client',
                                 action='store',
@@ -745,7 +614,8 @@ def main():
                                 action='store',
                                 help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
     injauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
+                                help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
+                                default="https://login.microsoftonline.com/common/oauth2/nativeclient")
     injauth_parser.add_argument('-ua', '--user-agent', action='store',
                                 help='Custom user agent to use. Default: Chrome on Windows user agent')
     injauth_parser.add_argument('-t',
@@ -778,18 +648,6 @@ def main():
     injauth_parser.add_argument('--cae',
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
-    injauth_parser.add_argument('--force-mfa',
-                                action='store_true',
-                                help='Force MFA during authentication')
-    injauth_parser.add_argument('--pkce',
-                                action='store_true',
-                                help='Use PKCE during authentication')
-    injauth_parser.add_argument('--origin',
-                                action='store',
-                                help='Origin header to use in code redemption (for single page app flows)')
-    injauth_parser.add_argument('--otpseed',
-                                action='store',
-                                help='TOTP seed to calculate MFA code when prompted')
 
     # Interactive auth using Selenium - enrich PRT
     enrauth_parser = subparsers.add_parser('prtenrich', help='Interactive authentication to add MFA claim to a PRT')
@@ -817,69 +675,12 @@ def main():
     enrauth_parser.add_argument('--tokens-stdout',
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
-    enrauth_parser.add_argument('--otpseed',
-                                action='store',
-                                help='TOTP seed to calculate MFA code when prompted')
-
-    # CLI authentication with device code flow
-    cliauth_parser = subparsers.add_parser('clicodeauth', help='Manual interactive authentication with external browser')
-    cliauth_parser.add_argument('-c',
-                                '--client',
-                                action='store',
-                                help=clienthelptext,
-                                default='1b730954-1685-4b74-9bfd-dac224a7b894')
-    cliauth_parser.add_argument('-r',
-                                '--resource',
-                                action='store',
-                                help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
-                                default='https://graph.windows.net')
-    cliauth_parser.add_argument('-s',
-                                '--scope',
-                                action='store',
-                                help='Scope to use. Will automatically switch to v2.0 auth endpoint if specified. If unsure use -r instead.')
-    cliauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                help='Redirect URL used when authenticating (default: chosen automatically based on well-known URLs for first party clients)')
-    cliauth_parser.add_argument('-t',
-                                '--tenant',
-                                action='store',
-                                help='Tenant ID or domain to auth to')
-    cliauth_parser.add_argument('--tokenfile',
-                                action='store',
-                                help='File to store the credentials (default: .roadtools_auth)',
-                                default='.roadtools_auth')
-    cliauth_parser.add_argument('--tokens-stdout',
-                                action='store_true',
-                                help='Do not store tokens on disk, pipe to stdout instead')
-    cliauth_parser.add_argument('--capture-code',
-                                action='store_true',
-                                help='Do not attempt to redeem any authentication code but print it instead')
-    cliauth_parser.add_argument('--cae',
-                                action='store_true',
-                                help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
-    cliauth_parser.add_argument('--force-mfa',
-                                action='store_true',
-                                help='Force MFA during authentication')
-    cliauth_parser.add_argument('--pkce',
-                                action='store_true',
-                                help='Use PKCE during authentication')
-    cliauth_parser.add_argument('--origin',
-                                action='store',
-                                help='Origin header to use in code redemption (for single page app flows)')
 
     # OWA Login with token
     owalogin_parser = subparsers.add_parser('owalogin', help='Login to OWA with token')
     owalogin_parser.add_argument('--access-token', action='store', help='Access token for Outlook. If not specified, taken from .roadtools_auth')
     owalogin_parser.add_argument('-ua', '--user-agent', action='store',
                                  help='Custom user agent to use. By default the user agent from FireFox is used without modification')
-    owalogin_parser.add_argument('-f', '--tokenfile', action='store', help='File to read the token from (default: .roadtools_auth)', default='.roadtools_auth')
-
-    # SPO Login with token
-    spologin_parser = subparsers.add_parser('sharepointlogin', help='Login to SharePoint with token')
-    spologin_parser.add_argument('--access-token', action='store', help='Access token for SharePoint / OneDrive. If not specified, taken from .roadtools_auth')
-    spologin_parser.add_argument('-ua', '--user-agent', action='store',
-                                 help='Custom user agent to use. By default the user agent from FireFox is used without modification')
-    spologin_parser.add_argument('--host', action='store', help='SharePoint host to use, for example: https://mycompany-my.sharepoint.com if unspecified, taken from access token')
-    spologin_parser.add_argument('-f', '--tokenfile', action='store', help='File to read the token from (default: .roadtools_auth)', default='.roadtools_auth')
 
     # ADFS Encrypted blob decrypt
     adfsdec_parser = subparsers.add_parser('decryptadfskey', help='Decrypt Encrypted PFX blob from ADFSpoof into PEM or PFX file')
@@ -961,12 +762,7 @@ def main():
         auth.set_client_id(tokenobject['_clientId'])
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
-        auth.set_scope(args.scope)
         auth.outfile = args.tokenfile
-        if args.origin:
-            auth.set_origin_value(args.origin)
-        elif 'originheader' in tokenobject:
-            auth.set_origin_value(tokenobject['originheader'])
         # Tenant from arguments or from tokenfile
         if args.tenant:
             auth.tenant = args.tenant
@@ -978,36 +774,20 @@ def main():
             auth.use_cae = args.cae
         if not args.tokens_stdout:
             if args.scope:
-                print(f'Requesting token with scope {auth.scope}')
+                print(f'Requesting token with scope {args.scope}')
             else:
                 print(f'Requesting token for resource {auth.resource_uri}')
-        try:
-            if args.broker_client:
-                additionaldata = {
-                    'brk_client_id': args.broker_client,
-                    'redirect_uri': args.broker_redirect_url
-                }
-            else:
-                additionaldata = None
-            if args.scope:
-                auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password, additionaldata=additionaldata)
-            else:
-                auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password, additionaldata=additionaldata)
-            auth.save_tokens(args)
-        except AuthenticationException as ex:
-            try:
-                error_data = json.loads(str(ex))
-                print(f"Error during authentication: {error_data['error_description']}")
-            except TypeError:
-                # No json
-                print(str(ex))
-            sys.exit(1)
+        if args.scope:
+            auth.scope = args.scope
+            auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password)
+        else:
+            auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password)
+        auth.save_tokens(args)
     elif args.command == 'appauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
-        auth.set_scope(args.scope)
-        if args.cae:
-            auth.set_cae()
+        auth.scope = args.scope
+        auth.use_cae = args.cae
         auth.tenant = args.tenant
         auth.outfile = args.tokenfile
         if not args.tokens_stdout:
@@ -1031,41 +811,11 @@ def main():
                 assertion = auth.generate_app_assertion(use_v2=False)
                 auth.authenticate_as_app_native(assertion=assertion)
         auth.save_tokens(args)
-    elif args.command == 'appauthobo':
-        auth.set_client_id(args.client)
-        auth.set_resource_uri(args.resource)
-        auth.set_scope(args.scope)
-        if args.cae:
-            auth.set_cae()
-        auth.tenant = args.tenant
-        auth.outfile = args.tokenfile
-        if not args.tokens_stdout:
-            if args.scope:
-                print(f'Requesting token with scope {auth.scope}')
-            else:
-                print(f'Requesting token for resource {auth.resource_uri}')
-        if args.password:
-            # Password based flow
-            if args.scope:
-                auth.authenticate_on_behalf_of_native_v2(token=args.token, client_secret=args.password)
-            else:
-                auth.authenticate_on_behalf_of_native(token=args.token, client_secret=args.password)
-        else:
-            if not auth.loadappcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
-                return
-            if args.scope:
-                assertion = auth.generate_app_assertion(use_v2=True)
-                auth.authenticate_on_behalf_of_native_v2(token=args.token, assertion=assertion)
-            else:
-                assertion = auth.generate_app_assertion(use_v2=False)
-                auth.authenticate_on_behalf_of_native(token=args.token, assertion=assertion)
-        auth.save_tokens(args)
     elif args.command == 'federatedappauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
-        auth.set_scope(args.scope)
-        if args.cae:
-            auth.set_cae()
+        auth.scope = args.scope
+        auth.use_cae = args.cae
         auth.tenant = args.tenant
         auth.outfile = args.tokenfile
         if not args.tokens_stdout:
@@ -1141,10 +891,7 @@ def main():
                         return
                 else:
                     refresh_token = args.refresh_token
-                if args.prt_protocol_v3:
-                    prtdata = deviceauth.get_prt_with_refresh_token_v3(refresh_token)
-                else:
-                    prtdata = deviceauth.get_prt_with_refresh_token(refresh_token)
+                prtdata = deviceauth.get_prt_with_refresh_token(refresh_token)
 
             if args.username and deviceauth.loadhellokey(args.hello_key):
                 prtdata = deviceauth.get_prt_with_hello_key(args.username)
@@ -1169,14 +916,8 @@ def main():
             deviceauth.saveprt(prtdata, args.prt_file)
     elif args.command == 'prtauth':
         auth.set_user_agent(args.user_agent)
-        if args.cae:
-            auth.set_cae()
-        auth.set_client_id(args.client)
-        auth.set_scope(args.scope)
-        if args.redirect_url:
-            redirect_url = args.redirect_url
-        else:
-            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False, broker=True)
+        auth.use_cae = args.cae
+        auth.scope = args.scope
         if args.tenant:
             auth.tenant = args.tenant
         if args.prt and args.prt_sessionkey:
@@ -1186,12 +927,7 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
-        if args.prt_protocol_v3:
-            if not args.scope and args.resource is not None:
-                args.scope = f"{args.resource}/.default"
-            tokendata = deviceauth.aad_brokerplugin_prt_auth_v3(args.client, args.scope, redirect_uri=redirect_url)
-        else:
-            tokendata = deviceauth.aad_brokerplugin_prt_auth(args.client, args.resource, redirect_uri=redirect_url)
+        tokendata = deviceauth.aad_brokerplugin_prt_auth(args.client, args.resource, redirect_uri=args.redirect_url)
         # We need to convert this to a token format roadlib understands
         if 'access_token' in tokendata:
             tokenobject, _ = auth.parse_accesstoken(tokendata['access_token'])
@@ -1203,17 +939,6 @@ def main():
         else:
             print('No access token in token data, assuming custom request')
             print(tokendata)
-    elif args.command in ('deviceauth', 'getdevicetoken', 'getdevicetokens'):
-        auth.set_user_agent(args.user_agent)
-        if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
-            return
-        auth.set_user_agent(args.user_agent)
-        if args.tenant:
-            auth.tenant = args.tenant
-        tokenreply = deviceauth.get_token_for_device(args.client, args.resource, redirect_uri=args.redirect_url)
-        auth.outfile = args.tokenfile
-        auth.tokendata = auth.tokenreply_to_tokendata(tokenreply)
-        auth.save_tokens(args)
     elif args.command == 'decrypt':
         header, enc_key, iv, ciphertext, auth_tag = auth.parse_compact_jwe(args.data, args.verbose)
         if header['alg'] == 'RSA-OAEP':
@@ -1250,16 +975,11 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        if args.pkce_secret:
-            auth.use_pkce = True
-            auth.pkce_secret = args.pkce_secret
-        if args.origin:
-            auth.set_origin_value(args.origin, args.redirect_url)
         if args.cae:
-            auth.set_cae()
+            auth.use_cae = args.cae
         if args.scope:
             # Switch to identity platform v2 and use scope instead of resource
-            auth.set_scope(args.scope)
+            auth.scope = args.scope
             auth.authenticate_with_code_native_v2(args.code, args.redirect_url, client_secret=args.password)
         else:
             auth.authenticate_with_code_native(args.code, args.redirect_url, client_secret=args.password)
@@ -1283,7 +1003,7 @@ def main():
         print('Well-known clients. Can be used as alias with -c or --client')
         print()
         for alias, clientid in WELLKNOWN_CLIENTS.items():
-            print(f"{alias:<14} - {clientid}")
+            print(f"{alias:<10} - {clientid}")
         print()
         print('Well-known resources. Can be used as alias with -r or --resource')
         print()
@@ -1299,26 +1019,16 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        auth.use_pkce = args.pkce
-        if args.origin:
-            auth.set_origin_value(args.origin, args.redirect_url)
-        if args.cae:
-            auth.set_cae()
-        if args.force_mfa:
-            auth.set_force_mfa()
+        auth.use_cae = args.cae
         if args.scope:
-            auth.set_scope(args.scope)
+            auth.scope = args.scope
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
-        if args.redirect_url:
-            redirect_url = args.redirect_url
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
+        if args.auth_url:
+            url = args.auth_url
         else:
-            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
-        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
-        if args.url:
-            url = args.url
-        else:
-            url = auth.build_auth_url(redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1328,13 +1038,13 @@ def main():
                 krbtoken = sys.stdin.read().strip()
             else:
                 krbtoken = args.krbtoken
-            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, otpseed=args.otpseed, capture=args.capture_code, krbdata=krbtoken, keep=args.keep_open)
+            result = selauth.selenium_login_with_kerberos(url, args.username, args.password, capture=args.capture_code, krbdata=krbtoken, keep=args.keep_open)
         elif args.estscookie:
-            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, otpseed=args.otpseed, capture=args.capture_code, estscookie=args.estscookie, keep=args.keep_open)
+            result = selauth.selenium_login_with_estscookie(url, args.username, args.password, capture=args.capture_code, estscookie=args.estscookie, keep=args.keep_open)
         elif custom_ua:
-            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, otpseed=args.otpseed, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
+            result = selauth.selenium_login_with_custom_useragent(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         else:
-            result = selauth.selenium_login_regular(url, args.username, args.password, otpseed=args.otpseed, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
+            result = selauth.selenium_login(url, args.username, args.password, capture=args.capture_code, federated=args.federated, keep=args.keep_open)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
@@ -1342,83 +1052,20 @@ def main():
         elif result:
             auth.outfile = args.tokenfile
             auth.save_tokens(args)
-    elif args.command == 'clicodeauth':
-        auth.set_client_id(args.client)
-        auth.set_resource_uri(args.resource)
-        auth.tenant = args.tenant
-        auth.use_pkce = args.pkce
-        if args.origin:
-            auth.set_origin_value(args.origin, args.redirect_url)
-        if args.cae:
-            auth.set_cae()
-        if args.force_mfa:
-            auth.set_force_mfa()
-        if args.scope:
-            auth.set_scope(args.scope)
-        if args.redirect_url:
-            redirect_url = args.redirect_url
-        else:
-            redirect_url = find_redirurl_for_client(auth.client_id, interactive=True)
-        url = auth.build_auth_url(redirect_url, 'code', args.scope)
-        print('Use the following URL in the external browser. Once authentication completes, paste the URL with a code query parameter back in the console here')
-        print(f"\n{url}\n")
-        code = None
-        while True:
-            try:
-                confirm = input(f'Enter the final URL or write quit to cancel: ')
-            except KeyboardInterrupt:
-                return
-            answer = confirm.strip()
-            if answer.lower() in ('q', 'quit'):
-                return
-            try:
-                parsed = urlparse(answer.strip())
-            except:
-                print('Please paste a valid URL')
-                continue
-            params = parse_qs(parsed.query)
-            try:
-                code = params['code'][0]
-                break
-            except KeyError:
-                print('Please paste a valid URL containing a code query parameter')
-        if args.capture_code:
-            if code:
-                print(f'Captured auth code: {code}')
-            return
-        elif code:
-            if auth.scope:
-                auth.authenticate_with_code_native_v2(code, redirect_url)
-            else:
-                auth.authenticate_with_code_native(code, redirect_url)
-            auth.outfile = args.tokenfile
-            auth.save_tokens(args)
     elif args.command == 'keepassauth':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        auth.use_pkce = args.pkce
-        if args.origin:
-            auth.set_origin_value(args.origin, args.redirect_url)
-        if args.cae:
-            auth.set_cae()
-        if args.force_mfa:
-            auth.set_force_mfa()
-        if args.scope:
-            auth.set_scope(args.scope)
+        auth.use_cae = args.cae
         # Intercept if custom UA is set
         custom_ua = args.user_agent is not None
-        if args.redirect_url:
-            redirect_url = args.redirect_url
-        else:
-            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
-        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
         password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
-        if args.url:
-            url = args.url
+        if args.auth_url:
+            url = args.auth_url
         else:
-            url = auth.build_auth_url(redirect_url, 'code', auth.scope)
+            url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1426,12 +1073,10 @@ def main():
         if custom_ua:
             result = selauth.selenium_login_with_custom_useragent(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
         else:
-            result = selauth.selenium_login_regular(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
+            result = selauth.selenium_login(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
         if args.capture_code:
             if result:
                 print(f'Captured auth code: {result}')
-            return
-        if not result:
             return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
@@ -1440,14 +1085,8 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        auth.use_pkce = args.pkce
-        if args.origin:
-            auth.set_origin_value(args.origin, args.redirect_url)
-        if args.cae:
-            auth.set_cae()
-        if args.force_mfa:
-            auth.set_force_mfa()
-        auth.set_scope(args.scope)
+        auth.use_cae = args.cae
+        auth.scope = args.scope
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_cookie:
@@ -1457,20 +1096,16 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
-        if args.redirect_url:
-            redirect_url = args.redirect_url
-        else:
-            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
-        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
-        if args.url:
-            url = args.url
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
+        if args.auth_url:
+            url = args.auth_url
         else:
             if not args.tokens_stdout:
                 if args.scope:
                     print(f'Running in token request mode - Requesting token with scope {auth.scope}\nIf you want a browser window instead, use the -url parameter to start browsing.')
                 else:
                     print(f'Running in token request mode - Requesting token for {auth.resource_uri}\nIf you want a browser window instead, use the -url parameter to start browsing.')
-            url = auth.build_auth_url(redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1497,13 +1132,7 @@ def main():
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
-        auth.use_pkce = args.pkce
-        if args.origin:
-            auth.set_origin_value(args.origin, args.redirect_url)
-        if args.cae:
-            auth.set_cae()
-        if args.force_mfa:
-            auth.set_force_mfa()
+        auth.use_cae = args.cae
         if args.prt and args.prt_sessionkey:
             deviceauth.setprt(args.prt, args.prt_sessionkey)
         elif args.prt_cookie:
@@ -1513,15 +1142,11 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
-        if args.redirect_url:
-            redirect_url = args.redirect_url
+        selauth = SeleniumAuthentication(auth, deviceauth, args.redirect_url)
+        if args.auth_url:
+            url = args.auth_url
         else:
-            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
-        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url)
-        if args.url:
-            url = args.url
-        else:
-            url = auth.build_auth_url(redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(args.redirect_url, 'code', args.scope)
             if args.username:
                 url += '&login_hint=' + quote_plus(args.username)
             else:
@@ -1531,7 +1156,7 @@ def main():
             password, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         else:
             password = args.password
-            otpseed = args.otpseed
+            otpseed = None
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1540,12 +1165,6 @@ def main():
             return
         auth.outfile = args.tokenfile
         auth.save_tokens(args)
-        if args.keep_open:
-            try:
-                time.sleep(99999)
-            except KeyboardInterrupt:
-                return
-            return
     elif args.command == 'prtenrich':
         if not args.no_prt:
             if args.prt and args.prt_sessionkey:
@@ -1574,7 +1193,7 @@ def main():
         if args.username and args.keepass and (args.keepass_password or 'KPPASS' in os.environ or args.keepass.endswith('.xml')):
             _, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         else:
-            otpseed = args.otpseed
+            otpseed = None
         service = selauth.get_service(args.driver_path)
         if not service:
             return
@@ -1842,13 +1461,14 @@ def main():
         cookie = auth.create_prt_cookie_kdf_ver_2(deviceauth.prt, deviceauth.session_key, challenge)
         print(f"PRT cookie: {cookie}")
         print("Can be used in external browsers using the x-ms-RefreshTokenCredential header or cookie. Note that a PRT cookie is only valid for 5 minutes.")
+
     elif args.command == 'owalogin':
         auth.set_user_agent(args.user_agent)
         if args.access_token:
             tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
         else:
             try:
-                with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
+                with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
                     tokenobject = json.load(infile)
                 _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
             except FileNotFoundError:
@@ -1864,51 +1484,7 @@ def main():
         if not service:
             return
         selauth.driver = selauth.get_webdriver(service, intercept=True)
-        res = selauth.selenium_login_owatoken(tokenobject['accessToken'])
-        if res is False:
-            return
-        try:
-            time.sleep(99999)
-        except KeyboardInterrupt:
-            return
-        return
-    elif args.command == 'sharepointlogin':
-        auth.set_user_agent(args.user_agent)
-        if args.access_token:
-            tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
-        else:
-            try:
-                with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
-                    tokenobject = json.load(infile)
-                _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
-            except FileNotFoundError:
-                print('No auth data found. Ether supply an access token with --access-token or make sure a token is present on disk in .roadtools_auth')
-                return
-        if tokendata['aud'] == '00000003-0000-0ff1-ce00-000000000000' and not args.host:
-            print('You must specify the SharePoint host to use with this token. Example --host https://company-my.sharepoint.com')
-            return
-        if tokendata['aud'] != '00000003-0000-0ff1-ce00-000000000000' and not tokendata['aud'].endswith('sharepoint.com'):
-            print(f"Wrong token audience, got {tokendata['aud']} but expected an audience ending with sharepoint.com")
-            print("Make sure to request a token with -r https://mycompany-my.sharepoint.com")
-            return
-        auth.set_user_agent(args.user_agent)
-        selauth = SeleniumAuthentication(auth, deviceauth, None, proxy=args.proxy, proxy_type=args.proxy_type)
-        service = selauth.get_service(None)
-        if not service:
-            return
-        selauth.driver = selauth.get_webdriver(service, intercept=True)
-        if args.host:
-            spohost = args.host.rstrip('/')
-        else:
-            spohost = tokendata['aud']
-        res = selauth.selenium_login_spotoken(tokenobject['accessToken'], spohost)
-        if res is False:
-            return
-        try:
-            time.sleep(99999)
-        except KeyboardInterrupt:
-            return
-        return
+        selauth.selenium_login_owatoken(tokenobject['accessToken'])
 
 if __name__ == '__main__':
     main()

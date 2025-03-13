@@ -8,8 +8,6 @@ import uuid
 import binascii
 import time
 import codecs
-import string
-import secrets
 from urllib.parse import urlparse, parse_qs, quote_plus
 from urllib3.util import SKIP_HEADER
 from xml.sax.saxutils import escape as xml_escape
@@ -24,10 +22,9 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography import x509
 from roadtools.roadlib.constants import WELLKNOWN_RESOURCES, WELLKNOWN_CLIENTS, WELLKNOWN_USER_AGENTS, \
-    DSSO_BODY_KERBEROS, DSSO_BODY_USERPASS, SAML_TOKEN_TYPE_V1, SAML_TOKEN_TYPE_V2, GRANT_TYPE_SAML1_1, \
-    WSS_SAML_TOKEN_PROFILE_V1_1, WSS_SAML_TOKEN_PROFILE_V2, GRANT_TYPE_SAML2
-from roadtools.roadlib.wstrust import Mex, build_rst, parse_wstrust_response
+    DSSO_BODY_KERBEROS, DSSO_BODY_USERPASS
 import requests
+import adal
 import jwt
 
 def get_data(data):
@@ -48,7 +45,6 @@ class Authentication():
         self.password = password
         self.tenant = tenant
         self.client_id = None
-        self.origin = None
         self.set_client_id(client_id)
         self.resource_uri = 'https://graph.windows.net/'
         self.tokendata = {}
@@ -62,9 +58,6 @@ class Authentication():
         self.scope = None
         self.user_agent = None
         self.use_cae = False
-        self.claims = None
-        self.use_pkce = False
-        self.pkce_secret = None
 
         # For cert based app auth
         self.appprivkey = None
@@ -86,23 +79,6 @@ class Authentication():
         """
         self.client_id = self.lookup_client_id(clid)
 
-    def set_scope(self, scope):
-        """
-        Sets scope to use (accepts aliases for resource part)
-        """
-        if not scope:
-            return
-        self.scope = self.lookup_scope_resource(scope)
-
-    def set_origin_value(self, origin, redirect_uri=None):
-        """
-        Sets Origin header to use
-        If the value "ru" is used, we take it from the redirect URL
-        """
-        if origin is not None and origin.lower() == 'ru' and redirect_uri is not None:
-            origin = redirect_uri
-        self.origin = origin
-
     def set_resource_uri(self, uri):
         """
         Sets resource URI to use (accepts aliases)
@@ -114,19 +90,11 @@ class Authentication():
         Overrides user agent (accepts aliases)
         """
         self.user_agent = self.lookup_user_agent(useragent)
+        # Patch it in adal too in case we fall back to that
+        #pylint: disable=protected-access
+        adal.oauth2_client._REQ_OPTION['headers']['User-Agent'] = self.user_agent
 
-    def user_discovery_v1(self, username):
-        """
-        Discover whether this is a federated user
-        """
-        # Tenant specific endpoint seems to not work for this?
-        authority_uri = 'https://login.microsoftonline.com/common'
-        user = quote_plus(username)
-        res = self.requests_get(f"{authority_uri}/UserRealm/{user}?api-version=1.0")
-        response = res.json()
-        return response
-
-    def user_discovery_v2(self, username):
+    def user_discovery(self, username):
         """
         Discover whether this is a federated user
         """
@@ -136,73 +104,6 @@ class Authentication():
         res = self.requests_get(f"{authority_uri}/UserRealm/{user}?api-version=2.0")
         response = res.json()
         return response
-
-    def user_discovery(self, username):
-        """
-        This function is for backwards compatibility
-        """
-        return self.user_discovery_v2(username)
-
-    def add_claim(self, token, claim, values=None, value=None, essential=None):
-        """
-        Add desired claim to authentication flow, for example CAE or MFA
-        """
-        if not self.claims:
-            self.claims = {}
-        if not token in self.claims:
-            self.claims[token] = {}
-        self.claims[token][claim] = {}
-        if value:
-            self.claims[token][claim]['value'] = value
-        elif values:
-            self.claims[token][claim]['values'] = values
-        if essential:
-            self.claims[token][claim]['essential'] = essential
-
-    def set_cae(self):
-        """
-        Request a Continuous Access Evaluation token
-        """
-        self.add_claim('access_token', 'xms_cc', values=['CP1'])
-
-    def set_force_mfa(self):
-        """
-        Force MFA during auth
-        """
-        self.add_claim('access_token', 'amr', values=['mfa'])
-
-    def set_force_ngcmfa(self):
-        """
-        Force NGC MFA during auth
-        """
-        self.add_claim('access_token', 'amr', values=['ngcmfa','mfa'])
-
-    def has_force_mfa(self):
-        """
-        Check whether MFA enforcement is set
-        """
-        try:
-            values = self.claims['access_token']['amr']['values']
-        except (KeyError, ValueError, TypeError):
-            return False
-        return 'mfa' in values or 'ngcmfa' in values
-
-    def gen_pkce_secret(self):
-        """
-        Generate a secret for PKCE
-        """
-        alphabet = string.ascii_letters + string.digits
-        self.pkce_secret = ''.join(secrets.choice(alphabet) for i in range(43))
-
-    def get_pkce_challenge(self):
-        """
-        Get PKCE challenge (sha256 hash) of the generated secret
-        """
-        digest = hashes.Hash(hashes.SHA256())
-        digest.update(self.pkce_secret.encode('utf-8'))
-        hashoutput = digest.finalize()
-        challenge = base64.urlsafe_b64encode(hashoutput).decode('utf-8').rstrip('=')
-        return challenge
 
     def loadappcert(self, pemfile=None, privkeyfile=None, pfxfile=None, pfxpass=None, pfxbase64=None):
         """
@@ -242,9 +143,26 @@ class Authentication():
     def authenticate_device_code(self):
         """
         Authenticate the end-user using device auth.
-        Wrapper for native method
         """
-        return self.authenticate_device_code_native()
+
+        authority_host_uri = self.get_authority_url()
+
+        context = adal.AuthenticationContext(authority_host_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
+        code = context.acquire_user_code(self.resource_uri, self.client_id)
+        print(code['message'])
+        self.tokendata = context.acquire_token_with_device_code(self.resource_uri, code, self.client_id)
+        return self.tokendata
+
+    def authenticate_username_password(self):
+        """
+        Authenticate using user w/ username + password.
+        This doesn't work for users or tenants that have multi-factor authentication required.
+        """
+        authority_uri = self.get_authority_url()
+        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
+        self.tokendata = context.acquire_token_with_username_password(self.resource_uri, self.username, self.password, self.client_id)
+
+        return self.tokendata
 
     def authenticate_device_code_native(self, additionaldata=None, returnreply=False):
         """
@@ -260,8 +178,6 @@ class Authentication():
             data['scope'] = self.scope
         if additionaldata:
             data = {**data, **additionaldata}
-        if self.has_force_mfa():
-            data['amr_values'] = 'ngcmfa'
         res = self.requests_post(f"{authority_uri}/oauth2/devicecode", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -309,10 +225,6 @@ class Authentication():
         }
         if additionaldata:
             data = {**data, **additionaldata}
-        if self.use_cae:
-            self.set_cae()
-        if self.claims:
-            data['claims'] = json.dumps(self.claims)
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/devicecode", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -347,77 +259,6 @@ class Authentication():
             return tokenreply
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
-
-    def authenticate_username_password(self):
-        """
-        Authenticate using user w/ username + password.
-        This doesn't work for users or tenants that have multi-factor authentication required.
-        Wrapper for native method
-        """
-        return self.authenticate_username_password_native()
-
-    def find_federation_endpoint(self, mex_endpoint):
-        """
-        Finder usernamemixed endpoint on the federation server
-        """
-        mex_resp = self.requests_get(mex_endpoint)
-        try:
-            return Mex(mex_resp.text).get_wstrust_username_password_endpoint()
-        except ET.ParseError:
-            print("Malformed MEX document: %s, %s", mex_resp.status_code, mex_resp.text)
-            raise
-
-    def get_saml_token_with_username_password(self, federationdata):
-        """
-        Fetch saml token from usernamemixed endpoint on the federation server
-        """
-        wstrust_endpoint = self.find_federation_endpoint(federationdata['federation_metadata_url'])
-        cloud_audience_urn = wstrust_endpoint.get("cloud_audience_urn", "urn:federation:MicrosoftOnline")
-        endpoint_address =  wstrust_endpoint.get("address", federationdata.get("federation_active_auth_url"))
-        soap_action = wstrust_endpoint.get("action")
-        if soap_action is None:
-            if '/trust/2005/usernamemixed' in endpoint_address:
-                soap_action = Mex.ACTION_2005
-            elif '/trust/13/usernamemixed' in endpoint_address:
-                soap_action = Mex.ACTION_13
-        if soap_action not in (Mex.ACTION_13, Mex.ACTION_2005):
-            raise ValueError("Unsupported soap action: %s. "
-                "Contact your administrator to check your ADFS's MEX settings." % soap_action)
-        data = build_rst( self.username, self.password, cloud_audience_urn, endpoint_address, soap_action)
-        headers = {
-            'Content-type':'application/soap+xml; charset=utf-8',
-            'SOAPAction': soap_action,
-        }
-        resp = self.requests_post(endpoint_address, data=data, headers=headers)
-        if resp.status_code >= 400:
-            print(f"Unsuccessful federation server response received: {resp.text}")
-        # It turns out ADFS uses 5xx status code even with client-side incorrect password error
-        # so we ignore the 5xx error and parse the XML instead
-        wstrust_result = parse_wstrust_response(resp.text)
-        if not ("token" in wstrust_result and "type" in wstrust_result):
-            raise AuthenticationException("Unsuccessful authentication against the federation server. %s" % wstrust_result)
-
-        grant_type = {
-            SAML_TOKEN_TYPE_V1: GRANT_TYPE_SAML1_1,
-            SAML_TOKEN_TYPE_V2: GRANT_TYPE_SAML2,
-            WSS_SAML_TOKEN_PROFILE_V1_1: GRANT_TYPE_SAML1_1,
-            WSS_SAML_TOKEN_PROFILE_V2: GRANT_TYPE_SAML2
-            }.get(wstrust_result.get("type"))
-        if not grant_type:
-            raise AuthenticationException(
-                "RSTR returned unknown token type: %s", wstrust_result.get("type"))
-        return wstrust_result, grant_type
-
-    def authenticate_username_password_federation_native(self, federationdata, additionaldata=None, returnreply=False):
-        """
-        Authenticate using user w/ username + password in federated environments
-        This doesn't work for users or tenants that have multi-factor authentication required.
-        Native version without adal
-        """
-        wstrust_result, grant_type = self.get_saml_token_with_username_password(federationdata)
-        if self.scope:
-            return self.authenticate_with_saml_native_v2(wstrust_result['token'], grant_type=grant_type, additionaldata=additionaldata, returnreply=returnreply)
-        return self.authenticate_with_saml_native(wstrust_result['token'], grant_type=grant_type, additionaldata=additionaldata, returnreply=returnreply)
 
     def authenticate_username_password_native(self, client_secret=None, additionaldata=None, returnreply=False):
         """
@@ -467,9 +308,7 @@ class Authentication():
         if additionaldata:
             data = {**data, **additionaldata}
         if self.use_cae:
-            self.set_cae()
-        if self.claims:
-            data['claims'] = json.dumps(self.claims)
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -483,12 +322,16 @@ class Authentication():
         """
         Authenticate with an APP id + secret (password credentials assigned to app or service principal)
         """
-        return self.authenticate_as_app_native()
+        authority_uri = self.get_authority_url()
+
+        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
+        self.tokendata = context.acquire_token_with_client_credentials(self.resource_uri, self.client_id, self.password)
+        return self.tokendata
 
     def authenticate_as_app_native(self, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
         """
-        Authenticate with a client id + secret or assertion
-        Essentially an implementation of the oauth2 client credentials grant on the v1 auth endpoint
+        Authenticate with an APP id + secret
+        Native ROADlib implementation
         """
         authority_uri = self.get_authority_url()
         data = {
@@ -517,8 +360,7 @@ class Authentication():
 
     def authenticate_as_app_native_v2(self, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
         """
-        Authenticate with a client id + secret or assertion
-        Essentially an implementation of the oauth2 client credentials grant on the v2 auth endpoint
+        Authenticate with an APP id + secret (password credentials assigned to serviceprinicpal)
         """
         authority_uri = self.get_authority_url()
         data = {
@@ -537,78 +379,7 @@ class Authentication():
         if additionaldata:
             data = {**data, **additionaldata}
         if self.use_cae:
-            self.set_cae()
-        if self.claims:
-            data['claims'] = json.dumps(self.claims)
-        res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
-        if res.status_code != 200:
-            raise AuthenticationException(res.text)
-        tokenreply = res.json()
-        if returnreply:
-            return tokenreply
-        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
-        return self.tokendata
-
-    def authenticate_on_behalf_of_native(self, token, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
-        """
-        Authenticate on-behalf-of a user, providing their token
-        plus a middle tier app client id + secret (client secret or certificate based assertion)
-        """
-        authority_uri = self.get_authority_url()
-        data = {
-            "client_id": self.client_id,
-            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            "resource": self.resource_uri,
-            "assertion": token,
-            "requested_token_use": "on_behalf_of"
-        }
-        if assertion:
-            data['client_assertion_type'] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-            data['client_assertion'] = assertion
-        else:
-            if client_secret:
-                data['client_secret'] = client_secret
-            else:
-                data['client_secret'] = self.password
-        if additionaldata:
-            data = {**data, **additionaldata}
-        res = self.requests_post(f"{authority_uri}/oauth2/token", data=data)
-        if res.status_code != 200:
-            raise AuthenticationException(res.text)
-        tokenreply = res.json()
-        if returnreply:
-            return tokenreply
-        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
-        return self.tokendata
-
-    def authenticate_on_behalf_of_native_v2(self, token, client_secret=None, assertion=None, additionaldata=None, returnreply=False):
-        """
-        Authenticate on-behalf-of a user, providing their token
-        plus a middle tier app client id + secret (client secret or certificate based assertion)
-        v2 endpoint implementation which uses a scope instead of a resource
-        """
-        authority_uri = self.get_authority_url()
-        data = {
-            "client_id": self.client_id,
-            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            "scope": self.scope,
-            "assertion": token,
-            "requested_token_use": "on_behalf_of"
-        }
-        if assertion:
-            data['client_assertion_type'] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-            data['client_assertion'] = assertion
-        else:
-            if client_secret:
-                data['client_secret'] = client_secret
-            else:
-                data['client_secret'] = self.password
-        if additionaldata:
-            data = {**data, **additionaldata}
-        if self.use_cae:
-            self.set_cae()
-        if self.claims:
-            data['claims'] = json.dumps(self.claims)
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -672,12 +443,34 @@ class Authentication():
         }
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
+    def authenticate_with_code(self, code, redirurl, client_secret=None):
+        """
+        Authenticate with a code plus optional secret in case of a non-public app (authorization grant)
+        """
+        authority_uri = self.get_authority_url()
+
+        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
+        self.tokendata = context.acquire_token_with_authorization_code(code, redirurl, self.resource_uri, self.client_id, client_secret)
+        return self.tokendata
+
     def authenticate_with_refresh(self, oldtokendata):
         """
         Authenticate with a refresh token, refreshes the refresh token
         and obtains an access token
         """
-        return self.authenticate_with_refresh_native(oldtokendata['refreshToken'])
+        authority_uri = self.get_authority_url()
+
+        context = adal.AuthenticationContext(authority_uri, api_version=None, proxies=self.proxies, verify_ssl=self.verify)
+        newtokendata = context.acquire_token_with_refresh_token(oldtokendata['refreshToken'], self.client_id, self.resource_uri)
+        # Overwrite fields
+        for ikey, ivalue in newtokendata.items():
+            self.tokendata[ikey] = ivalue
+        access_token = newtokendata['accessToken']
+        tokens = access_token.split('.')
+        inputdata = json.loads(base64.b64decode(tokens[1]+('='*(len(tokens[1])%4))))
+        self.tokendata['_clientId'] = self.client_id
+        self.tokendata['tenantId'] = inputdata['tid']
+        return self.tokendata
 
     def authenticate_with_refresh_native(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
         """
@@ -701,9 +494,9 @@ class Authentication():
         tokenreply = res.json()
         if returnreply:
             return tokenreply
+        access_token = tokenreply['access_token']
+        tokens = access_token.split('.')
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
-        if self.origin:
-            self.tokendata['originheader'] = self.origin
         return self.tokendata
 
     def authenticate_with_refresh_native_v2(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
@@ -722,9 +515,7 @@ class Authentication():
         if client_secret:
             data['client_secret'] = client_secret
         if self.use_cae:
-            self.set_cae()
-        if self.claims:
-            data['claims'] = json.dumps(self.claims)
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
@@ -734,16 +525,7 @@ class Authentication():
         if returnreply:
             return tokenreply
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
-        if self.origin:
-            self.tokendata['originheader'] = self.origin
         return self.tokendata
-
-    def authenticate_with_code(self, code, redirurl, client_secret=None):
-        """
-        Authenticate with a code plus optional secret in case of a non-public app (authorization grant)
-        Wrapper for native method
-        """
-        return self.authenticate_with_code_native(code, redirurl, client_secret)
 
     def authenticate_with_code_native(self, code, redirurl, client_secret=None, pkce_secret=None, additionaldata=None, returnreply=False):
         """
@@ -762,10 +544,8 @@ class Authentication():
             data['client_secret'] = client_secret
         if additionaldata:
             data = {**data, **additionaldata}
-        if not pkce_secret and self.use_pkce:
-            pkce_secret = self.pkce_secret
         if pkce_secret:
-            data['code_verifier'] = pkce_secret
+            raise NotImplementedError
         res = self.requests_post(f"{authority_uri}/oauth2/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -794,13 +574,9 @@ class Authentication():
         if additionaldata:
             data = {**data, **additionaldata}
         if self.use_cae:
-            self.set_cae()
-        if self.claims:
-            data['claims'] = json.dumps(self.claims)
-        if not pkce_secret and self.use_pkce:
-            pkce_secret = self.pkce_secret
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         if pkce_secret:
-            data['code_verifier'] = pkce_secret
+            raise NotImplementedError
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -831,7 +607,7 @@ class Authentication():
         data = self.decrypt_auth_response(prtdata, sessionkey, asjson=True)
         return data
 
-    def authenticate_with_saml_native(self, saml_token, additionaldata=None, returnreply=False, grant_type=GRANT_TYPE_SAML1_1):
+    def authenticate_with_saml_native(self, saml_token, additionaldata=None, returnreply=False):
         """
         Authenticate with a SAML token from the Federation Server
         Native ROADlib implementation without adal requirement
@@ -839,7 +615,7 @@ class Authentication():
         authority_uri = self.get_authority_url()
         data = {
             "client_id": self.client_id,
-            "grant_type": grant_type,
+            "grant_type": "urn:ietf:params:oauth:grant-type:saml1_1-bearer",
             "assertion": base64.b64encode(saml_token.encode('utf-8')).decode('utf-8'),
             "resource": self.resource_uri,
         }
@@ -854,23 +630,21 @@ class Authentication():
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
-    def authenticate_with_saml_native_v2(self, saml_token, additionaldata=None, returnreply=False, grant_type=GRANT_TYPE_SAML1_1):
+    def authenticate_with_saml_native_v2(self, saml_token, additionaldata=None, returnreply=False):
         """
         Authenticate with a SAML token from the Federation Server
         Native ROADlib implementation without adal requirement
         This function calls identity platform v2 and thus requires a scope instead of resource
         """
-        authority_uri = self.get_authority_url('organizations')
+        authority_uri = self.get_authority_url()
         data = {
             "client_id": self.client_id,
-            "grant_type": grant_type,
+            "grant_type": "urn:ietf:params:oauth:grant-type:saml1_1-bearer",
             "assertion": base64.b64encode(saml_token.encode('utf-8')).decode('utf-8'),
             "scope": self.scope,
         }
         if self.use_cae:
-            self.set_cae()
-        if self.claims:
-            data['claims'] = json.dumps(self.claims)
+            data['claims'] = '{"access_token":{"xms_cc":{"values":["cp1"]}}}'
         if additionaldata:
             data = {**data, **additionaldata}
         res = self.requests_post(f"{authority_uri}/oauth2/v2.0/token", data=data)
@@ -1009,12 +783,6 @@ class Authentication():
         '''
         urlt_v2 = 'https://login.microsoftonline.com/{3}/oauth2/v2.0/authorize?response_type={4}&client_id={0}&scope={2}&redirect_uri={1}&state={5}'
         urlt_v1 = 'https://login.microsoftonline.com/{3}/oauth2/authorize?response_type={4}&client_id={0}&resource={2}&redirect_uri={1}&state={5}'
-        if self.use_pkce:
-            if not self.pkce_secret:
-                self.gen_pkce_secret()
-            urlt_v2 = urlt_v2 + '&code_challenge_method=S256&code_challenge=' + quote_plus(self.get_pkce_challenge())
-            urlt_v1 = urlt_v1 + '&code_challenge_method=S256&code_challenge=' + quote_plus(self.get_pkce_challenge())
-
         if not state:
             state = str(uuid.uuid4())
         if not self.tenant:
@@ -1024,12 +792,7 @@ class Authentication():
         if scope:
             # Add CAE support parameters
             if self.use_cae:
-                self.set_cae()
-            if self.claims:
-                urlt_v2 = urlt_v2 + '&claims=' + quote_plus(json.dumps(self.claims))
-            if self.use_pkce:
-                if not self.pkce_secret:
-                    self.gen_pkce_secret()
+                urlt_v2 = urlt_v2 + '&claims={0}'.format(quote_plus('{"access_token":{"xms_cc":{"values":["cp1"]}}}'))
             # v2
             return urlt_v2.format(
                 quote_plus(self.client_id),
@@ -1039,8 +802,6 @@ class Authentication():
                 quote_plus(response_type),
                 quote_plus(state)
             )
-        if self.has_force_mfa():
-            urlt_v1 += '&amr_values=ngcmfa'
         # Else default to v1 identity endpoint
         return urlt_v1.format(
             quote_plus(self.client_id),
@@ -1088,7 +849,7 @@ class Authentication():
         """
         KDF version 2 PRT auth
         """
-        nonce = self.get_srv_challenge_nonce()
+        nonce = self.get_prt_cookie_nonce()
         if not nonce:
             return False
 
@@ -1107,7 +868,7 @@ class Authentication():
         headers = {
             'ctx': base64.b64encode(context).decode('utf-8'),
         }
-        nonce = self.get_srv_challenge_nonce()
+        nonce = self.get_prt_cookie_nonce()
         if not nonce:
             return False
         payload = {
@@ -1197,26 +958,23 @@ class Authentication():
     def get_srv_challenge(self):
         """
         Request server challenge (nonce) to use with a PRT
-        Returns Nonce as a dict {'Nonce':data}
         """
         data = {'grant_type':'srv_challenge'}
         res = self.requests_post('https://login.microsoftonline.com/common/oauth2/token', data=data)
         return res.json()
-
-    def get_srv_challenge_nonce(self):
-        """
-        Request server challenge (nonce) to use with a PRT
-        Returns Nonce as string
-        """
-        return self.get_srv_challenge()['Nonce']
 
     def get_prt_cookie_nonce(self):
         """
         Request a nonce to sign in with. This nonce is taken from the sign-in page, which
         is how Chrome processes it, but it could probably also be obtained using the much
         simpler request from the get_srv_challenge function.
-        This function is not used anymore but is still here for compatibility purposes
         """
+        ses = requests.session()
+        ses.proxies = self.proxies
+        ses.verify = self.verify
+        if self.user_agent:
+            headers = {'User-Agent': self.user_agent}
+            ses.headers = headers
         params = {
             'resource': self.resource_uri,
             'client_id': self.client_id,
@@ -1235,7 +993,7 @@ class Authentication():
             'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E)',
             'UA-CPU': 'AMD64',
         }
-        res = self.requests_get('https://login.microsoftonline.com/Common/oauth2/authorize', params=params, headers=headers, allow_redirects=False)
+        res = ses.get('https://login.microsoftonline.com/Common/oauth2/authorize', params=params, headers=headers, allow_redirects=False)
         if self.debug:
             with open('roadtools.debug.html','w') as outfile:
                 outfile.write(str(res.headers))
@@ -1277,7 +1035,7 @@ class Authentication():
         jdata = jwt.decode(cookie, options={"verify_signature":False}, algorithms=['HS256'])
         # Does it have a nonce?
         if not 'request_nonce' in jdata:
-            nonce = self.get_srv_challenge_nonce()
+            nonce = self.get_prt_cookie_nonce()
             if not nonce:
                 return False
             print('Requested nonce from server to use with ROADtoken: %s' % nonce)
@@ -1308,7 +1066,7 @@ class Authentication():
                 # Don't verify JWT, just load it
                 jdata = jwt.decode(cookie, sdata, options={"verify_signature":False}, algorithms=['HS256'])
             # Since a derived key was specified, we get a new nonce
-            nonce = self.get_srv_challenge_nonce()
+            nonce = self.get_prt_cookie_nonce()
             jdata['request_nonce'] = nonce
             if context:
                 # Resign with custom context, should be in base64
@@ -1457,9 +1215,6 @@ class Authentication():
         auth_parser.add_argument('--refresh-token',
                                  action='store',
                                  help='Refresh token (or the word "file" to read it from .roadtools_auth)')
-        auth_parser.add_argument('--origin',
-                                 action='store',
-                                 help='Origin of a browser refresh token from a Single Page Application (i.e. "https://portal.azure.com"). Used with Azure portal or other portal refresh tokens when combind with a client id like -c c44b4083-3bb0-49c1-b47d-974e53cbdf3c.')
         auth_parser.add_argument('--saml-token',
                                  action='store',
                                  help='SAML token from Federation Server')
@@ -1494,12 +1249,6 @@ class Authentication():
         auth_parser.add_argument('--cae',
                                  action='store_true',
                                  help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
-        auth_parser.add_argument('--force-mfa',
-                                 action='store_true',
-                                 help='Force MFA during authentication')
-        auth_parser.add_argument('--force-ngcmfa',
-                                 action='store_true',
-                                 help='Force NGC MFA (fresh MFA) during authentication')
         auth_parser.add_argument('-f',
                                  '--tokenfile',
                                  action='store',
@@ -1582,7 +1331,7 @@ class Authentication():
             tokenobject['expiresOn'] = (datetime.datetime.now() + datetime.timedelta(seconds=int(tokenreply['expires_in']))).strftime('%Y-%m-%d %H:%M:%S')
 
         tokenparts = tokenreply['access_token'].split('.')
-        inputdata = json.loads(base64.urlsafe_b64decode(tokenparts[1]+('='*(len(tokenparts[1])%4))))
+        inputdata = json.loads(base64.b64decode(tokenparts[1]+('='*(len(tokenparts[1])%4))))
         try:
             tokenobject['tenantId'] = inputdata['tid']
         except KeyError:
@@ -1598,8 +1347,7 @@ class Authentication():
             'access_token': 'accessToken',
             'refresh_token': 'refreshToken',
             'id_token': 'idToken',
-            'token_type': 'tokenType',
-            'expires_in': 'expiresIn'
+            'token_type': 'tokenType'
         }
         for newname, oldname in translate_map.items():
             if newname in tokenreply:
@@ -1654,30 +1402,6 @@ class Authentication():
             return uri
 
     @staticmethod
-    def lookup_scope_resource(scopes):
-        """
-        Translate resource URI aliases in a scope
-        Supports multiple scopes, eg "msgraph/.default offline_access"
-        """
-        outscopes = []
-        for scope in scopes.split(' '):
-            if '/' in scope:
-                # Full specifier
-                resource, rscope = scope.rsplit('/', 1)
-                try:
-                    resolved = WELLKNOWN_RESOURCES[resource.lower()]
-                    # Strip trailing / if there for aliases
-                    if resolved[-1] == '/':
-                        resolved = resolved[:-1]
-                except KeyError:
-                    resolved = resource
-                outscopes.append('/'.join([resolved, rscope]))
-            else:
-                # Just a scope, no resource
-                outscopes.append(scope)
-        return ' '.join(outscopes)
-
-    @staticmethod
     def lookup_client_id(clid):
         """
         Translate client ID aliases
@@ -1725,10 +1449,6 @@ class Authentication():
             headers = kwargs.get('headers',{})
             headers['User-Agent'] = self.user_agent
             kwargs['headers'] = headers
-        if self.origin:
-            headers = kwargs.get('headers',{})
-            headers['Origin'] = self.origin
-            kwargs['headers'] = headers
         return requests.post(*args, timeout=30.0, **kwargs)
 
     def parse_args(self, args):
@@ -1738,19 +1458,13 @@ class Authentication():
         self.set_client_id(args.client)
         self.access_token = args.access_token
         self.refresh_token = args.refresh_token
-        self.set_origin_value(args.origin)
         self.saml_token = args.saml_token
         self.outfile = args.tokenfile
         self.debug = args.debug
         self.set_resource_uri(args.resource)
-        self.set_scope(args.scope)
+        self.scope = args.scope
         self.set_user_agent(args.user_agent)
-        if args.cae:
-            self.set_cae()
-        if args.force_mfa:
-            self.set_force_mfa()
-        if args.force_ngcmfa:
-            self.set_force_ngcmfa()
+        self.use_cae = args.cae
 
         if not self.username is None and self.password is None:
             self.password = getpass.getpass()
@@ -1776,10 +1490,9 @@ class Authentication():
                 self.tokendata, _ = self.parse_accesstoken(self.access_token)
                 return self.tokendata
             if self.username and self.password:
-                discovery = self.user_discovery_v1(self.username)
-                if discovery['account_type'] == 'Federated':
-                    # Use the federation flow
-                    return self.authenticate_username_password_federation_native(discovery)
+                if self.user_discovery(self.username)['NameSpaceType'] == 'Federated':
+                    # Fall back to adal until we have support for this
+                    return self.authenticate_username_password()
                 # Use native implementation
                 if self.scope:
                     return self.authenticate_username_password_native_v2()
@@ -1801,7 +1514,7 @@ class Authentication():
                     return self.authenticate_device_code_native_v2()
                 return self.authenticate_device_code_native()
             if args.prt_init:
-                nonce = self.get_srv_challenge_nonce()
+                nonce = self.get_prt_cookie_nonce()
                 if nonce:
                     print(f'Requested nonce from server to use with ROADtoken: {nonce}')
                 return False
@@ -1822,11 +1535,19 @@ class Authentication():
                     return self.authenticate_with_prt(prt, None, sessionkey=sessionkey)
                 else:
                     return self.authenticate_with_prt_v2(prt, sessionkey)
+
+        except adal.adal_error.AdalError as ex:
+            try:
+                print(f"Error during authentication: {ex.error_response['error_description']}")
+            except TypeError:
+                # Not all errors are objects
+                print(str(ex))
+            sys.exit(1)
         except AuthenticationException as ex:
             try:
                 error_data = json.loads(str(ex))
                 print(f"Error during authentication: {error_data['error_description']}")
-            except (TypeError, json.decoder.JSONDecodeError):
+            except TypeError:
                 # No json
                 print(str(ex))
             sys.exit(1)
@@ -1836,8 +1557,6 @@ class Authentication():
         return False
 
     def save_tokens(self, args):
-        if self.origin:
-            self.tokendata['originheader'] = self.origin
         if args.tokens_stdout:
             sys.stdout.write(json.dumps(self.tokendata))
         else:
