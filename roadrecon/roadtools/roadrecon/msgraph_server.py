@@ -4,7 +4,8 @@ from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from marshmallow_sqlalchemy import ModelConverter
 from marshmallow import fields
-from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
+# Needs and IF statement to either import aad_database or just database depending on whether someone is using gather or enumerate
+from roadtools.roadlib.metadef.msgraph_database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
 import os
 import argparse
 from sqlalchemy import func, and_, or_, select
@@ -41,12 +42,61 @@ class RTModelSchema(ma.SQLAlchemyAutoSchema):
 class UsersSchema(ma.Schema):
     class Meta:
         model = User
-        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled', 'strongAuthenticationDetail', 'userType', 'searchableDeviceKey')
+        fields = (
+            'id',
+            'businessPhones',
+            'displayName',
+            'givenName',
+            'jobTitle',
+            'mail',
+            'mobilePhone',
+            'officeLocation',
+            'onPremisesSyncEnabled',
+            'preferredLanguage',
+            'surname',
+            'userPrincipalName'
+        )
 
 class DevicesSchema(ma.Schema):
     class Meta:
         model = User
-        fields = ('objectId', 'objectType', 'accountEnabled', 'displayName', 'deviceManufacturer', 'deviceModel', 'deviceOSType', 'deviceOSVersion', 'deviceTrustType', 'isCompliant', 'deviceId', 'isManaged', 'isRooted', 'dirSyncEnabled')
+        fields = (
+            'id',
+            'accountEnabled',
+            'alternativeSecurityIds',
+            'approximateLastSignInDateTime',
+            'complianceExpirationDateTime',
+            'createdDateTime',
+            'deletedDateTime',
+            'deviceCategory',
+            'deviceId',
+            'deviceMetadata',
+            'deviceOwnership',
+            'deviceVersion',
+            'displayName',
+            'domainName',
+            'enrollmentProfileName',
+            'enrollmentType',
+            'extensionAttributes',
+            'externalSourceName',
+            'isCompliant',
+            'isManaged',
+            'isRooted',
+            'keyCredentials',
+            'managementType',
+            'manufacturer',
+            'model',
+            'onPremisesLastSyncDateTime',
+            'onPremisesSyncEnabled',
+            'operatingSystem',
+            'operatingSystemVersion',
+            'physicalIds',
+            'profileType',
+            'registrationDateTime',
+            'sourceType',
+            'systemLabels',
+            'trustType'
+        )
 
 class DirectoryRoleSchema(ma.Schema):
     class Meta:
@@ -64,12 +114,12 @@ class AppRoleAssignmentsSchema(ma.SQLAlchemyAutoSchema):
 class GroupsSchema(ma.Schema):
     class Meta:
         model = Group
-        fields = ('displayName', 'description', 'createdDateTime', 'dirSyncEnabled', 'objectId', 'objectType', 'groupTypes', 'mail', 'isPublic', 'isAssignableToRole', 'membershipRule')
+        fields = ('displayName', 'description', 'createdDateTime', 'onPremisesSyncEnabled', 'id', 'groupTypes', 'mail', 'isAssignableToRole', 'membershipRule', 'onPremisesDomainName', 'onPremisesNetBiosName', 'onPremisesSamAccountName', 'onPremisesSecurityIdentifier', 'isPublic')
 
 class AdministrativeUnitsSchema(ma.Schema):
     class Meta:
         model = AdministrativeUnit
-        fields = ('displayName', 'description', 'createdDateTime', 'objectId', 'objectType', 'membershipType', 'membershipRule')
+        fields = ('displayName', 'description', 'id', 'membershipType', 'membershipRule')
 
 class SimpleServicePrincipalsSchema(ma.Schema):
     """
@@ -78,19 +128,19 @@ class SimpleServicePrincipalsSchema(ma.Schema):
     """
     class Meta:
         model = ServicePrincipal
-        fields = ('objectId', 'objectType', 'displayName', 'servicePrincipalType')
+        fields = ('id', 'displayName', 'servicePrincipalType')
 
 class ServicePrincipalsSchema(ma.Schema):
     class Meta:
         model = ServicePrincipal
-        fields = ('objectId', 'objectType', 'displayName', 'appDisplayName', 'appRoleAssignmentRequired', 'appId', 'appOwnerTenantId', 'publisherName', 'replyUrls', 'appRoles', 'microsoftFirstParty', 'isDirSyncEnabled', 'oauth2Permissions', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals', 'accountEnabled', 'servicePrincipalType')
+        fields = ('id', 'displayName', 'appDisplayName', 'appRoleAssignmentRequired', 'appId', 'appOwnerOrganizationId', 'replyUrls', 'appRoles', 'oauth2PermissionScopes', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals', 'accountEnabled', 'servicePrincipalType')#, 'state', 'conditions', 'grantControls', 'sessionControls')
     ownerUsers = fields.Nested(UsersSchema, many=True)
     ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 
 class ApplicationsSchema(ma.Schema):
     class Meta:
         model = Application
-        fields = ('objectId', 'objectType', 'displayName', 'appId', 'appDisplayName', 'oauth2AllowIdTokenImplicitFlow', 'availableToOtherTenants', 'publisherDomain', 'replyUrls', 'appRoles', 'publicClient', 'oauth2AllowImplicitFlow', 'oauth2Permissions', 'homepage', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals')
+        fields = ('id', 'displayName', 'appId', 'publisherDomain', 'appRoles', 'publicClient', 'oauth2AllowImplicitFlow', 'oauth2Permissions', 'homepage', 'passwordCredentials', 'keyCredentials', 'ownerUsers', 'ownerServicePrincipals', 'spa', 'web', 'api','signInAudience', 'notes', 'nativeAuthenticationApisEnabled', 'isFallbackPublicClient', 'requestSignatureVerification')
     ownerUsers = fields.Nested(UsersSchema, many=True)
     ownerServicePrincipals = fields.Nested(SimpleServicePrincipalsSchema, many=True)
 
@@ -285,48 +335,49 @@ def get_applications():
     result = applications_schema.dump(all_applications)
     return jsonify(result)
 
-@app.route("/api/mfa", methods=["GET"])
-def get_mfa():
-    # First get all users with per-user MFA
-    # per_user = db.session.query(AppRoleAssignment).filter(AppRoleAssignment.resourceDisplayName == "MicrosoftAzureActiveAuthn" and AppRoleAssignment.principalType == "User").all()
-    # enabledusers = []
-    # for approle in per_user:
-    #     enabledusers.append(approle.principalId)
+# --------------- TO DO: find a way to get this information with new Graph APIs ---------------
+# @app.route("/api/mfa", methods=["GET"])
+# def get_mfa():
+#     # First get all users with per-user MFA
+#     # per_user = db.session.query(AppRoleAssignment).filter(AppRoleAssignment.resourceDisplayName == "MicrosoftAzureActiveAuthn" and AppRoleAssignment.principalType == "User").all()
+#     # enabledusers = []
+#     # for approle in per_user:
+#     #     enabledusers.append(approle.principalId)
 
-    # Filter out mailbox-only users by default
-    all_mfa = db.session.execute(select(User).where(
-        or_(User.cloudMSExchRecipientDisplayType is None,
-            and_(
-                User.cloudMSExchRecipientDisplayType != 0,
-                User.cloudMSExchRecipientDisplayType != 7,
-                User.cloudMSExchRecipientDisplayType != 18
-            )
-        )
-    ))
-    out = []
-    for user, in all_mfa: # pylint: disable=E1133
-        mfa_methods = len(user.strongAuthenticationDetail['methods'])
-        methods = [method['methodType'] for method in user.strongAuthenticationDetail['methods']]
-        has_app = 'PhoneAppOTP' in methods or 'PhoneAppNotification' in methods
-        has_phonenr = 'OneWaySms' in methods or 'TwoWayVoiceMobile' in methods
-        has_fido = 'FIDO' in [key['usage'] for key in user.searchableDeviceKey]
-        perusermfa = None
-        if len(user.strongAuthenticationDetail['requirements']) > 0:
-            perusermfa = user.strongAuthenticationDetail['requirements'][0]['state']
-        out.append({
-            'objectId': user.objectId,
-            'displayName': user.displayName,
-            'userPrincipalName': user.userPrincipalName,
-            'mfamethods': mfa_methods,
-            'accountEnabled': user.accountEnabled,
-            'perusermfa': perusermfa,
-            'has_app': has_app,
-            'has_phonenr': has_phonenr,
-            'has_fido': has_fido,
-            'strongAuthenticationDetail': user.strongAuthenticationDetail,
-            'searchableDeviceKey': user.searchableDeviceKey
-        })
-    return jsonify(out)
+#     # Filter out mailbox-only users by default
+#     all_mfa = db.session.execute(select(User).where(
+#         or_(User.cloudMSExchRecipientDisplayType is None,
+#             and_(
+#                 User.cloudMSExchRecipientDisplayType != 0,
+#                 User.cloudMSExchRecipientDisplayType != 7,
+#                 User.cloudMSExchRecipientDisplayType != 18
+#             )
+#         )
+#     ))
+#     out = []
+#     for user, in all_mfa: # pylint: disable=E1133
+#         mfa_methods = len(user.strongAuthenticationDetail['methods'])
+#         methods = [method['methodType'] for method in user.strongAuthenticationDetail['methods']]
+#         has_app = 'PhoneAppOTP' in methods or 'PhoneAppNotification' in methods
+#         has_phonenr = 'OneWaySms' in methods or 'TwoWayVoiceMobile' in methods
+#         has_fido = 'FIDO' in [key['usage'] for key in user.searchableDeviceKey]
+#         perusermfa = None
+#         if len(user.strongAuthenticationDetail['requirements']) > 0:
+#             perusermfa = user.strongAuthenticationDetail['requirements'][0]['state']
+#         out.append({
+#             'id': user.id,
+#             'displayName': user.displayName,
+#             'userPrincipalName': user.userPrincipalName,
+#             'mfamethods': mfa_methods,
+#             'accountEnabled': user.accountEnabled,
+#             'perusermfa': perusermfa,
+#             'has_app': has_app,
+#             'has_phonenr': has_phonenr,
+#             'has_fido': has_fido,
+#             'strongAuthenticationDetail': user.strongAuthenticationDetail,
+#             'searchableDeviceKey': user.searchableDeviceKey
+#         })
+#     return jsonify(out)
 
 @app.route("/api/applications/<id>", methods=["GET"])
 def application_detail(id):
@@ -335,7 +386,7 @@ def application_detail(id):
         abort(404)
     return application_schema.jsonify(application)
 
-def resolve_objectid(oid):
+def resolve_id(oid):
     res = db.session.get(User, oid)
     if res:
         return 'User', users_schema.dump([res])[0]
@@ -420,7 +471,7 @@ def process_approle(approles, ar):
     if ar.principalType == 'Group':
         sp = db.session.get(Group, ar.principalId)
     if ar.id == '00000000-0000-0000-0000-000000000000':
-        approles.append({'objid':sp.objectId,
+        approles.append({'objid':sp.id,
                          'ptype':ar.principalType,
                          'pname':sp.displayName,
                          'app':ar.resourceDisplayName,
@@ -430,8 +481,8 @@ def process_approle(approles, ar):
                         })
     else:
         for approle in rsp.appRoles:
-            if approle['id'] == ar.id:
-                approles.append({'objid':sp.objectId,
+            if approle['id'] == ar.appRoleId:
+                approles.append({'objid':sp.id,
                                  'ptype':ar.principalType,
                                  'pname':sp.displayName,
                                  'app':ar.resourceDisplayName,
@@ -443,10 +494,8 @@ def process_approle(approles, ar):
 @app.route("/api/approles", methods=["GET"])
 def get_approles():
     approles = []
-    ar = db.session.query(AppRoleAssignment).all()
-    process_approle(approles, ar[0])
-    # for ar in db.session.query(AppRoleAssignment).all():
-    #     process_approle(approles, ar)
+    for ar in db.session.query(AppRoleAssignment).all():
+        process_approle(approles, ar)
     return jsonify(approles)
 
 @app.route("/api/approles_by_resource/<spid>", methods=["GET"])
@@ -472,7 +521,7 @@ def get_oauth2permissions():
         if permgrant.consentType == 'Principal':
             grant['type'] = 'user'
             user = db.session.get(User, permgrant.principalId)
-            grant['userid'] = user.objectId
+            grant['userid'] = user.id
             grant['userdisplayname'] = user.displayName
         else:
             grant['type'] = 'all'
@@ -480,10 +529,13 @@ def get_oauth2permissions():
             grant['userdisplayname'] = None
         targetapp = db.session.get(ServicePrincipal, permgrant.resourceId)
         grant['targetapplication'] = targetapp.displayName
-        grant['targetspobjectid'] = targetapp.objectId
         grant['sourceapplication'] = rsp.displayName
-        grant['sourcespobjectid'] = rsp.objectId
-        grant['expiry'] = permgrant.expiryTime.strftime("%Y-%m-%dT%H:%M:%S")
+        grant['clientId'] = permgrant.clientId
+        grant['resourceId'] = permgrant.resourceId
+        grant['principalId'] = permgrant.principalId
+        grant['targetspobjectid'] = targetapp.id
+        grant['sourcespobjectid'] = rsp.id
+        # grant['expiry'] = permgrant.expiryTime.strftime("%Y-%m-%dT%H:%M:%S")
         grant['scope'] = permgrant.scope
         oauth2permissions.append(grant)
     return jsonify(oauth2permissions)
@@ -493,7 +545,7 @@ def get_allroles():
     allroles = []
     for role in db.session.query(RoleDefinition).all():
         roleobj = {
-            'objectId': role.objectId,
+            'id': role.id,
             'displayName': role.displayName,
             'description': role.description,
             'isBuiltIn': role.isBuiltIn,
@@ -501,27 +553,28 @@ def get_allroles():
             'assignments': []
         }
         for assignment in role.assignments:
-            stypes, snames, sids = translate_rolescopes(assignment.resourceScopes)
+            scopes_list = [assignment.directoryScopeId]
+            stypes, snames, sids = translate_rolescopes(scopes_list)
             aobj = {
                 'type': 'assignment',
-                'scope': assignment.resourceScopes,
+                'scope': scopes_list,
                 'scopeTypes': stypes,
                 'scopeNames': snames,
                 'scopeIds': sids
             }
-            _, principal = resolve_objectid(assignment.principalId)
+            _, principal = resolve_id(assignment.principalId)
             aobj['principal'] = principal
             roleobj['assignments'].append(aobj)
         for assignment in role.eligibleAssignments:
-            stypes, snames, sids = translate_rolescopes(assignment.resourceScopes)
+            stypes, snames, sids = translate_rolescopes(assignment.directoryScopeId)
             aobj = {
                 'type': 'eligible',
-                'scope': assignment.resourceScopes,
+                'scope': assignment.directoryScopeId,
                 'scopeTypes': stypes,
                 'scopeNames': snames,
                 'scopeIds': sids
             }
-            _, principal = resolve_objectid(assignment.principalId)
+            _, principal = resolve_id(assignment.principalId)
             aobj['principal'] = principal
             roleobj['assignments'].append(aobj)
         allroles.append(roleobj)
@@ -551,12 +604,12 @@ def get_authpolicies():
 def get_stats():
     # pylint: disable=not-callable
     stats = {
-        'countUsers': db.session.query(func.count(User.objectId)).scalar(),
-        'countGroups': db.session.query(func.count(Group.objectId)).scalar(),
-        'countServicePrincipals': db.session.query(func.count(ServicePrincipal.objectId)).scalar(),
-        'countApplications': db.session.query(func.count(Application.objectId)).scalar(),
-        'countDevices': db.session.query(func.count(Device.objectId)).scalar(),
-        'countAdministrativeUnits': db.session.query(func.count(AdministrativeUnit.objectId)).scalar(),
+        'countUsers': db.session.query(func.count(User.id)).scalar(),
+        'countGroups': db.session.query(func.count(Group.id)).scalar(),
+        'countServicePrincipals': db.session.query(func.count(ServicePrincipal.id)).scalar(),
+        'countApplications': db.session.query(func.count(Application.id)).scalar(),
+        'countDevices': db.session.query(func.count(Device.id)).scalar(),
+        'countAdministrativeUnits': db.session.query(func.count(AdministrativeUnit.id)).scalar(),
     }
     return jsonify(stats)
 
@@ -573,7 +626,7 @@ def create_app_test():
 def main(args=None):
     global db
     if not args:
-        parser = argparse.ArgumentParser(add_help=True, description='ROADrecon GUI', formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser = argparse.ArgumentParser(add_help=True, description='ROADrecon GUI - msgraph only', formatter_class=argparse.RawDescriptionHelpFormatter)
         parser.add_argument('-d',
                             '--database',
                             action='store',

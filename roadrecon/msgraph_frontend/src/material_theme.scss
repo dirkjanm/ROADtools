@@ -1,0 +1,101 @@
+@use '@angular/material' as mat;
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat.core();
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue. Available color palettes: https://material.io/design/color/
+$rt-primary: (
+  50: #e1f5fe,
+  100: #b3e4fb,
+  200: #81d2f9,
+  300: #4fc1f5,
+  400: #2ab4f3,
+  500: #07a6f1,
+  600: #0798e2,
+  700: #0686ce,
+  800: #0575ba,
+  900: #035598,
+  A100: #ff8a80,
+  A200: #ff5252,
+  A400: #ff1744,
+  A700: #d50000,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: rgba(black, 0.87),
+    600: rgba(black, 0.87),
+    700: rgba(black, 0.87),
+    800: white,
+    900: white,
+    A100: rgba(black, 0.87),
+    A200: white,
+    A400: white,
+    A700: white,
+  )
+);
+
+$rt-secondary: (
+  50: #ffeaed,
+  100: #ffcacf,
+  200: #f59594,
+  300: #ed6a6a,
+  400: #f74444,
+  500: #fc2d25,
+  600: #ed1f26,
+  700: #db0d20,
+  800: #ce0018,
+  900: #c00008,
+  A100: #ff8a80,
+  A200: #ff5252,
+  A400: #ff1744,
+  A700: #d50000,
+  contrast: (
+    50: rgba(black, 0.54),
+    100: rgba(black, 0.54),
+    200: rgba(black, 0.54),
+    300: rgba(black, 0.54),
+    400: rgba(black, 0.54),
+    500: rgba(black, 0.54),
+    600: rgba(black, 0.54),
+    700: rgba(white, 0.7),
+    800: rgba(white, 0.7),
+    900: rgba(white, 0.7),
+    A100: rgba(white, 0.7),
+    A200: rgba(black, 0.54),
+    A400: rgba(black, 0.54),
+    A700: rgba(black, 0.54),
+  )
+);
+
+$roadtools-primary: mat.define-palette($rt-primary, 800, 900, 400);
+$roadtools-accent:  mat.define-palette($rt-secondary, 600, 800, 200);
+
+// The warn palette is optional (defaults to red).
+$roadtools-warn:    mat.define-palette(mat.$red-palette);
+
+// Create the theme object (a Sass map containing all of the palettes).
+$roadtools-theme: mat.define-light-theme($roadtools-primary, $roadtools-accent, $roadtools-warn);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include mat.all-component-themes($roadtools-theme);
+mat-table, .mat-table {
+  a:not(.mat-button) {
+      color: mat.get-color-from-palette($roadtools-primary, 900);
+      text-decoration: none;
+      &:hover {
+        color: mat.get-color-from-palette($roadtools-primary, 400);
+      }
+
+  }
+}
+

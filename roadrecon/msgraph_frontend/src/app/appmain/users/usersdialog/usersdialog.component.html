@@ -1,0 +1,251 @@
+<h1 mat-dialog-title>{{ user.displayName }}</h1>
+<mat-dialog-content>
+<mat-tab-group>
+  <mat-tab label="Overview">
+    <mat-card>
+      <table class="userTable">
+        <tr><th>Display name</th><td>{{ user.displayName }}</td></tr>
+        <tr><th>UserPrincipalName</th><td>{{ user.userPrincipalName }}</td></tr>
+        <tr><th>id</th><td>{{ user.id }}</td></tr>
+        <tr *ngIf="user.mail != null"><th>Email</th><td>{{ user.mail }}</td></tr>
+        <!-- <tr *ngIf="user.jobTitle != null"><th>Job Title</th><td>{{ user.jobTitle }}</td></tr> -->
+        <!-- <tr *ngIf="user.businessPhones != null"><th>Business Phones</th><td>{{ user.businessPhones }}</td></tr> -->
+        <tr><th>Account source</th><td>{{ user.onPremisesSyncEnabled? 'Synced with AD':'Cloud-only' }}</td></tr>
+        <!-- <tr><th>Status</th><td>{{ user.accountEnabled? 'Enabled':'Disabled' }}</td></tr> -->
+      </table>
+    </mat-card>
+    <mat-divider></mat-divider>
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Group memberships ({{ user.memberOf.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table mat-table [dataSource]="user.memberOf">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row"><a [routerLink]="['/groups/', row.id]">{{row.displayName}}</a></td>
+        </ng-container>
+
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{row.description}}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-expansion-panel>
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Role memberships ({{ user.memberOfRole.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table *ngIf="user.memberOfRole.length > 0" mat-table [dataSource]="user.memberOfRole">
+        <mat-text-column name="displayName"></mat-text-column>
+        <mat-text-column name="description"></mat-text-column>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-expansion-panel>
+  </mat-tab>
+  <mat-tab label="Owned objects" *ngIf="user.ownedServicePrincipals.length + user.ownedDevices.length + user.ownedApplications.length + user.ownedGroups.length > 0">
+    <mat-expansion-panel expanded *ngIf="user.ownedDevices.length > 0">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Devices ({{ user.ownedDevices.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table mat-table class="full-width-table" [dataSource]="user.ownedDevices" matSort aria-label="Elements">
+    <ng-container matColumnDef="displayName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let row"><a [routerLink]="['/devices/', row.id]">{{row.displayName}}</a></td>
+    </ng-container>
+
+    <ng-container matColumnDef="accountEnabled">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Enabled</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.accountEnabled" aria-hidden="false" aria-label="Enabled">check</mat-icon></td>
+    </ng-container>
+
+    <ng-container matColumnDef="manufacturer">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Manufacturer</th>
+      <td mat-cell *matCellDef="let row">{{row.manufacturer}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="model">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Model</th>
+      <td mat-cell *matCellDef="let row">{{row.model}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="operatingSystem">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>OS</th>
+      <td mat-cell *matCellDef="let row">{{row.operatingSystem}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="operatingSystemVersion">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>OS Version</th>
+      <td mat-cell *matCellDef="let row">{{row.operatingSystemVersion}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="trustType">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Trust type</th>
+      <td mat-cell *matCellDef="let row">{{row.trustType}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="isCompliant">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Compliant</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isCompliant" aria-hidden="false" aria-label="Compliant">check</mat-icon></td>
+    </ng-container>
+
+    <ng-container matColumnDef="isManaged">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Managed</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isManaged" aria-hidden="false" aria-label="Managed">check</mat-icon></td>
+    </ng-container>
+
+    <ng-container matColumnDef="isRooted">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Rooted</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isRooted" aria-hidden="false" aria-label="Rooted">check</mat-icon></td>
+    </ng-container>
+
+    <ng-container matColumnDef="onPremisesSyncEnabled">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>On Premise Sync Enabled</th>
+      <td mat-cell *matCellDef="let row">{{row.onPremisesSyncEnabled}}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumnsDevices"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumnsDevices;"></tr>
+  </table>
+    </mat-expansion-panel>
+<mat-expansion-panel expanded *ngIf="user.ownedServicePrincipals.length > 0">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          ServicePrincipals ({{ user.ownedServicePrincipals.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table mat-table class="full-width-table" [dataSource]="user.ownedServicePrincipals" matSort aria-label="Elements">
+    <ng-container matColumnDef="displayName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let row"><a [routerLink]="['/serviceprincipals/', row.id]">{{row.displayName}}</a></td>
+    </ng-container>
+
+    <ng-container matColumnDef="accountEnabled">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Enabled</th>
+      <td mat-cell *matCellDef="let row">{{row.accountEnabled}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="servicePrincipalType">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Service Principal Type</th>
+      <td mat-cell *matCellDef="let row">{{row.servicePrincipalType}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="appOwnerOrganizationId">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Owner Organization ID</th>
+      <td mat-cell *matCellDef="let row">{{row.appOwnerOrganizationId}}</td>
+    </ng-container>
+
+
+    <ng-container matColumnDef="passwordCredentials">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Passwords</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.passwordCredentials.length > 0">{{row.passwordCredentials.length}}</span></td>
+    </ng-container>
+
+    <ng-container matColumnDef="keyCredentials">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Keys</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.keyCredentials.length > 0">{{row.keyCredentials.length}}</span></td>
+    </ng-container>
+
+    <ng-container matColumnDef="appRoles">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Roles defined</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.appRoles.length > 0">{{row.appRoles.length}}</span></td>
+    </ng-container>
+
+    <ng-container matColumnDef="oauth2Permissions">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>OAuth2 Permissions</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.oauth2Permissions.length > 0">{{row.oauth2Permissions.length}}</span></td>
+    </ng-container>
+
+
+    <ng-container matColumnDef="ownerUsers">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Custom owner</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.ownerUsers.length + row.ownerServiceprincipals.length > 0" aria-hidden="false" aria-label="Yes">check</mat-icon></td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumnsServicePrincipals"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumnsServicePrincipals;"></tr>
+  </table>
+    </mat-expansion-panel>
+<mat-expansion-panel expanded *ngIf="user.ownedApplications.length > 0">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Applications ({{ user.ownedApplications.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table mat-table class="full-width-table" [dataSource]="user.ownedApplications" matSort aria-label="Elements">
+    <ng-container matColumnDef="displayName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let row"><a [routerLink]="['/applications/', row.id]">{{row.displayName}}</a></td>
+    </ng-container>
+
+    <ng-container matColumnDef="passwordCredentials">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Passwords</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.passwordCredentials.length > 0">{{row.passwordCredentials.length}}</span></td>
+    </ng-container>
+
+    <ng-container matColumnDef="keyCredentials">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Keys</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.keyCredentials.length > 0">{{row.keyCredentials.length}}</span></td>
+    </ng-container>
+
+    <ng-container matColumnDef="appRoles">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Roles defined</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.appRoles.length > 0">{{row.appRoles.length}}</span></td>
+    </ng-container>
+
+    <!-- <ng-container matColumnDef="oauth2Permissions">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>OAuth2 Permissions</th>
+      <td mat-cell *matCellDef="let row"><span *ngIf="row.oauth2Permissions.length > 0">{{row.oauth2Permissions.length}}</span></td>
+    </ng-container> -->
+    
+
+    <ng-container matColumnDef="ownerUsers">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Custom owner</th>
+      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.ownerUsers.length + row.ownerServiceprincipals.length > 0" aria-hidden="false" aria-label="Yes">check</mat-icon></td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumnsApplications"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumnsApplications;"></tr>
+  </table>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel expanded *ngIf="user.ownedGroups.length > 0">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Groups ({{ user.ownedGroups.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table mat-table [dataSource]="user.ownedGroups">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row"><a [routerLink]="['/groups/', row.id]">{{row.displayName}}</a></td>
+        </ng-container>
+
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{row.description}}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-expansion-panel>
+  </mat-tab>
+  <mat-tab label="Raw"><mat-card appJsonFormat [json]="user"></mat-card></mat-tab>
+</mat-tab-group>
+</mat-dialog-content>
+
