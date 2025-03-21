@@ -567,6 +567,7 @@ class LoginTenantBranding(object):
 
     ]
 
+
 class NamedLocationsPolicy(DirectoryObject):
     props = {
         'appliesTo': Collection,
@@ -873,6 +874,19 @@ class User(DirectoryObject):
         'preferredLanguage': Edm.String,
         'surname': Edm.String,
         'userPrincipalName': Edm.String,
+        'isAdmin': Edm.Boolean,
+        'isMfaCapable': Edm.Boolean,
+        'isMfaRegistered': Edm.Boolean,
+        'isPasswordlessCapable': Edm.Boolean,
+        'isSsprCapable': Edm.Boolean,
+        'isSsprEnabled': Edm.Boolean,
+        'isSsprRegistered' : Edm.Boolean,
+        'isSystemPreferredAuthenticationMethodEnabled': Edm.Boolean,
+        'lastUpdatedDate': Edm.DateTime,
+        'methodsRegistered': Collection,
+        'systemPreferredAuthenticationMethods' : Collection,
+        'userPreferredMethodForSecondaryAuthentication': Edm.String,
+        'userType': Edm.String,
     }
     rels = [
         'agreementAcceptances',
@@ -914,6 +928,26 @@ class User(DirectoryObject):
         'todo',
         'transitiveMemberOf',
     ]
+
+class User_MFA(object):
+    props = {
+        'id': Edm.String,
+        'isAdmin': Edm.Boolean,
+        'isMfaCapable': Edm.Boolean,
+        'isMfaRegistered': Edm.Boolean,
+        'isPasswordlessCapable': Edm.Boolean,
+        'isSsprCapable': Edm.Boolean,
+        'isSsprEnabled': Edm.Boolean,
+        'isSsprRegistered' : Edm.Boolean,
+        'isSystemPreferredAuthenticationMethodEnabled': Edm.Boolean,
+        'lastUpdatedDate': Edm.DateTime,
+        'methodsRegistered': Collection,
+        'systemPreferredAuthenticationMethods' : Collection,
+        'userDisplayName': Edm.String,
+        'userPreferredMethodForSecondaryAuthentication': Edm.String,
+        'userPrincipalName': Edm.String,
+        'userType': Edm.String,
+    }
 
 class PermissionGrantConditionSet(object):
     props = {

@@ -20,7 +20,7 @@ export class MfaComponent implements AfterViewInit, OnInit {
   constructor(private service: DatabaseService) {  }
 
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['displayName', 'userPrincipalName', 'accountEnabled', 'perusermfa', 'mfamethods', 'has_fido', 'has_app', 'has_phonenr', 'strongAuthenticationDetail'];
+  displayedColumns = ['displayName', 'userPrincipalName', 'mfamethods', 'has_fido', 'has_app', 'has_phonenr','systemPreferredAuthenticationMethods'];
 
   ngOnInit() {
     this.dataSource = new MatTableDataSource();
@@ -32,21 +32,23 @@ export class MfaComponent implements AfterViewInit, OnInit {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
     this.table.dataSource = this.dataSource;
-    this.dataSource.sortingDataAccessor = (item, property) => {
-      switch (property) {
-        case 'mfamethods': {
-          return item['strongAuthenticationDetail']['methods'].length;
-        }
+    // this.dataSource.sortingDataAccessor = (item, property) => {
+    //   switch (property) {
+    //     case 'mfamethods': {
+    //       return item['strongAuthenticationDetail']['methods'].length;
+    //     }
 
-        case 'strongAuthenticationDetail': {
-          return item['strongAuthenticationDetail']['methods'].length;
-        }
-        default: {
-          return item[property];
-        }
-      }
-    };
+    //     case 'strongAuthenticationDetail': {
+    //       return item['strongAuthenticationDetail']['methods'].length;
+    //     }
+    //     default: {
+    //       return item[property];
+    //     }
+    //   }
+    // };
   }
+
+  
 
   applyFilter(filterValue: string) {
     filterValue = filterValue.trim(); // Remove whitespace

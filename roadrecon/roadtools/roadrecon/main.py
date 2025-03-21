@@ -4,7 +4,7 @@ import os
 import importlib
 from roadtools.roadlib.auth import Authentication
 from roadtools.roadrecon.gather import getargs as getgatherargs
-from roadtools.roadrecon.enumerate import getargs as getenumargs
+from roadtools.roadrecon.msgraph_gather import getargs as getenumargs
 
 RR_HELP = r'''
 ROADrecon - The Entra ID exploration tool.
@@ -19,7 +19,7 @@ roadrecon auth <options>
 
 2. Gather all information
 roadrecon gather <options> [OLD]
-roadrecon enumerate <options> [NEW]
+roadrecon gather --msgraph <options> [NEW]
 
 3. Explore the data or export it to a specific format using a plugin
 roadrecon gui
@@ -56,11 +56,15 @@ def main():
     auth.get_sub_argparse(auth_parser, for_rr=True)
 
     # Construct gather module options (imported from gather module)
-    gather_parser = subparsers.add_parser('gather', help='Gather Entra ID information - Azure AD Graph [OLD]')
+    gather_parser = subparsers.add_parser('gather', aliases=['dump'], help='Gather Entra ID information')
+    gather_parser.add_argument('--msgraph',
+                               '-mg',
+                            action='store_true',
+                            help='Use the new msgraph endpoints for collection')
     getgatherargs(gather_parser)
 
-    enum_parser = subparsers.add_parser('enumerate', aliases=['dump'], help='Gather Entra ID information - Microsoft Graph [NEW]')
-    getenumargs(enum_parser)
+    # enum_parser = subparsers.add_parser('enumerate', aliases=['dump'], help='Gather Entra ID information - Microsoft Graph [NEW]')
+    # getenumargs(enum_parser)
 
     # Construct GUI options
     gui_parser = subparsers.add_parser('gui', help='Launch the web-based GUI')
@@ -81,6 +85,7 @@ def main():
                             help='HTTP Server port (default=5000)',
                             default=5000)
     gui_parser.add_argument('--msgraph',
+                               '-mg',
                             action='store_true',
                             help='Use the GUI for data collected with the msgraph endpoints')
 
@@ -138,12 +143,13 @@ def main():
             from roadtools.roadrecon.server import main as servermain
             check_database_exists(args.database)
             servermain(args)
-    elif args.command == 'gather':
-        from roadtools.roadrecon.gather import main as gathermain
-        gathermain(args)
-    elif args.command == 'enumerate' or args.command == 'dump':
-        from roadtools.roadrecon.enumerate import main as enummain
-        enummain(args)
+    elif args.command == 'gather' or args.command == 'dump':
+        if args.msgraph:
+            from roadtools.roadrecon.msgraph_gather import main as enummain
+            enummain(args)
+        else:
+            from roadtools.roadrecon.gather import main as gathermain
+            gathermain(args)
     elif args.command == 'plugin':
         # Dynamic import
         plugin_module = importlib.import_module('roadtools.roadrecon.plugins.{}'.format(args.plugin))

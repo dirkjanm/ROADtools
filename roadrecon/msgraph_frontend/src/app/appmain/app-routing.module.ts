@@ -24,7 +24,7 @@ const routes: Routes = [
       { path: '', component: IndexComponent },
       { path: 'config', component: ConfigComponent },
       { path: 'oauth2permissions', component: Oauth2permissionsComponent },
-      // { path: 'mfa', component: MfaComponent },
+      { path: 'mfa', component: MfaComponent },
       { path: 'users',
         component: UsersComponent,
         children: [
@@ -109,7 +109,7 @@ const routes: Routes = [
       { path: 'directoryroles',
         component: DirectoryRolesComponent
       },
-      // TO DO: Fix MFA
+
       // { path: 'users/:objectId', component: UsersComponentDetail },
     ];
 @NgModule({

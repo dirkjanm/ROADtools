@@ -16,15 +16,6 @@
       <td mat-cell *matCellDef="let row">{{row.userPrincipalName}}</td>
     </ng-container>
 
-    <ng-container matColumnDef="accountEnabled">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Account Enabled</th>
-      <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.accountEnabled" aria-hidden="false" aria-label="Enabled">check</mat-icon></td>
-    </ng-container>
-
-    <ng-container matColumnDef="perusermfa">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Per-user MFA</th>
-      <td mat-cell *matCellDef="let row">{{row.perusermfa}}</td>
-    </ng-container>
 
     <ng-container matColumnDef="has_app">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Authenticator app</th>
@@ -46,19 +37,24 @@
       <td mat-cell *matCellDef="let row"><span *ngIf="row.mfamethods > 0">{{row.mfamethods}}</span><span *ngIf="row.mfamethods == 0">None</span></td>
     </ng-container>
 
-    <ng-container matColumnDef="strongAuthenticationDetail">
+
+    <ng-container matColumnDef="systemPreferredAuthenticationMethods">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Methods</th>
       <td mat-cell *matCellDef="let row">
-        <span *ngFor="let method of row.strongAuthenticationDetail.methods">
-          <mat-icon *ngIf="method.methodType == 'PhoneAppOTP'" aria-label="App with OTP" [class.active]="method.isDefault" matTooltip="App with OTP" >phonelink_lock</mat-icon>
-          <mat-icon *ngIf="method.methodType == 'PhoneAppNotification'" aria-label="Phone notification" [class.active]="method.isDefault" matTooltip="App with notification" >notifications_active</mat-icon>
-          <mat-icon *ngIf="method.methodType == 'OneWaySms'" aria-label="Text message (SMS)" [class.active]="method.isDefault" matTooltip="Text message (SMS)" >sms</mat-icon>
-          <mat-icon *ngIf="method.methodType == 'TwoWayVoiceMobile'" aria-label="Phone call" [class.active]="method.isDefault" matTooltip="Phone call" >phone_callback</mat-icon>
+        <span *ngFor="let method of row.systemPreferredAuthenticationMethods">
+          <mat-icon *ngIf="method == 'PhoneAppOTP'" aria-label="App with OTP" [class.active]="method.isDefault" matTooltip="App with OTP" >phonelink_lock</mat-icon>
+          <mat-icon *ngIf="method == 'PhoneAppNotification'" aria-label="Phone notification" [class.active]="method.isDefault" matTooltip="App with notification" >notifications_active</mat-icon>
+          <mat-icon *ngIf="method == 'OneWaySms'" aria-label="Text message (SMS)" [class.active]="method.isDefault" matTooltip="Text message (SMS)" >sms</mat-icon>
+          <mat-icon *ngIf="method == 'TwoWayVoiceMobile'" aria-label="Phone call" [class.active]="method.isDefault" matTooltip="Phone call" >phone_callback</mat-icon>
+          <mat-icon *ngIf="method == 'FIDO'" aria-label="FIDO key" [class.active]="method.isDefault" matTooltip="FIDO key">vpn_key</mat-icon>  
+          <mat-icon *ngIf="method == 'Fido2'" aria-label="FIDO key" [class.active]="method.isDefault" matTooltip="FIDO key">vpn_key</mat-icon>  
+          <mat-icon *ngIf="method == 'NGC'" aria-label="Windows Hello" matTooltip="Windows Hello for Business" >passkey</mat-icon>
         </span>
-        <span *ngFor="let sdk of row.searchableDeviceKey">
+        <!-- <span *ngFor="let sdk of row.searchableDeviceKey">
           <mat-icon *ngIf="sdk.usage == 'NGC'" aria-label="Windows Hello" matTooltip="Windows Hello for Business" >passkey</mat-icon>
           <mat-icon *ngIf="sdk.usage == 'FIDO'" aria-label="FIDO2 key / passkey" matTooltip="FIDO 2 key or passkey" >passkey</mat-icon>
-        </span>
+          <mat-icon *ngIf="sdk.usage == 'fido2'" aria-label="FIDO2 key / passkey" matTooltip="FIDO 2 key or passkey" >passkey</mat-icon>
+        </span> -->
       </td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

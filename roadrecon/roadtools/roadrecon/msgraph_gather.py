@@ -132,7 +132,7 @@ def checktoken():
             print("- Attempting token refresh -")
             token = auth.authenticate_with_refresh(token)
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
-            expiretime = time.time() + token['expiresIn']#Something broken here
+            expiretime = int(time.time()) + int(token['expiresIn'])
             print('+ Refreshed token +')
             return True
         elif time.time() > expiretime:
@@ -357,9 +357,17 @@ class DataDumper(object):
         obj = await dumpsingle(url, method=method)
         if not obj:
             return
-        cache.append({'userid':parentid,'strongAuthenticationDetail':obj['strongAuthenticationDetail']})
-
-    async def dump_mfa(self, objecttype, parenttbl, method=None):
+        cache.append({'userid':parentid,
+                      'isMfaRegistered':obj['isMfaRegistered'],
+                      'isMfaCapable':obj['isMfaCapable'],
+                      'isSsprRegistered':obj['isSsprRegistered'],
+                      'isSsprEnabled':obj['isSsprEnabled'],
+                      'isSsprCapable':obj['isSsprCapable'],
+                      'isPasswordlessCapable': obj['isPasswordlessCapable'],
+                      'methodsRegistered':obj['methodsRegistered'],
+                      'systemPreferredAuthenticationMethods':obj['systemPreferredAuthenticationMethods']})
+        
+    async def dump_mfa(self, parenttbl, method=None):
         if method is None:
             method = self.ahsession.get
         parents = self.session.query(parenttbl.id).all()
@@ -367,7 +375,7 @@ class DataDumper(object):
         cache = []
         i = 0
         for parentid, in parents:
-            url = 'https://graph.microsoft.com/v1.0/%s/%s?$select=strongAuthenticationDetail,id' % (objecttype, parentid)
+            url = 'https://graph.microsoft.com/v1.0/reports/authenticationMethods/userRegistrationDetails/%s' % (parentid)
             # print(url)
             jobs.append(self.dump_mfa_to_db(url, method, parentid, cache))
             i += 1
@@ -667,7 +675,7 @@ async def run(args):
         tasks.append(dumper.dump_custom_role_members(RoleAssignment))
         tasks.append(dumper.dump_eligible_role_members(EligibleRoleAssignment))
         if args.mfa:
-            tasks.append(dumper.dump_mfa('users', User, method=ahsession.get))
+            tasks.append(dumper.dump_mfa(User, method=ahsession.get))
         # tasks.append(dumper.dump_each(ServicePrincipal, 'applicationRefs', ApplicationRef)) # Doesn't look like new graph has a direct alternative API available
         tasks.append(dumper.dump_keycredentials('servicePrincipals', ServicePrincipal))
         tasks.append(dumper.dump_keycredentials('applications', Application))

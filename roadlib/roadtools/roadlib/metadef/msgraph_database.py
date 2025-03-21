@@ -612,6 +612,22 @@ class User(Base, SerializeMixin):
     preferredLanguage = Column(Text)
     surname = Column(Text)
     userPrincipalName = Column(Text)
+    # MFA Properties
+    isAdmin = Column(Boolean)
+    isMfaCapable = Column(Boolean)
+    isMfaRegistered = Column(Boolean)
+    isPasswordlessCapable = Column(Boolean)
+    isSsprCapable = Column(Boolean)
+    isSsprEnabled = Column(Boolean)
+    isSsprRegistered = Column(Boolean)
+    isSystemPreferredAuthenticationMethodEnabled = Column(Boolean)
+    lastUpdatedDate = Column(DateTime)
+    methodsRegistered = Column(JSON)
+    systemPreferredAuthenticationMethods = Column(JSON)
+    userDisplayName = Column(Text)
+    userPreferredMethodForSecondaryAuthentication = Column(Text)
+    userPrincipalName = Column(Text)
+    userType = Column(Text)
 
     memberOf = relationship("Group", secondary=lnk_group_member_user, back_populates="memberUsers")
     memberOfAu = relationship("AdministrativeUnit", secondary=lnk_au_member_user, back_populates="memberUsers")
@@ -620,6 +636,25 @@ class User(Base, SerializeMixin):
     ownedDevices = relationship("Device", secondary=lnk_device_owner, back_populates="owner")
     ownedGroups = relationship("Group", secondary=lnk_group_owner_user, back_populates="ownerUsers")
     ownedServicePrincipals = relationship("ServicePrincipal", secondary=lnk_serviceprincipal_owner_user, back_populates="ownerUsers")
+
+# class User_MFA(Base, SerializeMixin):
+#     __tablename__ = "User_MFA"
+#     id = Column(Text, primary_key=True)
+#     isAdmin = Column(Boolean)
+#     isMfaCapable = Column(Boolean)
+#     isMfaRegistered = Column(Boolean)
+#     isPasswordlessCapable = Column(Boolean)
+#     isSsprCapable = Column(Boolean)
+#     isSsprEnabled = Column(Boolean)
+#     isSsprRegistered = Column(Boolean)
+#     isSystemPreferredAuthenticationMethodEnabled = Column(Boolean)
+#     lastUpdatedDate = Column(DateTime)
+#     methodsRegistered = Column(JSON)
+#     systemPreferredAuthenticationMethods = Column(JSON)
+#     userDisplayName = Column(Text)
+#     userPreferredMethodForSecondaryAuthentication = Column(Text)
+#     userPrincipalName = Column(Text)
+#     userType = Column(Text)
 
 def parse_db_argument(dbarg):
     if not ':/' in dbarg:

@@ -55,17 +55,20 @@ export class RoletableComponent implements AfterViewInit, OnInit {
   }
   
 
-  // TO DO: Fix the MFA stuff 
   updateMfaColumn(value) {
-    if(value){
-      if(!this.displayedColumns.includes('strongAuthenticationDetail')){
-        this.displayedColumns.push('strongAuthenticationDetail')
-      }
-    }else{
-      if(this.displayedColumns.includes('strongAuthenticationDetail')){
-        this.displayedColumns.splice(this.displayedColumns.indexOf('strongAuthenticationDetail'), 1)
-      }
-    }
+    const columnsToAddOrRemove: string[] = ['methodsRegistered'];//['isMfaRegistered','has_app','has_phonenr','has_fido','isSsprRegistered','isSsprEnabled','isSsprCapable','isMfaCapable','isPasswordlessCapable','methodsRegistered','systemPreferredAuthenticationMethods','userPreferredMethodForSecondaryAuthentication'];
+
+    if (value) {
+      // Add columns if not already present
+      columnsToAddOrRemove.forEach(column => {
+          if (!this.displayedColumns.includes(column)) {
+              this.displayedColumns.push(column);
+          }
+      });
+  } else {
+      // Remove columns if present
+      this.displayedColumns = this.displayedColumns.filter(column => !columnsToAddOrRemove.includes(column));
+  }
   }
 
   ngAfterViewInit() {

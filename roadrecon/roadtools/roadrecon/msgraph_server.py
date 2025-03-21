@@ -55,7 +55,41 @@ class UsersSchema(ma.Schema):
             'preferredLanguage',
             'surname',
             'userPrincipalName'
+            'isAdmin',
+            'isMfaCapable',
+            'isMfaRegistered',
+            'isPasswordlessCapable',
+            'isSsprCapable',
+            'isSsprEnabled',
+            'isSsprRegistered',
+            'isSystemPreferredAuthenticationMethodEnabled',
+            'methodsRegistered',
+            'systemPreferredAuthenticationMethods',
+            'userPreferredMethodForSecondaryAuthentication',
+            'userType',
         )
+
+# class UserMfaSchema(ma.Schema):
+#     class Meta:
+#         model = User_MFA
+#         fields = (
+#             'id',
+#             'userPrincipalName',
+#             'userDisplayName',
+#             'userType',
+#             'isAdmin',
+#             'isSsprRegistered',
+#             'isSsprEnabled',
+#             'isSsprCapable',
+#             'isMfaRegistered',
+#             'isMfaCapable',
+#             'isPasswordlessCapable',
+#             'methodsRegistered',
+#             'isSystemPreferredAuthenticationMethodEnabled',
+#             'systemPreferredAuthenticationMethods',
+#             'userPreferredMethodForSecondaryAuthentication',
+#             'lastUpdatedDateTime',
+#         )
 
 class DevicesSchema(ma.Schema):
     class Meta:
@@ -161,6 +195,10 @@ class UserSchema(RTModelSchema):
     ownedApplications = fields.Nested(ApplicationsSchema, many=True)
     ownedGroups = fields.Nested(GroupsSchema, many=True)
 
+# class UserMfaSchema(RTModelSchema):
+#     class Meta(RTModelSchema.Meta):
+#         model = User_MFA
+    
 class DeviceSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = Device
@@ -217,6 +255,7 @@ class AuthorizationPolicySchema(RTModelSchema):
 
 # Instantiate all schemas
 user_schema = UserSchema()
+# user_mfa_schema = UserSchema()
 device_schema = DeviceSchema()
 group_schema = GroupSchema()
 application_schema = ApplicationSchema()
@@ -335,49 +374,69 @@ def get_applications():
     result = applications_schema.dump(all_applications)
     return jsonify(result)
 
-# --------------- TO DO: find a way to get this information with new Graph APIs ---------------
-# @app.route("/api/mfa", methods=["GET"])
-# def get_mfa():
-#     # First get all users with per-user MFA
-#     # per_user = db.session.query(AppRoleAssignment).filter(AppRoleAssignment.resourceDisplayName == "MicrosoftAzureActiveAuthn" and AppRoleAssignment.principalType == "User").all()
-#     # enabledusers = []
-#     # for approle in per_user:
-#     #     enabledusers.append(approle.principalId)
 
-#     # Filter out mailbox-only users by default
-#     all_mfa = db.session.execute(select(User).where(
-#         or_(User.cloudMSExchRecipientDisplayType is None,
-#             and_(
-#                 User.cloudMSExchRecipientDisplayType != 0,
-#                 User.cloudMSExchRecipientDisplayType != 7,
-#                 User.cloudMSExchRecipientDisplayType != 18
-#             )
-#         )
-#     ))
-#     out = []
-#     for user, in all_mfa: # pylint: disable=E1133
-#         mfa_methods = len(user.strongAuthenticationDetail['methods'])
-#         methods = [method['methodType'] for method in user.strongAuthenticationDetail['methods']]
-#         has_app = 'PhoneAppOTP' in methods or 'PhoneAppNotification' in methods
-#         has_phonenr = 'OneWaySms' in methods or 'TwoWayVoiceMobile' in methods
-#         has_fido = 'FIDO' in [key['usage'] for key in user.searchableDeviceKey]
-#         perusermfa = None
-#         if len(user.strongAuthenticationDetail['requirements']) > 0:
-#             perusermfa = user.strongAuthenticationDetail['requirements'][0]['state']
-#         out.append({
-#             'id': user.id,
-#             'displayName': user.displayName,
-#             'userPrincipalName': user.userPrincipalName,
-#             'mfamethods': mfa_methods,
-#             'accountEnabled': user.accountEnabled,
-#             'perusermfa': perusermfa,
-#             'has_app': has_app,
-#             'has_phonenr': has_phonenr,
-#             'has_fido': has_fido,
-#             'strongAuthenticationDetail': user.strongAuthenticationDetail,
-#             'searchableDeviceKey': user.searchableDeviceKey
-#         })
-#     return jsonify(out)
+@app.route("/api/mfa", methods=["GET"])
+def get_mfa():
+    
+    all_users_mfa = db.session.query(User).all()
+    
+    out = []
+    for user in all_users_mfa:
+        # Some users dont return MFA data - just checking to see if it has an attribute - possibly a better way to do this but not sure rn and it is late
+        if user.methodsRegistered is None:
+            out.append({
+            'id': user.id,
+            'displayName': user.displayName,
+            'userPrincipalName': user.userPrincipalName,
+            'mfamethods': None,
+            #'perusermfa': perusermfa,
+            'has_app': None,
+            'has_phonenr': None,
+            'has_fido': None,
+            'isAdmin': user.isAdmin,
+            'isMfaRegistered': user.isMfaRegistered,
+            'isSsprRegistered': user.isSsprRegistered,
+            'isSsprEnabled': user.isSsprEnabled,
+            'isSsprCapable': user.isSsprCapable,
+            'isMfaCapable': user.isMfaCapable,
+            'isPasswordlessCapable': user.isPasswordlessCapable,
+            'methodsRegistered': user.methodsRegistered,
+            'systemPreferredAuthenticationMethods': user.systemPreferredAuthenticationMethods,
+            'userPreferredMethodForSecondaryAuthentication': user.userPreferredMethodForSecondaryAuthentication,
+            
+        })
+            continue
+        mfa_methods = len(user.methodsRegistered)
+        methods = user.methodsRegistered
+        has_app = 'PhoneAppOTP' in methods or 'PhoneAppNotification' in methods or 'microsoftAuthenticatorPasswordless' in methods or 'microsoftAuthenticatorPush' in methods
+        has_phonenr = 'OneWaySms' in methods or 'TwoWayVoiceMobile' in methods or 'mobilePhone' in methods
+        has_fido = 'FIDO' in user.systemPreferredAuthenticationMethods or 'Fido2' in user.systemPreferredAuthenticationMethods #[key['usage'] for key in user.searchableDeviceKey]
+        # perusermfa = None
+        # if len(user.strongAuthenticationDetail['requirements']) > 0:
+        #     perusermfa = user.strongAuthenticationDetail['requirements'][0]['state']
+        out.append({
+            'id': user.id,
+            'displayName': user.displayName,
+            'userPrincipalName': user.userPrincipalName,
+            'mfamethods': mfa_methods,
+            #'perusermfa': perusermfa,
+            'has_app': has_app,
+            'has_phonenr': has_phonenr,
+            'has_fido': has_fido,
+            'isAdmin': user.isAdmin,
+            'isMfaRegistered': user.isMfaRegistered,
+            'isSsprRegistered': user.isSsprRegistered,
+            'isSsprEnabled': user.isSsprEnabled,
+            'isSsprCapable': user.isSsprCapable,
+            'isMfaRegistered':user.isMfaRegistered,
+            'isMfaCapable': user.isMfaCapable,
+            'isPasswordlessCapable': user.isPasswordlessCapable,
+            'methodsRegistered': user.methodsRegistered,
+            'systemPreferredAuthenticationMethods': user.systemPreferredAuthenticationMethods,
+            'userPreferredMethodForSecondaryAuthentication': user.userPreferredMethodForSecondaryAuthentication,
+            
+        })
+    return jsonify(out)
 
 @app.route("/api/applications/<id>", methods=["GET"])
 def application_detail(id):

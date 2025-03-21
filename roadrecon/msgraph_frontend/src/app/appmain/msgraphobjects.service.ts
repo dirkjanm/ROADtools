@@ -149,15 +149,22 @@ export interface GroupsItem {
   }
 
 export interface MfaItem {
-  accountEnabled: boolean;
   displayName: string;
   has_app: boolean;
   has_fido: boolean;
   has_phonenr: boolean;
   id: string;
   mfamethods: number;
-  perusermfa: string;
-  strongAuthenticationDetail: object;
+  isAdmin: boolean;
+  isMfaRegistered: boolean;
+  isSsprRegistered: boolean;
+  isSsprEnabled: boolean;
+  isSsprCapable: boolean;
+  isMfaCapable: boolean;
+  isPasswordlessCapable: boolean;
+  methodsRegistered: object;
+  systemPreferredAuthenticationMethods: object; 
+  userPreferredMethodForSecondaryAuthentication: string;
 }
 
 export interface OAuth2PermissionsItem {
@@ -256,7 +263,22 @@ export interface UsersItem {
   ownedGroups: GroupsItem[];
   ownedServicePrincipals: ServicePrincipalsItem[];
   // strongAuthenticationDetail: object;
+  has_app: boolean;
+  has_fido: boolean;
+  has_phonenr: boolean;
+  mfamethods: number;
+  isAdmin: boolean;
+  isMfaRegistered: boolean;
+  isSsprRegistered: boolean;
+  isSsprEnabled: boolean;
+  isSsprCapable: boolean;
+  isMfaCapable: boolean;
+  isPasswordlessCapable: boolean;
+  methodsRegistered: object;
+  systemPreferredAuthenticationMethods: object; 
+  userPreferredMethodForSecondaryAuthentication: string;
 }
+
 
 export interface appMetadata {
   data: object[];
