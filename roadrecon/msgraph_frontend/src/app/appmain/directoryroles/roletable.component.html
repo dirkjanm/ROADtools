@@ -61,19 +61,23 @@
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Methods</th>
       <td mat-cell *matCellDef="let row">
         <span *ngFor="let method of row.methodsRegistered">
-          <mat-icon *ngIf="method == 'PhoneAppOTP'" aria-label="App with OTP" [class.active]="method.isDefault" matTooltip="App with OTP" >phonelink_lock</mat-icon>
-          <mat-icon *ngIf="method == 'PhoneAppNotification'" aria-label="Phone notification" [class.active]="method.isDefault" matTooltip="App with notification" >phonelink_lock</mat-icon>
-          <mat-icon *ngIf="method == 'microsoftAuthenticatorPush'" aria-label="Phone notification" [class.active]="method.isDefault" matTooltip="Microsoft Authenticator (push notification)" >notifications_active</mat-icon>
-          <mat-icon *ngIf="method == 'deviceBasedPush'" aria-label="Phone notification" [class.active]="method.isDefault" matTooltip="Microsoft Authenticator (Passwordless)" >notifications_active</mat-icon>
-          <mat-icon *ngIf="method.methodType == 'OneWaySms'" aria-label="Text message (SMS)" [class.active]="method.isDefault" matTooltip="Text message (SMS)" >sms</mat-icon>
-          <mat-icon *ngIf="method == 'sms'" aria-label="Text message (SMS)" [class.active]="method.isDefault" matTooltip="Text message (SMS)" >sms</mat-icon>
-          <mat-icon *ngIf="method == 'mobilePhone'" aria-label="Text message (SMS)" [class.active]="method.isDefault" matTooltip="Text message (SMS)" >sms</mat-icon>
-          <mat-icon *ngIf="method == 'voice'" aria-label="Phone call" [class.active]="method.isDefault" matTooltip="Phone call" >phone_callback</mat-icon>
-          <mat-icon *ngIf="method.methodType == 'TwoWayVoiceMobile'" aria-label="Phone call" [class.active]="method.isDefault" matTooltip="Phone call" >phone_callback</mat-icon>
-          <mat-icon *ngIf="method == 'FIDO'" aria-label="FIDO key" [class.active]="method.isDefault" matTooltip="FIDO key">passkey</mat-icon>  
-          <mat-icon *ngIf="method == 'Fido2'" aria-label="FIDO key" [class.active]="method.isDefault" matTooltip="FIDO key">passkey</mat-icon>  
-          <mat-icon *ngIf="method == 'windowsHelloForBusiness'" aria-label="Windows Hello" matTooltip="Windows Hello for Business" >passkey</mat-icon>
-          <mat-icon *ngIf="method == 'temporaryAccessPassOneTime'" aria-label="Windows Hello" matTooltip="Windows Hello for Business" >timer</mat-icon>
+
+            <mat-icon *ngIf="method == 'PhoneAppOTP'" aria-label="App with OTP" matTooltip="App with OTP">phonelink_lock</mat-icon>
+            <mat-icon *ngIf="method == 'PhoneAppNotification'" aria-label="Phone notification" matTooltip="App with notification">notifications_active</mat-icon>
+            <mat-icon *ngIf="method == 'microsoftAuthenticatorPush'" aria-label="Microsoft Authenticator (push notification)" matTooltip="App with notification">notifications_active</mat-icon>
+            <mat-icon *ngIf="method == 'deviceBasedPush'" aria-label="Microsoft Authenticator (Passwordless)" matTooltip="Microsoft Authenticator (Passwordless)">notifications_active</mat-icon>
+            <mat-icon *ngIf="method == 'OneWaySms'" aria-label="Text message (SMS)" matTooltip="Text message (SMS)">sms</mat-icon>
+            <mat-icon *ngIf="method == 'sms'" aria-label="Text message (SMS)" matTooltip="Text message (SMS)">sms</mat-icon>
+            <mat-icon *ngIf="method == 'mobilePhone'" aria-label="Mobile Phone" matTooltip="Phone call">phone_callback</mat-icon>
+            <mat-icon *ngIf="method == 'voice'" aria-label="Phone call" matTooltip="Phone call">phone_callback</mat-icon>
+            <mat-icon *ngIf="method == 'TwoWayVoiceMobile'" aria-label="Phone call" matTooltip="Phone call">phone_callback</mat-icon>
+            <mat-icon *ngIf="method == 'FIDO'" aria-label="FIDO key" matTooltip="FIDO key">passkey</mat-icon>
+            <mat-icon *ngIf="method == 'Fido2'" aria-label="FIDO key" matTooltip="FIDO key">passkey</mat-icon>
+            <mat-icon *ngIf="method == 'windowsHelloForBusiness'" aria-label="Windows Hello" matTooltip="Windows Hello for Business">fingerprint</mat-icon>
+            <mat-icon *ngIf="method == 'temporaryAccessPassOneTime'" aria-label="Temporary Access Pass" matTooltip="Temporary Access Pass">timer</mat-icon>
+            <mat-icon *ngIf="method == 'passKeyDeviceBound'" aria-label="Passkey Device Bound" matTooltip="FIDO key">passkey</mat-icon>
+            <mat-icon *ngIf="method == 'softwareOneTimePasscode'" aria-label="Software OTP" matTooltip="App with OTP">phonelink_lock</mat-icon>
+            <mat-icon *ngIf="method == 'microsoftAuthenticatorPasswordless'" aria-label="Microsoft Authenticator Passwordless" matTooltip="Microsoft Authenticator Passwordless">notifications_active</mat-icon>
           
         </span>
          <!-- <span *ngFor="let sdk of row.searchableDeviceKey">
