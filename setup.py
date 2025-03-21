@@ -19,5 +19,5 @@ setup(name='roadtools',
       ],
       packages=[],
       zip_safe=False,
-    #   install_requires=['roadlib', 'roadrecon', 'roadtx']
+      install_requires=['roadlib', 'roadrecon', 'roadtx']
       )
