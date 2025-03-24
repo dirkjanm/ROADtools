@@ -410,7 +410,7 @@ def get_mfa():
         methods = user.methodsRegistered
         has_app = 'PhoneAppOTP' in methods or 'PhoneAppNotification' in methods or 'microsoftAuthenticatorPasswordless' in methods or 'microsoftAuthenticatorPush' in methods
         has_phonenr = 'OneWaySms' in methods or 'TwoWayVoiceMobile' in methods or 'mobilePhone' in methods
-        has_fido = 'FIDO' in user.systemPreferredAuthenticationMethods or 'Fido2' in user.systemPreferredAuthenticationMethods #[key['usage'] for key in user.searchableDeviceKey]
+        has_fido = 'FIDO' in user.systemPreferredAuthenticationMethods or 'Fido2' in user.systemPreferredAuthenticationMethods or 'passKeyDeviceBound' in user.methodsRegistered #[key['usage'] for key in user.searchableDeviceKey]
         # perusermfa = None
         # if len(user.strongAuthenticationDetail['requirements']) > 0:
         #     perusermfa = user.strongAuthenticationDetail['requirements'][0]['state']

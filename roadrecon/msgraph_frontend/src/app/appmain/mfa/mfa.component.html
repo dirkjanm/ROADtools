@@ -79,8 +79,10 @@
             <mat-icon *ngIf="method == 'passKeyDeviceBound'" aria-label="Passkey Device Bound" matTooltip="FIDO key">passkey</mat-icon>
             <mat-icon *ngIf="method == 'softwareOneTimePasscode'" aria-label="Software OTP" matTooltip="App with OTP">phonelink_lock</mat-icon>
             <mat-icon *ngIf="method == 'microsoftAuthenticatorPasswordless'" aria-label="Microsoft Authenticator Passwordless" matTooltip="Microsoft Authenticator Passwordless">notifications_active</mat-icon>
+           
           
         </span>
+        
          <!-- <span *ngFor="let sdk of row.searchableDeviceKey">
           <mat-icon *ngIf="sdk.usage == 'NGC'" aria-label="Windows Hello" matTooltip="Windows Hello for Business" >passkey</mat-icon>
           <mat-icon *ngIf="sdk.usage == 'FIDO'" aria-label="FIDO2 key / passkey" matTooltip="FIDO 2 key or passkey" >passkey</mat-icon>
