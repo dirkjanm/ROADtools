@@ -131,7 +131,7 @@ def checktoken():
             print("- Attempting token refresh -")
             token = auth.authenticate_with_refresh(token)
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
-            expiretime = time.time() + token['expiresIn']
+            expiretime = time.time() + float(token['expiresIn'])
             print('+ Refreshed token +')
             return True
         elif time.time() > expiretime:
