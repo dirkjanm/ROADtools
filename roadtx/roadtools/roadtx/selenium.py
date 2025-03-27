@@ -71,6 +71,16 @@ class SeleniumAuthentication():
         Load webdriver based on service, which is either
         from selenium or selenium-wire if interception is requested
         '''
+        # Exclude some CDN hosts to massively speed up mitmproxy interception
+        exclude_hosts = [
+            'cdn.office.net',
+            'res-1.cdn.office.net',
+            'aadcdn.msauth.net',
+            'cdn.mozilla.net',
+            'amcdn.msftauth.net',
+            'afd-v2.hosting.portal.azure.net',
+            'reactblade.portal.azure.net'
+        ]
         if self.proxy:
             options = {
                 'proxy': {
@@ -79,12 +89,12 @@ class SeleniumAuthentication():
                     'no_proxy': 'localhost,127.0.0.1'
                 },
                 'request_storage': 'memory',
-                'exclude_hosts':['cdn.office.net','res-1.cdn.office.net','aadcdn.msauth.net','cdn.mozilla.net','amcdn.msftauth.net']
+                'exclude_hosts': exclude_hosts
             }
             # Force intercept to add proxy
             intercept = True
         else:
-            options = {'request_storage': 'memory','exclude_hosts':['cdn.office.net','res-1.cdn.office.net','aadcdn.msauth.net','cdn.mozilla.net','amcdn.msftauth.net']}
+            options = {'request_storage': 'memory','exclude_hosts':exclude_hosts}
             if self.redir_has_custom_scheme():
                 intercept = True
         if intercept and self.headless:
