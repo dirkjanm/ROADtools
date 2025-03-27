@@ -1,0 +1,126 @@
+<h1 mat-dialog-title>{{ administrativeUnit.displayName }}</h1>
+<!-- TO DO: Fix this - says the AU has no members but i know i am a member of one -->
+<mat-dialog-content>
+<mat-tab-group>
+  <mat-tab label="Overview">
+<mat-card>
+      <table class="userTable">
+        <tr><th>Display name</th><td>{{ administrativeUnit.displayName }}</td></tr>
+        <tr><th>Description</th><td>{{ administrativeUnit.description }}</td></tr>
+        <tr><th>id</th><td>{{ administrativeUnit.id }}</td></tr>
+        <tr *ngIf="administrativeUnit.membershipRule != null"><th>Dynamic Membership</th><td>{{ administrativeUnit.membershipRule }}</td></tr>
+      </table>
+    </mat-card>
+    <mat-divider></mat-divider>
+
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Member users ({{ administrativeUnit.memberUsers.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table *ngIf="administrativeUnit.memberUsers.length > 0" mat-table [dataSource]="administrativeUnit.memberUsers">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row"><a [routerLink]="['/users/', row.id]">{{row.displayName}}</a></td>
+        </ng-container>
+
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{row.description}}</td>
+        </ng-container>
+
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumnsUsers"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumnsUsers;"></tr>
+      </table>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Member groups ({{ administrativeUnit.memberGroups.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table *ngIf="administrativeUnit.memberGroups.length > 0" mat-table [dataSource]="administrativeUnit.memberGroups">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row"><a [routerLink]="['/groups/', row.id]">{{row.displayName}}</a></td>
+        </ng-container>
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let row">{{row.description}}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel expanded>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Member devices ({{ administrativeUnit.memberDevices.length }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <table *ngIf="administrativeUnit.memberDevices.length > 0" mat-table [dataSource]="administrativeUnit.memberDevices">
+        <ng-container matColumnDef="displayName">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row"><a [routerLink]="['/devices/', row.id]">{{row.displayName}}</a></td>
+        </ng-container>
+
+        <ng-container matColumnDef="accountEnabled">
+          <th mat-header-cell *matHeaderCellDef>Enabled</th>
+          <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.accountEnabled" aria-hidden="false" aria-label="Enabled">check</mat-icon></td>
+        </ng-container>
+
+        <ng-container matColumnDef="manufacturer">
+          <th mat-header-cell *matHeaderCellDef>Manufacturer</th>
+          <td mat-cell *matCellDef="let row">{{row.manufacturer}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="model">
+          <th mat-header-cell *matHeaderCellDef>Model</th>
+          <td mat-cell *matCellDef="let row">{{row.model}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="operatingSystem">
+          <th mat-header-cell *matHeaderCellDef>OS</th>
+          <td mat-cell *matCellDef="let row">{{row.operatingSystem}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="operatingSystemVersion">
+          <th mat-header-cell *matHeaderCellDef>OS Version</th>
+          <td mat-cell *matCellDef="let row">{{row.operatingSystemVersion}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="trustType">
+          <th mat-header-cell *matHeaderCellDef>Trust type</th>
+          <td mat-cell *matCellDef="let row">{{row.trustType}}</td>
+        </ng-container>
+        
+        <ng-container matColumnDef="isCompliant">
+          <th mat-header-cell *matHeaderCellDef>Compliant</th>
+          <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isCompliant" aria-hidden="false" aria-label="Compliant">check</mat-icon></td>
+        </ng-container>
+
+        <ng-container matColumnDef="isManaged">
+          <th mat-header-cell *matHeaderCellDef>Managed</th>
+          <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isManaged" aria-hidden="false" aria-label="Managed">check</mat-icon></td>
+        </ng-container>
+
+        <ng-container matColumnDef="isRooted">
+          <th mat-header-cell *matHeaderCellDef>Rooted</th>
+          <td mat-cell *matCellDef="let row"><mat-icon *ngIf="row.isRooted" aria-hidden="false" aria-label="Rooted">check</mat-icon></td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumnsDevices"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumnsDevices;"></tr>
+      </table>
+    </mat-expansion-panel>
+  </mat-tab>
+  <mat-tab label="Raw"><p appJsonFormat [json]="administrativeUnit"></p></mat-tab>
+</mat-tab-group>
+</mat-dialog-content>
+
