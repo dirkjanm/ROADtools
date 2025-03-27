@@ -1,6 +1,8 @@
 import os
 import sys
 import requests
+import codecs
+import json
 from urllib.parse import urlparse, parse_qs, quote_plus
 from roadtools.roadlib.auth import Authentication, AuthenticationException, get_data, WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES
 from roadtools.roadlib.deviceauth import DeviceAuthentication
@@ -329,7 +331,18 @@ class SeleniumAuthentication():
                 if '/authorize' in request.url or '/login' in request.url or '/kmsi' in request.url or '/reprocess' in request.url or '/resume' in request.url:
                     if prtcookie:
                         # Force single cookie injection
-                        request.headers['X-Ms-Refreshtokencredential'] = prtcookie
+                        if prtcookie == 'filerefresh':
+                            try:
+                                with codecs.open('.roadtools_prtcookie','r','utf-8') as infile:
+                                    data = json.load(infile)
+                                    cur_prtcookie = data['refreshTokenCredential']
+                                request.headers['X-Ms-Refreshtokencredential'] = cur_prtcookie
+                            except IOError:
+                                print('Could not load PRT cookie from .roadtools_prtcookie file')
+                            except KeyError:
+                                print('No PRT cookie data found in .roadtools_prtcookie file')
+                        else:
+                            request.headers['X-Ms-Refreshtokencredential'] = prtcookie
                     else:
                         if 'sso_nonce' in request.url:
                             res = urlparse(request.url)
