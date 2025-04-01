@@ -4,6 +4,7 @@ import { ApplicationsItem, appMetadata } from '../../aadobjects.service'
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
+import { LocalStorageService } from 'ngx-webstorage';
 @Component({
   template: ''
 })
@@ -47,11 +48,14 @@ export class ApplicationsdialogComponent {
   public displayedColumnsAppRoles: string[] = ['value','displayName', 'description', 'id', 'allowedMemberTypes']
   public displayedColumnsOAuth2: string[] = ['value', 'userConsentDisplayName','userConsentDescription', 'adminConsentDisplayName', 'adminConsentDescription', 'id', 'type']
   public metadata: object[] = [];
+  public showPortalLink: boolean;
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(
     public dialogRef: MatDialogRef<ApplicationsdialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public application: ApplicationsItem
+    @Inject(MAT_DIALOG_DATA) public application: ApplicationsItem,
+    private localSt: LocalStorageService
   ) {
+    this.showPortalLink = this.localSt.retrieve('portallinks');
     if (application.appMetadata && application.appMetadata.data.length > 0){
       for( let metadata of application.appMetadata.data){
         let out = {}
