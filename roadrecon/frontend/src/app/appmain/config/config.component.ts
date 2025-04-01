@@ -9,6 +9,8 @@ import { LocalStorage } from 'ngx-webstorage';
 export class ConfigComponent implements OnInit {
   @LocalStorage()
   public mfa;
+  @LocalStorage()
+  public portallinks;
 
   constructor() { }
 
