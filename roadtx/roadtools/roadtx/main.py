@@ -517,6 +517,7 @@ def main():
     getscope_parser.add_argument('-s', '--scope', default=None, action='store', required=False, metavar='SCOPE', help='Desired scope (API URL + scope on that API, for example https://graph.microsoft.com/files.read).')
     getscope_parser.add_argument('-a', '--all', action='store_true', help='List all scopes instead')
     getscope_parser.add_argument('--foci', action='store_true', help='Only list FOCI clients')
+    getscope_parser.add_argument('--all-clients', action='store_true', help='List all clients instead of public clients only (may require advanced auth flow to use)')
     getscope_parser.add_argument('--csv', action='store_true', help='Output in CSV format')
 
     # Get OTP
@@ -1665,7 +1666,8 @@ def main():
             for app in data['apps'].values():
                 if args.foci and not app['foci']:
                     continue
-
+                if not app['public_client'] and not args.all_clients:
+                    continue
                 for app_id, scopes in app['scopes'].items():
                     for resource in app_resource_ids.get(app_id, [f'https://{app_id}']):
                         resource = resource.rstrip('/')
@@ -1701,8 +1703,11 @@ def main():
         # Loop through scopes
         results = []
         for appid, app in data['apps'].items():
-            # Skip foci apps
+            # Skip non-foci apps
             if args.foci and not app['foci']:
+                continue
+            # Skip non-public clients by default since we can't easily auth to them
+            if not app['public_client'] and not args.all_clients:
                 continue
             try:
                 scopes = app['scopes'][resourceid]
