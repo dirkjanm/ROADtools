@@ -37,7 +37,7 @@ class HackyKeePassFileReader():
                 kname = kvpair.find('Key').text
                 kval = kvpair.find('Value').text
                 crypted = kvpair.find('Value').get('Protected', None) == 'True'
-                if crypted:
+                if crypted and kval:
                     decrypted = self.decrypter.decrypt(base64.b64decode(kval))
                     entrydata[kname] = decrypted.decode('utf-8')
                 else:
