@@ -71,16 +71,22 @@ class HackyKeePassFileReader():
         '''
         Read plain XML file as string
         '''
-        with codecs.open(database, 'rb', 'utf-8') as infile:
-            self.data = infile.read()
+        try:
+            with codecs.open(database, 'rb', 'utf-8') as infile:
+                self.data = infile.read()
+        except FileNotFoundError:
+            raise IOError(f'The file {database} does not exist!')
 
     def decrypt_keepass(self, database, password):
         '''
         Decrypt KeePass file
         '''
         b = []
-        with open(database, 'rb') as infile:
-            b = bytearray(infile.read())
+        try:
+            with open(database, 'rb') as infile:
+                b = bytearray(infile.read())
+        except FileNotFoundError:
+            raise IOError(f'The file {database} does not exist!')
 
         # ---------- Header Stuff ----------
         # file magic number (4 bytes)

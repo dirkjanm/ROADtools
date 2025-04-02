@@ -175,6 +175,8 @@ class SeleniumAuthentication():
         if filepath.endswith('.xml'):
             reader = HackyKeePassFileReader(filepath, password, plain=True)
         else:
+            if not password:
+                raise AuthenticationException('No password was specified to decrypt the KeePass database')
             reader = HackyKeePassFileReader(filepath, password, plain=False)
         entry = reader.get_entry(identity)
         if not entry:
