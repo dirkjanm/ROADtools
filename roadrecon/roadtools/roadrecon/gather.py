@@ -80,7 +80,7 @@ async def dumphelper(url, method=requests.get):
                     objects = await req.json()
                 except json.decoder.JSONDecodeError:
                     # In case we break Azure
-                    
+                    print(url)
                     print(req.content)
                     print('')
                     return
@@ -257,7 +257,6 @@ class DataDumper(object):
         global groupcounter, totalgroups, devicecounter, totaldevices
         i = 0
         async for obj in dumphelper(url, method=method):
-            
             objectid, objclass = obj['url'].split('/')[-2:]
             # If only one type exists, we don't need to use the mapping
             if mapping is not None:
@@ -288,7 +287,6 @@ class DataDumper(object):
         i = 0
         cache = {}
         async for obj in dumphelper(url, method=method):
-            
             objectid, objclass = obj['url'].split('/')[-2:]
             # If only one type exists, we don't need to use the mapping
             if mapping is not None:
@@ -315,7 +313,6 @@ class DataDumper(object):
             print('Done processing {0}/{1} groups {2}/{3} devices'.format(int(groupcounter/2), totalgroups, devicecounter, totaldevices), end='\r')
 
     async def dump_links(self, objecttype, linktype, parenttbl, mapping=None, linkname=None, childtbl=None, method=None):
-        # print("Object:",objecttype,"linktype:",linktype,"parenttbl:",parenttbl,"mapping:",mapping,"linkname:",linkname,"childtbl:",childtbl,"method",method)
         if method is None:
             method = self.ahsession.get
         parents = self.session.query(parenttbl).all()
@@ -323,7 +320,6 @@ class DataDumper(object):
         i = 0
         for parent in parents:
             url = 'https://graph.windows.net/%s/%s/%s/$links/%s?api-version=%s' % (self.tenantid, objecttype, parent.objectId, linktype, self.api_version)
-            
             jobs.append(self.dump_l_to_db(url, method, mapping, linkname, childtbl, parent))
             i += 1
             # Chunk it to avoid huge memory usage
@@ -341,7 +337,6 @@ class DataDumper(object):
         jobs = []
         for parentid, in parents:
             url = 'https://graph.windows.net/%s/%s/%s/$links/%s?api-version=%s' % (self.tenantid, objecttype, parentid, linktype, self.api_version)
-            
             # Chunk it to avoid huge memory usage
             await queue.put(self.dump_l_to_linktable(url, method, mapping, parentid, objecttype))
         await queue.join()
@@ -362,7 +357,6 @@ class DataDumper(object):
         i = 0
         for parentid, in parents:
             url = 'https://graph.windows.net/%s/%s/%s?api-version=%s&$select=strongAuthenticationDetail,objectId' % (self.tenantid, objecttype, parentid, self.api_version)
-            
             jobs.append(self.dump_mfa_to_db(url, method, parentid, cache))
             i += 1
             # Chunk it to avoid huge memory usage
@@ -381,7 +375,6 @@ class DataDumper(object):
         Async db dumphelper for multiple linked objects (returned as a list)
         """
         async for obj in dumphelper(url, method=method):
-            
             # objectid, objclass = obj['url'].split('/')[-2:]
             # If only one type exists, we don't need to use the mapping
             # print(parent.objectId, obj)
@@ -453,7 +446,6 @@ class DataDumper(object):
         cache = []
         url = 'https://graph.windows.net/%s/%s?api-version=1.61-internal&$select=keyCredentials,objectId' % (self.tenantid, objecttype)
         async for obj in dumphelper(url, method=method):
-            
             cache.append({'userid':obj['objectId'], 'keyCredentials':obj['keyCredentials']})
             if len(cache) > 1000:
                 commitmfa(self.session, dbtype, cache)
@@ -467,7 +459,6 @@ class DataDumper(object):
         jobs = []
         for parentid in parents:
             url = 'https://graph.windows.net/%s/%s/%s?api-version=%s' % (self.tenantid, endpoint, parentid, self.api_version)
-            
             jobs.append(self.dump_so_to_db(url, self.ahsession.get, dbtype, cache, ignore_duplicates=ignore_duplicates))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
@@ -480,7 +471,6 @@ class DataDumper(object):
         jobs = []
         for parent in parents:
             url = 'https://graph.windows.net/%s/%s/%s?api-version=%s' % (self.tenantid, endpoint, parent.appId, self.api_version)
-            
             jobs.append(self.dump_so_to_db(url, self.ahsession.get, dbtype, cache, ignore_duplicates=ignore_duplicates))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
@@ -493,7 +483,6 @@ class DataDumper(object):
         jobs = []
         for parent in parents:
             url = 'https://graph.windows.net/%s/roleAssignments?api-version=%s&$filter=roleDefinitionId eq \'%s\'' % (self.tenantid, self.api_version, parent.objectId)
-            
             jobs.append(self.dump_lo_to_db(url, self.ahsession.get, dbtype, cache))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
@@ -506,7 +495,6 @@ class DataDumper(object):
         jobs = []
         for parent in parents:
             url = 'https://graph.windows.net/%s/eligibleRoleAssignments?api-version=%s&$filter=roleDefinitionId eq \'%s\'' % (self.tenantid, self.api_version, parent.objectId)
-            
             jobs.append(self.dump_lo_to_db(url, self.ahsession.get, dbtype, cache))
         await asyncio.gather(*jobs)
         if len(cache) > 0:

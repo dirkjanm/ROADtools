@@ -1,4 +1,4 @@
-from roadtools.roadlib.metadef.msgraph_entitytypes import *
+from roadtools.roadlib.metadef.entitytypes_msgraph import *
 
 header = '''import os
 import json

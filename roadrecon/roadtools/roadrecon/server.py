@@ -443,10 +443,8 @@ def process_approle(approles, ar):
 @app.route("/api/approles", methods=["GET"])
 def get_approles():
     approles = []
-    ar = db.session.query(AppRoleAssignment).all()
-    process_approle(approles, ar[0])
-    # for ar in db.session.query(AppRoleAssignment).all():
-    #     process_approle(approles, ar)
+    for ar in db.session.query(AppRoleAssignment).all():
+        process_approle(approles, ar)
     return jsonify(approles)
 
 @app.route("/api/approles_by_resource/<spid>", methods=["GET"])

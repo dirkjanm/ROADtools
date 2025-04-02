@@ -271,7 +271,7 @@ tables = [
     (unifiedRoleAssignmentScheduleInstance, [], []),
     (administrativeUnit, ['au_member_user', 'au_member_device', 'au_member_group'], [])
 ]
-with open('metadef/database_msgraph.py', 'w') as outf:
+with open('metadef/msgraph_database.py', 'w') as outf:
     outf.write(header)
     for relname, reldata in relations.items():
         outf.write(gen_link_table(relname, reldata[0], reldata[1]))

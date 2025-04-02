@@ -1,5 +1,5 @@
 from roadtools.roadlib.metadef.basetypes import Edm, Collection
-from roadtools.roadlib.metadef.msgraph_complextypes import *
+from roadtools.roadlib.metadef.complextypes_msgraph import *
 
 
 class entity(object):
