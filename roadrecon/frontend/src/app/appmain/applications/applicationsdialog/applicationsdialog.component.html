@@ -10,6 +10,7 @@
         <tr><th>Publisher</th><td>{{ application.publisherName }}</td></tr>
         <tr><th>Homepage</th><td>{{ application.homepage }}</td></tr>
         <tr><th>Service Principal</th><td><a [routerLink]="['/serviceprincipals-by-appid/', application.appId]">{{ application.displayName }}</a></td></tr>
+        <tr *ngIf="showPortalLink"><th>Manage in Entra portal</th><td><a target="_blank" href="https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/{{ application.appId }}/isMSAApp~/false"><mat-icon>open_in_new</mat-icon></a></td></tr>
         <tr><th>Reply Urls</th><td>
           <mat-list>
             <mat-list-item *ngFor="let url of application.replyUrls"> {{ url }} </mat-list-item>

@@ -4,6 +4,7 @@ import { GroupsItem } from '../../aadobjects.service'
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
+import { LocalStorageService } from 'ngx-webstorage';
 @Component({
   template: ''
 })
@@ -26,8 +27,6 @@ export class GroupsdialogInitComponent implements OnInit {
           data: data.user
         });
         dialogRef.afterClosed().subscribe(result => {
-          console.log(this.router.url);
-          console.log(this.myurl);
           if(this.router.url == this.myurl){
             this.location.back();
           }
@@ -49,11 +48,15 @@ export class GroupsdialogComponent {
   public displayedColumnsServicePrincipal: string[] = ['displayName', 'servicePrincipalType']
   public displayedColumnsOwners: string[] = ['displayName', 'userPrincipalName']
   public displayedColumnsDevices: string[] = ['displayName', 'deviceModel', 'deviceOSType', 'deviceTrustType'];
+  public showPortalLink: boolean;
 
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(
     public dialogRef: MatDialogRef<GroupsdialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public group: GroupsItem
-  ) { }
+    @Inject(MAT_DIALOG_DATA) public group: GroupsItem,
+    private localSt: LocalStorageService
+  ) {
+    this.showPortalLink = this.localSt.retrieve('portallinks');
+  }
 
 }

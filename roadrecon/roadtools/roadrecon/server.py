@@ -509,9 +509,24 @@ def get_allroles():
                 'scopeNames': snames,
                 'scopeIds': sids
             }
-            _, principal = resolve_objectid(assignment.principalId)
+            principalType, principal = resolve_objectid(assignment.principalId)
             aobj['principal'] = principal
+
             roleobj['assignments'].append(aobj)
+            if principalType == 'Group':
+                group = db.session.get(Group, assignment.principalId)
+                for member in group.memberUsers:
+                    mp = users_schema.dump([member])[0]
+                    mp['displayName'] = f"{principal['displayName']} member: {mp['displayName']}"
+                    roleobj['assignments'].append({
+                        'type': 'assignment',
+                        'scope': assignment.resourceScopes,
+                        'scopeTypes': stypes,
+                        'scopeNames': snames,
+                        'scopeIds': sids,
+                        'principal': mp
+                    })
+
         for assignment in role.eligibleAssignments:
             stypes, snames, sids = translate_rolescopes(assignment.resourceScopes)
             aobj = {
@@ -521,9 +536,22 @@ def get_allroles():
                 'scopeNames': snames,
                 'scopeIds': sids
             }
-            _, principal = resolve_objectid(assignment.principalId)
+            principalType, principal = resolve_objectid(assignment.principalId)
             aobj['principal'] = principal
             roleobj['assignments'].append(aobj)
+            if principalType == 'Group':
+                group = db.session.get(Group, assignment.principalId)
+                for member in group.memberUsers:
+                    mp = users_schema.dump([member])[0]
+                    mp['displayName'] = f"{principal['displayName']} member: {mp['displayName']}"
+                    roleobj['assignments'].append({
+                        'type': 'eligible',
+                        'scope': assignment.resourceScopes,
+                        'scopeTypes': stypes,
+                        'scopeNames': snames,
+                        'scopeIds': sids,
+                        'principal': mp
+                    })
         allroles.append(roleobj)
     return jsonify(allroles)
 

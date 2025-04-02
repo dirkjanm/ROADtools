@@ -7,6 +7,7 @@
         <tr><th>Display name</th><td>{{ device.displayName }}</td></tr>
         <tr><th>ObjectId</th><td>{{ device.objectId }}</td></tr>
         <tr><th>Device ID</th><td>{{ device.deviceId }}</td></tr>
+        <tr *ngIf="showPortalLink"><th>Manage in Entra portal</th><td><a target="_blank" href="https://entra.microsoft.com/#view/Microsoft_AAD_Devices/DeviceDetailsMenuBlade/~/Properties/objectId/{{ device.objectId }}/deviceId/"><mat-icon>open_in_new</mat-icon></a></td></tr>
       </table>
     </mat-card>
     <mat-divider></mat-divider>

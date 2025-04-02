@@ -5,5 +5,9 @@
     <mat-slide-toggle [(ngModel)]="mfa" [checked]="mfa">
         Show MFA columns (only accurate if you collected this data)
       </mat-slide-toggle>
+      <br />
+      <mat-slide-toggle [(ngModel)]="portallinks" [checked]="portallinks">
+        Show management links to Entra portal on objects
+      </mat-slide-toggle>
   </mat-card-content>
 </mat-card>

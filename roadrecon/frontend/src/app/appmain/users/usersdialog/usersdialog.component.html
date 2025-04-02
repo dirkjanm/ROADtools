@@ -15,6 +15,7 @@
         <tr><th>Account source</th><td>{{ user.dirSyncEnabled? 'Synced with AD':'Cloud-only' }}</td></tr>
         <tr><th>Account type</th><td>{{ user.userType }}</td></tr>
         <tr><th>Status</th><td>{{ user.accountEnabled? 'Enabled':'Disabled' }}</td></tr>
+        <tr *ngIf="showPortalLink"><th>Manage in Entra portal</th><td><a target="_blank" href="https://entra.microsoft.com/#blade/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/userId/{{ user.objectId }}"><mat-icon>open_in_new</mat-icon></a></td></tr>
       </table>
     </mat-card>
     <mat-divider></mat-divider>

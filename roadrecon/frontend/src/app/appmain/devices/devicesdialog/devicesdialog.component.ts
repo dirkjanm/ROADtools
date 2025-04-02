@@ -4,6 +4,7 @@ import { DevicesItem } from '../../aadobjects.service'
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
+import { LocalStorageService } from 'ngx-webstorage';
 @Component({
   template: ''
 })
@@ -47,11 +48,14 @@ export class DevicesdialogComponent {
   public displayedColumnsBLKeys: string[] = ['keyIdentifier', 'keyMaterial']
   public displayedColumnsDevices: string[] = ['displayName', 'deviceManufacturer', 'accountEnabled', 'deviceModel', 'deviceOSType', 'deviceOSVersion', 'deviceTrustType', 'isCompliant', 'isManaged', 'isRooted'];
   public blkeys: object[] = [];
+  public showPortalLink: boolean;
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(
     public dialogRef: MatDialogRef<DevicesdialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public device: DevicesItem
+    @Inject(MAT_DIALOG_DATA) public device: DevicesItem,
+    private localSt: LocalStorageService
   ) {
+    this.showPortalLink = this.localSt.retrieve('portallinks');
     if (device.bitLockerKey && device.bitLockerKey.length > 0){
       for( let blkey of device.bitLockerKey){
         let out = blkey;
