@@ -5,7 +5,7 @@ from flask_cors import CORS
 from marshmallow_sqlalchemy import ModelConverter
 from marshmallow import fields
 # Needs and IF statement to either import aad_database or just database depending on whether someone is using gather or enumerate
-from roadtools.roadlib.metadef.msgraph_database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
+from roadtools.roadlib.metadef.database_msgraph import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
 import os
 import argparse
 from sqlalchemy import func, and_, or_, select

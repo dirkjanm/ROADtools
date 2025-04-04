@@ -9,10 +9,10 @@ import warnings
 
 import aiohttp
 import requests
-import roadtools.roadlib.metadef.msgraph_database as msgraph_database
+import roadtools.roadlib.metadef.database_msgraph as database_msgraph
 #from roadlib.metadef.database import Domain
 from roadtools.roadlib.auth import Authentication
-from roadtools.roadlib.metadef.msgraph_database import (
+from roadtools.roadlib.metadef.database_msgraph import (
     AdministrativeUnit, Application, ApplicationRef, AppRoleAssignment,
     AuthorizationPolicy, Contact, Device, DirectoryRole, DirectorySetting,
     EligibleRoleAssignment, ExtensionProperty, Group, OAuth2PermissionGrant,
@@ -559,7 +559,7 @@ async def run(args):
     else:
         destroy_db = True
 
-    engine = msgraph_database.init(destroy_db, dburl=dburl)
+    engine = database_msgraph.init(destroy_db, dburl=dburl)
     dumper = DataDumper(tenantid, engine=engine)
     if not args.skip_first_phase:
         async with aiohttp.ClientSession() as ahsession:
@@ -592,7 +592,7 @@ async def run(args):
 
     if args.skip_first_phase:
         # Delete existing links to make sure we start with clean data
-        for table in msgraph_database.Base.metadata.tables.keys():
+        for table in database_msgraph.Base.metadata.tables.keys():
             if table.startswith('lnk_'):
                 dbsession.execute(text("DELETE FROM {0}".format(table)))
         dbsession.query(ApplicationRef).delete()
