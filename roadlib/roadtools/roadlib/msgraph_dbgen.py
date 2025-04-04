@@ -259,7 +259,7 @@ tables = [
     (DirectoryRole, ['role_member_user', 'role_member_serviceprincipal', 'role_member_group'], []),
     (TenantDetail, [], []),
     (ApplicationRef, [], []),
-    # (ExtensionProperty, [], []),
+    (ExtensionProperty, [], []),
     (Contact, [], ['group_member_contact']),
     (Policy, [], []),
     (RoleDefinition, ['role_assignment_eligible', 'role_assignment_active'], []),

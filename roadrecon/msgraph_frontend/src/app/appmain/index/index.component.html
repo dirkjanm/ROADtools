@@ -1,0 +1,128 @@
+<mat-card *ngIf="tenantstats">
+  <mat-card-title>Database Stats</mat-card-title>
+  <mat-card-content>
+      <table class="userTable">
+        <tr><th>Users</th><td>{{ tenantstats.countUsers }}</td></tr>
+        <tr><th>Groups</th><td>{{ tenantstats.countGroups }}</td></tr>
+        <tr><th>Applications</th><td>{{ tenantstats.countApplications }}</td></tr>
+        <tr><th>ServicePrincipals</th><td>{{ tenantstats.countServicePrincipals }}</td></tr>
+        <tr><th>Devices</th><td>{{ tenantstats.countDevices }}</td></tr>
+        <tr><th>Administrative Units</th><td>{{ tenantstats.countAdministrativeUnits }}</td></tr>
+      </table>
+  </mat-card-content>
+</mat-card>
+
+<mat-card *ngIf="directorysettings">
+  <mat-card-title>Directory settings</mat-card-title>
+  <mat-card-content>
+    <table class="userTable">
+      <tbody>
+        <tr *ngFor="let setting of directorysettings.values">
+          <ng-container *ngIf="setting.name === 'LockoutDurationInSeconds'">
+            <th>Lockout Duration</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'LockoutThreshold'">
+            <th>Lockout Threshold</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'BannedPasswordCheckOnPremisesMode'">
+            <th>Banned Password Check On-Premises Mode</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'EnableBannedPasswordCheckOnPremises'">
+            <th>Enable Banned Password Check On-Premises</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'EnableBannedPasswordCheck'">
+            <th>Enable Banned Password Check</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <ng-container *ngIf="setting.name === 'BannedPasswordList'">
+            <th>Banned Password List</th>
+            <td>{{ setting.value }}</td>
+          </ng-container>
+          <!-- Add other conditions here as needed -->
+        </tr>
+      </tbody>
+    </table>
+  </mat-card-content>
+</mat-card>
+
+<mat-card *ngIf="tenantdetails">
+  <mat-card-title>Tenant information</mat-card-title>
+  <mat-card-content>
+      <table class="userTable">
+        <tr><th>Name</th><td>{{ tenantdetails.displayName }}</td></tr>
+        <tr><th>Tenant ID</th><td>{{ tenantdetails.id }}</td></tr>
+        <tr><th>Syncs from AD</th><td>{{ tenantdetails.onPremisesSyncEnabled? 'Yes':'No' }}</td></tr>
+      </table>
+  </mat-card-content>
+  <mat-card-actions>
+<button mat-button (click)="showDetails()">View Raw</button>
+  </mat-card-actions>
+</mat-card>
+
+
+<mat-card *ngIf="authorizationPolicy">
+  <mat-card-title>Authorization Policy</mat-card-title>
+  <mat-card-content>
+      <table class="userTable">
+        <tr><th>Self-service password reset enabled</th><td>{{ authorizationPolicy.allowedToUseSSPR? 'Yes':'No' }}</td></tr>
+        <tr><th>MSOnline PowerShell blocked</th><td>{{ authorizationPolicy.blockMsolPowerShell? 'Yes':'No' }}</td></tr>
+        <tr><th>Default user role permissions</th>
+          <td>
+              <span *ngFor="let setting of authorizationPolicy.defaultUserRolePermissions | keyvalue">{{ setting.key }}: {{ setting.value? 'Yes':'No' }} <br /></span>
+          </td>
+        </tr>
+        <!-- TO DO: See what info this gives and try and find an alternative -->
+        <!-- <tr><th>Application consent settings</th><td>
+          <div *ngIf="authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole.length > 0; then thenBlock else elseBlock"></div>
+          <ng-template #thenBlock>
+            <div *ngFor="let policy of authorizationPolicy.permissionGrantPolicyIdsAssignedToDefaultUserRole">
+              <div [ngSwitch]="policy">
+                <span *ngSwitchCase="'ManagePermissionGrantsForSelf.microsoft-user-default-legacy'">Users can consent to applications (insecure old default)</span>
+                <span *ngSwitchCase="'ManagePermissionGrantsForSelf.microsoft-user-default-low'">Users can consent to limited permissions only (default)</span>
+                <span *ngSwitchCase="'ManagePermissionGrantsForOwnedResource.microsoft-dynamically-managed-permissions-for-chat'">Resource specific consent for chats: Managed by Microsoft</span>
+                <span *ngSwitchCase="'ManagePermissionGrantsForOwnedResource.microsoft-dynamically-managed-permissions-for-team'">Resource specific consent for Teams: Managed by Microsoft</span>
+                <span *ngSwitchDefault>Unknown: {{ policy }}</span>
+              </div>
+            </div>
+            <span *ngIf="!hasSelfConsentPolicy">User self-consent is disabled</span>
+          </ng-template>
+          <ng-template #elseBlock>User consent is disabled</ng-template>
+        </td></tr>
+        <tr><th>Guest access settings</th><td [ngSwitch]="authorizationPolicy.guestUserRoleId">
+          <span *ngSwitchCase="'a0b1b346-4d3e-4e8b-98f8-753987be4970'">Same as member users</span>
+          <span *ngSwitchCase="'10dae51f-b6af-4016-8d66-8c2a99b929b3'">Limited access (default)</span>
+          <span *ngSwitchCase="'2af84b1e-32c8-42b7-82bc-daa82404023b'">Restricted access</span>
+          <span *ngSwitchDefault>Unknown: {{ authorizationPolicy.guestUserRoleId }}</span>
+
+        </td></tr> -->
+      </table>
+  </mat-card-content>
+</mat-card>
+
+<mat-card *ngIf="tenantdetails">
+  <mat-card-title>Tenant Domains</mat-card-title>
+  <table mat-table [dataSource]="tenantdetails.verifiedDomains">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let row">{{row.name}}</td>
+    </ng-container>
+    <ng-container matColumnDef="type">
+      <th mat-header-cell *matHeaderCellDef>Type</th>
+      <td mat-cell *matCellDef="let row">{{row.type}}</td>
+    </ng-container>
+    <ng-container matColumnDef="properties">
+      <th mat-header-cell *matHeaderCellDef>Properties</th>
+      <td mat-cell *matCellDef="let row">{{ row.default? 'Default ':'' }}{{ row.initial? 'Initial':'' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="capabilities">
+      <th mat-header-cell *matHeaderCellDef>Capabilities</th>
+      <td mat-cell *matCellDef="let row">{{row.capabilities}}</td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+</mat-card>
