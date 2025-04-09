@@ -1,6 +1,7 @@
 from setuptools import setup
 setup(name='roadtx',
       version='1.17.1',
+      version='1.10.0',
       description='ROADtools Token eXchange',
       author='Dirk-jan Mollema',
       author_email='dirkjan@outsidersecurity.nl',
