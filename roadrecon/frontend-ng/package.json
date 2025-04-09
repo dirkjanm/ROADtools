@@ -1,0 +1,37 @@
+{
+  "name": "mosaic-vue",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "docker": "vite build --config vite.config.docker.js",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@primevue/themes": "^4.0.7",
+    "@tailwindcss/forms": "^0.5.7",
+    "@vueuse/core": "^10.7.0",
+    "axios": "^1.7.7",
+    "clipboard": "^2.0.11",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
+    "flatpickr": "^4.6.13",
+    "moment": "^2.29.4",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.0.7",
+    "vite-svg-loader": "^5.1.0",
+    "vue": "^3.2.20",
+    "vue-flatpickr-component": "^11.0.3",
+    "vue-router": "^4.2.5",
+    "vue3-json-viewer": "^2.2.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "@vue/compiler-sfc": "^3.2.20",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "vite": "^5.4.5"
+  }
+}

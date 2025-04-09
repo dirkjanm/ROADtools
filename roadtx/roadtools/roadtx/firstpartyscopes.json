@@ -127,9 +127,6 @@
                 "6b91db1b-f05b-405a-a0b2-e3f60b28d645": [
                     "Recommendations.ReadWrite"
                 ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
-                ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
                 ],
@@ -475,9 +472,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "62e90394-69f5-4237-9190-012177145e10"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -494,10 +488,6 @@
                 "00edd498-7c0c-4e68-859c-5a55d518c9c0": [
                     "User.ReadWrite.All"
                 ],
-                "18e271e7-a818-46ad-8e73-07cb0ae64328": [
-                    "access_as_user",
-                    "User.Read"
-                ],
                 "29f411f1-b2cf-4043-8ac8-2185d7316811": [
                     "IotHub.Read",
                     "IotHub.Write"
@@ -505,30 +495,14 @@
                 "39aaf054-81a5-48c7-a4f8-0293012095b9": [
                     "Teams.AccessAsUser.All"
                 ],
-                "46da2f7e-b5ef-422a-88d4-2a7f9de6a0b2": [
-                    "all"
-                ],
                 "478d8d1a-326f-49da-a58e-8f576faa4b5e": [
                     "ThreatIntelligence.Read.All"
-                ],
-                "499b84ac-1321-427f-aa17-267ca6975798": [
-                    "user_impersonation"
-                ],
-                "4e09c6ac-4372-45b7-a977-e9f89e673e32": [
-                    "api.call",
-                    "user_impersonation"
                 ],
                 "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
                     "Teams.AccessAsUser.All"
                 ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
-                ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
-                ],
-                "7c209960-a417-423c-b2e3-9251907e63fe": [
-                    "azuresphere.readwrite"
                 ],
                 "826870f9-9fbb-4f23-81b8-3a957080dfa2": [
                     "Medeina.Access"
@@ -1535,20 +1509,14 @@
                     "Contacts.Read",
                     "Family.Read",
                     "Files.ReadWrite.All",
-                    "FileStorageContainer.Selected",
-                    "InformationProtectionPolicy.Read",
                     "Notes.Create",
                     "Notes.ReadWrite.All",
-                    "Organization.Read.All",
                     "People.Read",
                     "Tasks.ReadWrite",
-                    "User.Read",
                     "User.ReadBasic.All"
                 ],
                 "00000003-0000-0ff1-ce00-000000000000": [
-                    "Container.Selected",
                     "Files.Read.All",
-                    "Files.ReadWrite.All",
                     "Sites.FullControl.All",
                     "User.Read.All"
                 ],
@@ -1569,9 +1537,6 @@
                 "4345a7b9-9a63-4910-a426-35363201d503": [
                     "OfficeHome.All"
                 ],
-                "4354e225-50c9-4423-9ece-2d5afd904870": [
-                    "AugLoop.All"
-                ],
                 "4439d626-9bfa-41ca-805d-5c264263bc71": [
                     "TenantFeedback.Write"
                 ],
@@ -1582,12 +1547,6 @@
                     "OfficeHome.All"
                 ],
                 "4787c7ff-7cea-43db-8d0d-919f15c6354b": [
-                    "access_as_user"
-                ],
-                "4f2ddf1c-152e-4e3e-aa42-63b3ae8d88d3": [
-                    "URLPreview.Generate"
-                ],
-                "4f550ec4-347e-412f-9119-ed6fdab0a63f": [
                     "access_as_user"
                 ],
                 "66a88757-258c-4c72-893c-3e8bed4d6899": [
@@ -1616,19 +1575,14 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
+                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "People.Read.All",
                     "QnA.Read.All",
+                    "Sites.Read.All",
                     "User.Read.All"
-                ],
-                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
-                    "CopilotEligibility.Read",
-                    "CopilotSettings.ReadWrite"
-                ],
-                "c8423563-e8f6-49f2-924b-90d9f664378a": [
-                    "Goals.ReadWrite"
                 ],
                 "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": [
                     "Forms.ReadWrite"
@@ -1636,8 +1590,7 @@
                 "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
                     "Apps.ReadWrite",
                     "Authorization.ReadWrite",
-                    "Region.ReadWrite",
-                    "user_impersonation"
+                    "Region.ReadWrite"
                 ],
                 "e03a13ee-9730-4cae-8525-47559c8cf18a": [
                     "features.read",
@@ -1648,17 +1601,13 @@
                     "Cards.ReadWrite"
                 ],
                 "e8be65d6-d430-4289-a665-51bf2a194bda": [
-                    "AuthConfig.Read",
-                    "Title.ReadWrite"
+                    "AuthConfig.Read"
                 ],
                 "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
                     "Files.Read",
                     "OfficeFeed-Internal.ReadWrite",
                     "PeoplePredictions-Internal.Read",
                     "SubstrateSearch-Internal.ReadWrite"
-                ],
-                "ee272b19-4411-433f-8f28-5c13cb6fd407": [
-                    "access_as_user"
                 ],
                 "f3a218b7-5c8f-460b-93af-56b072788c15": [
                     "User.Read.All"
@@ -1960,6 +1909,9 @@
                 ],
                 "66a88757-258c-4c72-893c-3e8bed4d6899": [
                     "SubstrateSearch-Internal.ReadWrite"
+                ],
+                "99f53064-85db-4f9f-ab36-118a009b8857": [
+                    "AugLoop.All"
                 ],
                 "d32c68ad-72d2-4acb-a0c7-46bb2cf93873": [
                     "UserActivity.ReadWrite",
@@ -2471,8 +2423,6 @@
                     "App.Read.All",
                     "Capacity.Read.All",
                     "Capacity.ReadWrite.All",
-                    "Connection.Read.All",
-                    "Connection.ReadWrite.All",
                     "Content.Create",
                     "Dashboard.Read.All",
                     "Dashboard.ReadWrite.All",
@@ -2543,20 +2493,11 @@
                     "AuditLog.Read.All",
                     "Directory.AccessAsUser.All"
                 ],
-                "499b84ac-1321-427f-aa17-267ca6975798": [
-                    "user_impersonation"
-                ],
                 "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
                     "Teams.AccessAsUser.All"
                 ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
-                ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
-                ],
-                "8476fe4e-65c4-449b-b8be-98bad6ab3ea3": [
-                    "Chat.Read"
                 ],
                 "8578e004-a5c6-46e7-913e-12f58912df43": [
                     "Analytics.AdvisorActions.Execute",
@@ -2577,9 +2518,6 @@
                 "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7": [
                     "Building.Read.All",
                     "FloorPlan.Read.All"
-                ],
-                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
-                    "CopilotEligibility.Read"
                 ],
                 "c61d67cf-295a-462c-972f-33af37008751": [
                     "CQD_Data_API",
@@ -2692,9 +2630,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "profile",
                     "openid",
@@ -2703,9 +2638,6 @@
                 ],
                 "16aeb910-ce68-41d1-9ac3-9e1673ac9575": [
                     "User.Read"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -2725,9 +2657,6 @@
             "result": "ok",
             "scopes": {
                 "00000002-0000-0000-c000-000000000000": [
-                    "user_impersonation"
-                ],
-                "00000002-0000-0ff1-ce00-000000000000": [
                     "user_impersonation"
                 ],
                 "00000003-0000-0000-c000-000000000000": [
@@ -2765,9 +2694,6 @@
                 ],
                 "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
                     "Teams.AccessAsUser.All"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -3171,7 +3097,6 @@
                     "User.ReadBasic.All"
                 ],
                 "00000003-0000-0ff1-ce00-000000000000": [
-                    "Container.Selected",
                     "MyFiles.Write",
                     "Sites.FullControl.All",
                     "Sites.Manage.All",
@@ -3190,10 +3115,6 @@
                 "00edd498-7c0c-4e68-859c-5a55d518c9c0": [
                     "User.ReadWrite.All"
                 ],
-                "038187f5-ca69-4382-8c0b-8d87708d099f": [
-                    "MeetingArtifacts-Internal.Read",
-                    "MeetingArtifacts-Internal.Write"
-                ],
                 "09abbdfd-ed23-44ee-a2d9-a627aa1c90f3": [
                     "Group.ReadWrite.All"
                 ],
@@ -3206,18 +3127,12 @@
                 "2634dd23-5e5a-431c-81ca-11710d9079f4": [
                     "access_microsoftstream_service"
                 ],
-                "282c9137-f94e-4287-8223-9b60f2974e5c": [
-                    "play_powerapps"
-                ],
                 "2c9e12e5-a56c-4ba1-b768-7a141586c6fe": [
                     "learningsettings.readwrite"
                 ],
                 "2d4d3d8e-2be3-4bef-9f87-7875a61c29de": [
                     "Notes.ReadWrite",
                     "Notes.ReadWrite.All"
-                ],
-                "2f7b4d11-d621-4079-9798-27f548d681f1": [
-                    "access_as_user"
                 ],
                 "3016d0ce-47cc-4005-b11d-5fcabb1b643d": [
                     "Mesh.Privacy.Update",
@@ -3263,32 +3178,13 @@
                 "4787c7ff-7cea-43db-8d0d-919f15c6354b": [
                     "access_as_user"
                 ],
-                "4f2ddf1c-152e-4e3e-aa42-63b3ae8d88d3": [
-                    "URLPreview.Generate"
-                ],
-                "4f550ec4-347e-412f-9119-ed6fdab0a63f": [
-                    "access_as_user"
-                ],
                 "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
                     "Teams.AccessAsUser.All"
-                ],
-                "56233257-15ee-4d3d-bdcd-9aa975244e4c": [
-                    "VivaPulse.ReadWrite"
-                ],
-                "56c1da01-2129-48f7-9355-af6d59d42766": [
-                    "ExternalConnection.ReadWrite.All"
                 ],
                 "57da3f69-2d82-4c17-9e57-2e6d78b2dc60": [
                     "read",
                     "user_impersonation",
                     "write"
-                ],
-                "5e2795e3-ce8c-4cfb-b302-35fe5cd01597": [
-                    "access_as_user",
-                    "designerappservice.all"
-                ],
-                "5f00fd34-f302-417f-81ef-1adda179d8fd": [
-                    "Forms.ReadWrite"
                 ],
                 "5f09333a-842c-47da-a157-57da27fcbca5": [
                     "ShellSettings.Read"
@@ -3312,14 +3208,14 @@
                 "7084e364-df71-4a4a-9e8f-d375b5529913": [
                     "media.user_impersonation"
                 ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
+                "71a7c376-13e6-4100-968e-92ce98c5d3d2": [
+                    "StaticMedia.View"
                 ],
                 "75efb5bc-18a1-4e7b-8a66-2ad2503d79c6": [
                     "WalkieTalkie.Channels.ReadWrite"
                 ],
-                "75f31797-37c9-498e-8dc9-53c16a36afca": [
-                    "Planner.TokenProvider.ReadWrite"
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
+                    "user_impersonation"
                 ],
                 "7df0a125-d3be-4c96-aa54-591f83ff541c": [
                     "Flows.Manage.All",
@@ -3339,26 +3235,13 @@
                     "Connectivity.Connections.Read",
                     "Connectivity.Connections.Write",
                     "Connectivity.ConnectorPermissions.Read",
-                    "Connectivity.Connectors.Read",
-                    "PowerVirtualAgents.Conversations.Read",
-                    "PowerVirtualAgents.Copilots.Create",
-                    "PowerVirtualAgents.FirstPartyBots.Invoke",
-                    "PowerVirtualAgents.Tokens.Read"
-                ],
-                "8f348934-64be-4bb2-bc16-c54c96789f43": [
-                    "EduAssignments.Read",
-                    "EduAssignments.ReadWrite",
-                    "EduCurricula.Read",
-                    "EduCurricula.ReadWrite"
-                ],
-                "9362bc14-3e81-4ef9-8b77-f1c40afe68e0": [
-                    "play_powerapps"
+                    "Connectivity.Connectors.Read"
                 ],
                 "982bda36-4632-4165-a46a-9863b1bbcf7d": [
                     "teams"
                 ],
-                "9e3981dd-e6a2-473a-992d-92ba6d92597e": [
-                    "Appsuggestion.ReadWrite.All"
+                "99f53064-85db-4f9f-ab36-118a009b8857": [
+                    "AugLoop.All"
                 ],
                 "9e4a5442-a5c9-4f6f-b03f-5b9fcaaf24b1": [
                     "MRU.Read",
@@ -3384,37 +3267,18 @@
                 "ab3be6b7-f5df-413d-ac2d-abf1e3fd9c0b": [
                     "access_as_user"
                 ],
-                "adc59501-b8c1-453a-a88b-9f4b244c1631": [
-                    "play_powerapps"
-                ],
-                "b0ee3e94-4d3f-493c-91c3-a640229e47b8": [
-                    "access_as_user",
-                    "esi.enrollment",
-                    "user_impersonation"
-                ],
                 "b55b276d-2b09-4ad2-8de5-f09cf24ffba9": [
                     "teams.readwrite",
                     "teams-internal.readwrite"
                 ],
-                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
-                    "CopilotEligibility.Read",
-                    "CopilotSettings.ReadWrite"
-                ],
                 "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
                     "UserPolicies.Read"
-                ],
-                "c82e1b1b-5ab6-48fb-b4f8-890a5b27b181": [
-                    "AttendanceReport.Read"
-                ],
-                "c8423563-e8f6-49f2-924b-90d9f664378a": [
-                    "Goals.ReadWrite"
                 ],
                 "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": [
                     "Forms.ReadWrite"
                 ],
                 "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
                     "Authorization.ReadWrite",
-                    "Region.ReadWrite",
                     "user_impersonation"
                 ],
                 "cfa8b339-82a2-471a-a3c9-0fc0be7a4093": [
@@ -3426,16 +3290,11 @@
                 "e03a13ee-9730-4cae-8525-47559c8cf18a": [
                     "augloop.spo.acquire",
                     "features.read",
-                    "files.open",
                     "spo.files.open"
                 ],
                 "e1979c22-8b73-4aed-a4da-572cc4d0b832": [
                     "AppDefinitions.ReadWrite",
                     "Cards.ReadWrite"
-                ],
-                "e521cb67-22c8-4b2b-aaa5-e94bb3eec243": [
-                    "bpa.rules.manage",
-                    "webhook.create"
                 ],
                 "e8be65d6-d430-4289-a665-51bf2a194bda": [
                     "AuthConfig.Read",
@@ -3457,9 +3316,6 @@
                     "SubstrateSearch-Internal.ReadWrite",
                     "Tasks.ReadWrite",
                     "User.ReadWrite"
-                ],
-                "ee272b19-4411-433f-8f28-5c13cb6fd407": [
-                    "access_as_user"
                 ],
                 "f3a218b7-5c8f-460b-93af-56b072788c15": [
                     "User.Read.All"
@@ -3991,16 +3847,10 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "profile",
                     "openid",
                     "email",
-                    "user_impersonation"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
                     "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
@@ -4047,7 +3897,6 @@
                     "email",
                     "openid",
                     "profile",
-                    "Files.Read.All",
                     "Files.ReadWrite",
                     "User.Read"
                 ],
@@ -4073,9 +3922,6 @@
                 "66a88757-258c-4c72-893c-3e8bed4d6899": [
                     "SubstrateSearch-Internal.ReadWrite"
                 ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
-                ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
                 ],
@@ -4084,12 +3930,17 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
+                    "Conversations.Read.All",
+                    "Directory.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
+                    "NewsFeed.ReadWrite",
                     "People.Read.All",
+                    "PowerBi.Read.All",
                     "QnA.Read.All",
+                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "c9d254a9-346a-4c00-95eb-950cb62a58f0": [
@@ -4166,7 +4017,6 @@
                     "Calendars.ReadWrite",
                     "Calendars.ReadWrite.All",
                     "Contacts.ReadWrite",
-                    "Contacts.ReadWrite.Shared",
                     "Directory.ReadWrite.All",
                     "EAS.AccessAsUser.All",
                     "Ews.AccessAsUser.All",
@@ -4177,7 +4027,6 @@
                     "Mail.Send",
                     "MailboxSettings.ReadWrite",
                     "OutlookService.AccessAsUser.All",
-                    "OutlookService.AccessAsUser.Sdp",
                     "OWA.AccessAsUser.All",
                     "People.Read",
                     "People.Read.All",
@@ -4201,7 +4050,6 @@
                     "openid",
                     "profile",
                     "Files.ReadWrite.All",
-                    "FileStorageContainer.Selected",
                     "Mail.Read",
                     "Mail.Read.Shared",
                     "People.Read",
@@ -4213,17 +4061,11 @@
                     "UserAuthenticationMethod.ReadWrite"
                 ],
                 "00000003-0000-0ff1-ce00-000000000000": [
-                    "Container.Selected",
                     "Files.ReadWrite",
                     "Sites.ReadWrite.All",
                     "User.Read.All"
                 ],
-                "038187f5-ca69-4382-8c0b-8d87708d099f": [
-                    "MeetingArtifacts-Internal.Read",
-                    "MeetingArtifacts-Internal.Write"
-                ],
                 "394866fc-eedb-4f01-8536-3ff84b16be2a": [
-                    "Mail.Read",
                     "User.Read.All"
                 ],
                 "4354e225-50c9-4423-9ece-2d5afd904870": [
@@ -4243,21 +4085,12 @@
                     "Connectors.AdaptiveCards.Actions",
                     "user_impersonation"
                 ],
-                "4f550ec4-347e-412f-9119-ed6fdab0a63f": [
-                    "access_as_user"
-                ],
                 "57da3f69-2d82-4c17-9e57-2e6d78b2dc60": [
                     "read",
                     "write"
                 ],
-                "5e2795e3-ce8c-4cfb-b302-35fe5cd01597": [
-                    "designerappservice.all"
-                ],
                 "66a88757-258c-4c72-893c-3e8bed4d6899": [
                     "SubstrateSearch-Internal.ReadWrite"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -4281,29 +4114,24 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
+                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
+                    "NewsFeed.ReadWrite",
                     "People.Read.All",
                     "QnA.Read.All",
+                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "b669c6ea-1adf-453f-b8bc-6d526592b419": [
                     "FocusedInbox-Internal.ReadWrite"
                 ],
-                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
-                    "CopilotEligibility.Read",
-                    "CopilotSettings.ReadWrite"
-                ],
-                "c8423563-e8f6-49f2-924b-90d9f664378a": [
-                    "Goals.ReadWrite"
-                ],
                 "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe": [
                     "Apps.ReadWrite",
                     "Authorization.ReadWrite",
-                    "Region.ReadWrite",
-                    "user_impersonation"
+                    "Region.ReadWrite"
                 ],
                 "cfa8b339-82a2-471a-a3c9-0fc0be7a4093": [
                     "user_impersonation"
@@ -4312,12 +4140,7 @@
                     "AppDefinitions.ReadWrite",
                     "Cards.ReadWrite"
                 ],
-                "e521cb67-22c8-4b2b-aaa5-e94bb3eec243": [
-                    "bpa.rules.manage",
-                    "webhook.create"
-                ],
                 "e8be65d6-d430-4289-a665-51bf2a194bda": [
-                    "AuthConfig.Read",
                     "Title.ReadWrite"
                 ],
                 "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
@@ -4531,9 +4354,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "62e90394-69f5-4237-9190-012177145e10"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "mdm_delegation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -4546,12 +4366,6 @@
                 ],
                 "01cb2876-7ebd-4aa4-9cc9-d28bd4d359a9": [
                     "adrs_access"
-                ],
-                "499b84ac-1321-427f-aa17-267ca6975798": [
-                    "mdm_delegation"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "mdm_delegation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "mdm_delegation"
@@ -5156,12 +4970,15 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
+                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
+                    "NewsFeed.ReadWrite",
                     "People.Read.All",
                     "QnA.Read.All",
+                    "Sites.Read.All",
                     "User.Read.All"
                 ]
             }
@@ -6052,8 +5869,6 @@
                     "Connectivity.Connections.Read",
                     "Connectivity.Connections.Write",
                     "PowerApps.Features.Read",
-                    "PowerAutomate.Billing.EmitLocalRunInfo",
-                    "PowerAutomate.Credentials.ResolveForRegisteredMachine",
                     "PowerAutomate.DesktopFlows.AutoClaim",
                     "PowerAutomate.DesktopFlows.ExecuteConnectorAction",
                     "PowerAutomate.DesktopFlows.InvokeAI",
@@ -6062,7 +5877,6 @@
                     "PowerAutomate.DesktopFlows.Update",
                     "PowerAutomate.EnvironmentVariables.RetrieveValue",
                     "PowerAutomate.WorkQueues.Enqueue",
-                    "PowerAutomate.WorkQueues.Read",
                     "PowerAutomate.WorkQueues.Update",
                     "ProcessMining.TaskCoach.Invoke"
                 ],
@@ -6809,13 +6623,11 @@
                     "email",
                     "openid",
                     "profile",
-                    "ChannelMessage.Read.All",
                     "Chat.Create",
                     "Chat.Read",
                     "ChatMessage.Send",
                     "Files.Read.All",
                     "Group.Read.All",
-                    "Mail.Read",
                     "Organization.Read.All",
                     "People.Read",
                     "Presence.Read.All",
@@ -6830,6 +6642,9 @@
                 ],
                 "00000003-0000-0ff1-ce00-000000000000": [
                     "Files.ReadWrite.All"
+                ],
+                "00000006-0000-0ff1-ce00-000000000000": [
+                    "M365AdminPortal.Centro.Read"
                 ],
                 "00000009-0000-0000-c000-000000000000": [
                     "__Content.Create.Internal",
@@ -6871,9 +6686,6 @@
                     "PowerApps.UserSettings.Write",
                     "PowerVirtualAgents.FirstPartyBots.Invoke",
                     "PowerVirtualAgents.Tokens.Read"
-                ],
-                "9362bc14-3e81-4ef9-8b77-f1c40afe68e0": [
-                    "play_powerapps"
                 ],
                 "aeb86249-8ea3-49e2-900b-54cc8e308f85": [
                     "LicenseManager.AccessAsUser"
@@ -8118,9 +7930,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -8131,9 +7940,6 @@
                 ],
                 "01cb2876-7ebd-4aa4-9cc9-d28bd4d359a9": [
                     "adrs_access"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -8749,9 +8555,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -8760,13 +8563,6 @@
                 ],
                 "00000003-0000-0ff1-ce00-000000000000": [
                     "Files.ReadWrite.All"
-                ],
-                "50351660-e7b1-4621-8bc8-8503296a5535": [
-                    "Flows.Manage.All",
-                    "Flows.Read.All"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -9261,6 +9057,9 @@
                 "66a88757-258c-4c72-893c-3e8bed4d6899": [
                     "SubstrateSearch-Internal.ReadWrite"
                 ],
+                "99f53064-85db-4f9f-ab36-118a009b8857": [
+                    "AugLoop.All"
+                ],
                 "9e4a5442-a5c9-4f6f-b03f-5b9fcaaf24b1": [
                     "MRU.Read",
                     "MRU.ReadWrite",
@@ -9546,9 +9345,6 @@
                     "Notes.ReadWrite.All",
                     "Notes.ReadWrite.CreatedByApp"
                 ],
-                "4f2ddf1c-152e-4e3e-aa42-63b3ae8d88d3": [
-                    "URLPreview.Generate"
-                ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
                 ],
@@ -9680,10 +9476,6 @@
                 "4787c7ff-7cea-43db-8d0d-919f15c6354b": [
                     "access_as_user"
                 ],
-                "8c1a9936-578e-4d13-9bd9-9afe53ef7de8": [
-                    "access_as_user",
-                    "user_impersonation"
-                ],
                 "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": [
                     "access_as_user",
                     "Forms.Read",
@@ -9718,9 +9510,6 @@
             "result": "ok",
             "scopes": {
                 "00000002-0000-0000-c000-000000000000": [
-                    "user_impersonation"
-                ],
-                "00000002-0000-0ff1-ce00-000000000000": [
                     "user_impersonation"
                 ],
                 "00000003-0000-0000-c000-000000000000": [
@@ -10350,9 +10139,7 @@
                 "00000002-0000-0ff1-ce00-000000000000": [
                     "Analytics.ReadWrite",
                     "Calendars.ReadWrite",
-                    "Calendars.ReadWrite.All",
                     "Calendars.ReadWrite.Shared",
-                    "Calendars-Internal.ReadWrite",
                     "Channel.Create",
                     "Channel.ReadBasic.All",
                     "ChannelMember.Read.All",
@@ -10361,43 +10148,28 @@
                     "Chat.Read",
                     "Chat.ReadWrite.All",
                     "Collab-Internal.ReadWrite",
-                    "ConnectedAccount-Internal.ReadWrite",
-                    "Connectors.ReadWrite.Shared",
                     "Contacts.ReadWrite",
                     "Contacts.ReadWrite.Shared",
-                    "Directory.Read.Global",
-                    "Directory.Read.Local",
-                    "DWEngine-Internal.Read",
-                    "EAS.AccessAsUser.All",
                     "Files.ReadWrite.All",
                     "Files.ReadWrite.Shared",
                     "FocusedInbox-Internal.ReadWrite",
                     "Group.ReadWrite.All",
-                    "Locations-Internal.ReadWrite",
-                    "Mail.ReadWrite",
                     "Mail.ReadWrite.All",
                     "Mail.ReadWrite.Shared",
                     "Mail.Send",
                     "Mail.Send.Shared",
                     "MailboxSettings.ReadWrite",
-                    "MailboxSettings.ReadWrite.All",
                     "Notes.Read",
                     "Notes.ReadWrite",
-                    "Notes-Internal.ReadWrite",
                     "Notifications-Internal.ReadWrite",
                     "OnlineMeetings.ReadWrite",
                     "OutlookService.AccessAsUser.All",
-                    "OutlookService.NotificationsChannel.All",
                     "OWA.AccessAsUser.All",
                     "People.Read",
                     "People.ReadWrite",
-                    "PeoplePredictions-Internal.Read",
-                    "PeopleSettings.Read.All",
                     "Place.Read.All",
                     "Place.ReadWrite.All",
-                    "Premium-Internal.ReadWrite",
                     "Privilege.OpenAsSystem",
-                    "Signal.ReadWrite",
                     "Signals.Read",
                     "Signals.ReadWrite",
                     "Signals-Internal.Read.Shared",
@@ -10412,7 +10184,6 @@
                     "User.Read.All",
                     "User.ReadBasic",
                     "User.ReadBasic.All",
-                    "User.ReadBasic.Shared",
                     "User.ReadWrite",
                     "User-Internal.ReadWrite"
                 ],
@@ -10428,13 +10199,10 @@
                     "Directory.Read.All",
                     "EduRoster.ReadBasic",
                     "Files.ReadWrite.All",
-                    "FileStorageContainer.Selected",
                     "Group.ReadWrite.All",
                     "InformationProtectionPolicy.Read",
-                    "OnlineMeetingArtifact.Read.All",
                     "OnlineMeetings.Read",
                     "OnlineMeetings.ReadWrite",
-                    "Organization.Read.All",
                     "People.Read",
                     "SensitiveInfoType.Detect",
                     "SensitiveInfoType.Read.All",
@@ -10445,7 +10213,6 @@
                     "User.ReadWrite"
                 ],
                 "00000003-0000-0ff1-ce00-000000000000": [
-                    "Container.Selected",
                     "Files.ReadWrite.All",
                     "Sites.FullControl.All"
                 ],
@@ -10453,10 +10220,6 @@
                     "CompliancePolicy-Internal.ReadWrite",
                     "ServiceHealth.Read",
                     "user_impersonation"
-                ],
-                "038187f5-ca69-4382-8c0b-8d87708d099f": [
-                    "MeetingArtifacts-Internal.Read",
-                    "MeetingArtifacts-Internal.Write"
                 ],
                 "0e90d0b8-039a-4936-a6f4-d25dd510be5d": [
                     "Mail.ReadWrite",
@@ -10474,11 +10237,7 @@
                     "Teams.ManageChats"
                 ],
                 "394866fc-eedb-4f01-8536-3ff84b16be2a": [
-                    "Group.ReadWrite",
                     "User.Read.All"
-                ],
-                "39aaf054-81a5-48c7-a4f8-0293012095b9": [
-                    "Endpoint.ReadWrite.All"
                 ],
                 "4354e225-50c9-4423-9ece-2d5afd904870": [
                     "AugLoop.All"
@@ -10496,15 +10255,9 @@
                     "Connectors.AdaptiveCards.Actions",
                     "user_impersonation"
                 ],
-                "4f2ddf1c-152e-4e3e-aa42-63b3ae8d88d3": [
-                    "URLPreview.Generate"
-                ],
                 "57da3f69-2d82-4c17-9e57-2e6d78b2dc60": [
                     "read",
                     "write"
-                ],
-                "5e2795e3-ce8c-4cfb-b302-35fe5cd01597": [
-                    "designerappservice.all"
                 ],
                 "5f09333a-842c-47da-a157-57da27fcbca5": [
                     "ShellSettings.Read"
@@ -10529,6 +10282,9 @@
                 "870c4f2e-85b6-4d43-bdda-6ed9a579b725": [
                     "UnifiedPolicy.User.Read"
                 ],
+                "99f53064-85db-4f9f-ab36-118a009b8857": [
+                    "AugLoop.All"
+                ],
                 "9e4a5442-a5c9-4f6f-b03f-5b9fcaaf24b1": [
                     "DiscoveryConnectedServices.Read",
                     "DiscoveryConnectedServices.ReadWrite",
@@ -10542,9 +10298,6 @@
                 ],
                 "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
                     "UserPolicies.Read"
-                ],
-                "c82e1b1b-5ab6-48fb-b4f8-890a5b27b181": [
-                    "AttendanceReport.Read"
                 ],
                 "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": [
                     "Forms.ReadWrite",
@@ -10571,10 +10324,8 @@
                     "Files.ReadWrite.Shared",
                     "OfficeFeed-Internal.ReadWrite",
                     "PeoplePredictions-Internal.Read",
-                    "PeopleSettings.Read.All",
                     "Privilege.OpenAsSystem",
                     "Signals-Internal.Read.Shared",
-                    "Signals-Internal.ReadWrite",
                     "Signals-Internal.ReadWrite.Shared",
                     "User.Read.All"
                 ],
@@ -11232,9 +10983,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -11253,9 +11001,6 @@
                 ],
                 "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
                     "Teams.AccessAsUser.All"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -11513,6 +11258,7 @@
                     "profile",
                     "Device.Read.All",
                     "DeviceManagementRBAC.Read.All",
+                    "GroupMember.Read.All",
                     "Organization.Read.All",
                     "ServiceHealth.Read.All"
                 ],
@@ -11971,9 +11717,6 @@
             "result": "ok",
             "scopes": {
                 "00000002-0000-0000-c000-000000000000": [
-                    "user_impersonation"
-                ],
-                "00000002-0000-0ff1-ce00-000000000000": [
                     "user_impersonation"
                 ],
                 "00000003-0000-0000-c000-000000000000": [
@@ -13633,13 +13376,6 @@
                     "msdynxPnAVariance_f9544bd4d1c14210aaba7c7802ae191e_CV_ForPBI",
                     "msdynxPnAVisualPlanning_0361ca99cfca4abf98f32300584ae294_CV_ForPBI"
                 ],
-                "282c9137-f94e-4287-8223-9b60f2974e5c": [
-                    "play_powerapps",
-                    "PowerApps_PBI_CV_C29F1DCC_81F5_4973_94AD_0517D44CC06A_CV_ForPBI"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
-                ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
                 ],
@@ -13647,15 +13383,10 @@
                     "Approvals.Manage.All",
                     "Flows.Manage.All",
                     "Flows.Read.All",
-                    "FlowVisual_C29F1DCC_81F5_4973_94AD_0517D44CC06A_CV_ForPBI",
-                    "FlowVisual_C29F1DCC_81F5_4973_94AD_0517D44CC06A_TEST_CV_ForPBI"
+                    "FlowVisual_C29F1DCC_81F5_4973_94AD_0517D44CC06A_CV_ForPBI"
                 ],
                 "870c4f2e-85b6-4d43-bdda-6ed9a579b725": [
                     "UnifiedPolicy.User.Read"
-                ],
-                "9362bc14-3e81-4ef9-8b77-f1c40afe68e0": [
-                    "play_powerapps",
-                    "PowerApps_PBI_CV_C29F1DCC_81F5_4973_94AD_0517D44CC06A_CV_ForPBI"
                 ],
                 "9e4a5442-a5c9-4f6f-b03f-5b9fcaaf24b1": [
                     "MRU.Read",
@@ -14515,9 +14246,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "62e90394-69f5-4237-9190-012177145e10"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -14528,15 +14256,6 @@
                 ],
                 "4354e225-50c9-4423-9ece-2d5afd904870": [
                     "AugLoop.All"
-                ],
-                "46da2f7e-b5ef-422a-88d4-2a7f9de6a0b2": [
-                    "all"
-                ],
-                "499b84ac-1321-427f-aa17-267ca6975798": [
-                    "user_impersonation"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -16360,10 +16079,6 @@
             "result": "ok",
             "scopes": {
                 "00000002-0000-0000-c000-000000000000": [
-                    "ServicePrincipalEndpoint.Read.All",
-                    "User.Read"
-                ],
-                "00000002-0000-0ff1-ce00-000000000000": [
                     "user_impersonation"
                 ],
                 "00000003-0000-0000-c000-000000000000": [
@@ -16378,9 +16093,6 @@
                 ],
                 "01cb2876-7ebd-4aa4-9cc9-d28bd4d359a9": [
                     "adrs_access"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -17639,9 +17351,7 @@
                     "User.ReadWrite"
                 ],
                 "00000003-0000-0ff1-ce00-000000000000": [
-                    "AllSites.Write",
                     "Files.Read.All",
-                    "MyFiles.Write",
                     "Sites.Read.All"
                 ],
                 "0a5f63c0-b750-4f38-a71c-4fc0d58b89e2": [
@@ -17650,12 +17360,6 @@
                 ],
                 "2634dd23-5e5a-431c-81ca-11710d9079f4": [
                     "access_microsoftstream_service"
-                ],
-                "39aaf054-81a5-48c7-a4f8-0293012095b9": [
-                    "Teams.AccessAsUser.All"
-                ],
-                "944f0bd1-117b-4b1c-af26-804ed95e767e": [
-                    "Read"
                 ],
                 "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
                     "UserPolicies.Read"
@@ -17801,12 +17505,6 @@
                     "Mail.Send",
                     "Mail.Send.Shared",
                     "People.Read",
-                    "user_impersonation"
-                ],
-                "499b84ac-1321-427f-aa17-267ca6975798": [
-                    "user_impersonation"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
                     "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
@@ -18533,9 +18231,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -18543,12 +18238,6 @@
                     "Files.Read",
                     "Sites.Read.All",
                     "User.Read"
-                ],
-                "66a88757-258c-4c72-893c-3e8bed4d6899": [
-                    "SubstrateSearch-Internal.ReadWrite"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -18560,7 +18249,6 @@
                     "Files.ReadWrite.Shared",
                     "OfficeFeed-Internal.ReadWrite",
                     "PeoplePredictions-Internal.Read",
-                    "SharePointSmartCache.ReadWrite",
                     "SubstrateSearch-Internal.ReadWrite"
                 ]
             }
@@ -18741,12 +18429,6 @@
                     "User.Read",
                     "User.ReadBasic.All"
                 ],
-                "46da2f7e-b5ef-422a-88d4-2a7f9de6a0b2": [
-                    "all"
-                ],
-                "499b84ac-1321-427f-aa17-267ca6975798": [
-                    "user_impersonation"
-                ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
                 ],
@@ -18814,9 +18496,6 @@
                 ],
                 "394866fc-eedb-4f01-8536-3ff84b16be2a": [
                     "User.Read.All"
-                ],
-                "4354e225-50c9-4423-9ece-2d5afd904870": [
-                    "AugLoop.All"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -19048,9 +18727,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -19066,12 +18742,6 @@
                 ],
                 "394866fc-eedb-4f01-8536-3ff84b16be2a": [
                     "User.Read.All"
-                ],
-                "4354e225-50c9-4423-9ece-2d5afd904870": [
-                    "AugLoop.All"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -19693,29 +19363,15 @@
                 "4787c7ff-7cea-43db-8d0d-919f15c6354b": [
                     "access_as_user"
                 ],
-                "4f550ec4-347e-412f-9119-ed6fdab0a63f": [
-                    "access_as_user"
-                ],
                 "80ccca67-54bd-44ab-8625-4b79c4dc7775": [
                     "metaos"
-                ],
-                "8c1a9936-578e-4d13-9bd9-9afe53ef7de8": [
-                    "access_as_user",
-                    "user_impersonation"
                 ],
                 "9e4a5442-a5c9-4f6f-b03f-5b9fcaaf24b1": [
                     "RoamingUserSettings.Read",
                     "RoamingUserSettings.ReadWrite"
                 ],
-                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
-                    "CopilotEligibility.Read",
-                    "CopilotSettings.ReadWrite"
-                ],
                 "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
                     "UserPolicies.Read"
-                ],
-                "c8423563-e8f6-49f2-924b-90d9f664378a": [
-                    "Goals.ReadWrite"
                 ],
                 "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": [
                     "access_as_user",
@@ -19733,9 +19389,6 @@
                 ],
                 "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
                     "User.ReadWrite"
-                ],
-                "ee272b19-4411-433f-8f28-5c13cb6fd407": [
-                    "access_as_user"
                 ],
                 "f3a218b7-5c8f-460b-93af-56b072788c15": [
                     "User.Read.All"
@@ -20243,16 +19896,10 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "profile",
                     "openid",
                     "email",
-                    "user_impersonation"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
                     "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
@@ -20833,16 +20480,10 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
                     "profile",
-                    "user_impersonation"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
                     "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
@@ -21301,9 +20942,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
@@ -21326,12 +20964,6 @@
                 ],
                 "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
                     "Teams.AccessAsUser.All"
-                ],
-                "6bf85cfa-ac8a-4be5-b5de-425a0d0dc016": [
-                    "ADSynchronization.ReadWrite.All"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -21842,9 +21474,6 @@
                     "Sites.Read.All",
                     "User.Read"
                 ],
-                "00000003-0000-0ff1-ce00-000000000000": [
-                    "Files.Read.All"
-                ],
                 "0a5f63c0-b750-4f38-a71c-4fc0d58b89e2": [
                     "Intune.MAM.Registrations.Read.All",
                     "Intune.MAM.Registrations.Write.All"
@@ -21858,12 +21487,15 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
+                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
+                    "NewsFeed.ReadWrite",
                     "People.Read.All",
                     "QnA.Read.All",
+                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "a4f2693f-129c-4b96-982b-2c364b8314d7": [
@@ -22213,9 +21845,6 @@
                 "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
                     "Teams.AccessAsUser.All"
                 ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
-                ],
                 "c9d254a9-346a-4c00-95eb-950cb62a58f0": [
                     "SmartList.ReadWrite"
                 ],
@@ -22499,7 +22128,6 @@
                     "Notes.ReadWrite",
                     "Oab.AccessAsUser.All",
                     "OutlookService.AccessAsUser.All",
-                    "OutlookService.AccessAsUser.Sdp",
                     "OWA.AccessAsUser.All",
                     "People.Read",
                     "People.ReadWrite",
@@ -22545,7 +22173,6 @@
                     "Printer.Read.All",
                     "PrinterShare.ReadBasic.All",
                     "PrintJob.ReadWriteBasic",
-                    "Reports.Read.All",
                     "SensitiveInfoType.Detect",
                     "SensitiveInfoType.Read.All",
                     "SensitivityLabel.Evaluate",
@@ -22568,15 +22195,8 @@
                 "00edd498-7c0c-4e68-859c-5a55d518c9c0": [
                     "User.ReadWrite.All"
                 ],
-                "038187f5-ca69-4382-8c0b-8d87708d099f": [
-                    "MeetingArtifacts-Internal.Read",
-                    "MeetingArtifacts-Internal.Write"
-                ],
                 "09abbdfd-ed23-44ee-a2d9-a627aa1c90f3": [
                     "Tasks.ReadWrite"
-                ],
-                "23761678-2a11-41be-8fc1-517cd080526a": [
-                    "access_as_user"
                 ],
                 "2634dd23-5e5a-431c-81ca-11710d9079f4": [
                     "access_microsoftstream_service"
@@ -22619,15 +22239,6 @@
                     "Connectors.AdaptiveCards.Actions",
                     "user_impersonation"
                 ],
-                "499b84ac-1321-427f-aa17-267ca6975798": [
-                    "user_impersonation"
-                ],
-                "4f2ddf1c-152e-4e3e-aa42-63b3ae8d88d3": [
-                    "URLPreview.Generate"
-                ],
-                "4f550ec4-347e-412f-9119-ed6fdab0a63f": [
-                    "access_as_user"
-                ],
                 "55bdc56c-2b15-4538-aa37-d0c008c8c430": [
                     "Teams.AccessAsUser.All"
                 ],
@@ -22639,13 +22250,6 @@
                 "57da3f69-2d82-4c17-9e57-2e6d78b2dc60": [
                     "read",
                     "write"
-                ],
-                "59929c62-edde-413a-b308-a5057f3d1cb5": [
-                    "Emerald.All",
-                    "user_impersonation"
-                ],
-                "5e2795e3-ce8c-4cfb-b302-35fe5cd01597": [
-                    "designerappservice.all"
                 ],
                 "5f09333a-842c-47da-a157-57da27fcbca5": [
                     "ShellSettings.Read"
@@ -22662,9 +22266,6 @@
                 ],
                 "6bc3b958-689b-49f5-9006-36d165f30e00": [
                     "User.Read",
-                    "user_impersonation"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
                     "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
@@ -22696,19 +22297,14 @@
                 "870c4f2e-85b6-4d43-bdda-6ed9a579b725": [
                     "UnifiedPolicy.User.Read"
                 ],
-                "8c1a9936-578e-4d13-9bd9-9afe53ef7de8": [
-                    "access_as_user",
-                    "user_impersonation"
-                ],
-                "8f348934-64be-4bb2-bc16-c54c96789f43": [
-                    "EduAssignments.Read",
-                    "EduAssignments.ReadWrite",
-                    "EduCurricula.Read",
-                    "EduCurricula.ReadWrite",
-                    "user_impersonation"
-                ],
                 "92876b03-76a3-4da8-ad6a-0511ffdf8647": [
                     "User.Read"
+                ],
+                "99f53064-85db-4f9f-ab36-118a009b8857": [
+                    "AugLoop.All"
+                ],
+                "9c60a40b-b5c5-4d01-8588-776209c80db3": [
+                    "Dynamics.Read.All"
                 ],
                 "9e4a5442-a5c9-4f6f-b03f-5b9fcaaf24b1": [
                     "DiscoveryConnectedServices.ReadWrite",
@@ -22719,23 +22315,14 @@
                     "SharedWithMe.Read"
                 ],
                 "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7": [
-                    "Acronym.Read.All"
+                    "Acronym.Read.All",
+                    "Topic.Read.All"
                 ],
                 "aa813f0e-407a-459d-93af-805f2bf10f33": [
                     "SCIS-Internal.ReadWrite"
                 ],
-                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
-                    "CopilotEligibility.Read",
-                    "CopilotSettings.ReadWrite"
-                ],
                 "c5393580-f805-4401-95e8-94b7a6ef2fc2": [
                     "ServiceHealth.Read"
-                ],
-                "c82e1b1b-5ab6-48fb-b4f8-890a5b27b181": [
-                    "AttendanceReport.Read"
-                ],
-                "c8423563-e8f6-49f2-924b-90d9f664378a": [
-                    "Goals.ReadWrite"
                 ],
                 "c94ede5f-b856-405a-bcd9-406285330a76": [
                     "Privacy.Read",
@@ -22770,19 +22357,11 @@
                     "AppDefinitions.ReadWrite",
                     "Cards.ReadWrite"
                 ],
-                "e521cb67-22c8-4b2b-aaa5-e94bb3eec243": [
-                    "bpa.rules.manage",
-                    "webhook.create"
-                ],
                 "e8bdeda8-b4a3-4eed-b307-5e2456238a77": [
                     "AppDefinitions.Read"
                 ],
                 "e8be65d6-d430-4289-a665-51bf2a194bda": [
-                    "AuthConfig.Read",
                     "Title.ReadWrite"
-                ],
-                "eb20f3e3-3dce-4d2c-b721-ebb8d4414067": [
-                    "User.Read"
                 ],
                 "ec156f81-f23a-47bd-b16f-9fb2c66420f9": [
                     "ActivityFeed-Internal.ReadWrite",
@@ -22825,9 +22404,6 @@
                     "User-Internal.Read",
                     "UserSettings.Read",
                     "UserSettings.ReadWrite"
-                ],
-                "ee272b19-4411-433f-8f28-5c13cb6fd407": [
-                    "access_as_user"
                 ],
                 "f8f7a2aa-e116-4ba6-8aea-ca162cfa310d": [
                     "ContentDomain.Read.All",
@@ -23716,9 +23292,6 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "mdm_delegation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "mdm_delegation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "profile",
                     "openid",
@@ -23727,12 +23300,6 @@
                 ],
                 "16aeb910-ce68-41d1-9ac3-9e1673ac9575": [
                     "User.Read"
-                ],
-                "499b84ac-1321-427f-aa17-267ca6975798": [
-                    "mdm_delegation"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "mdm_delegation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "mdm_delegation"
@@ -24356,13 +23923,10 @@
                     "OfficeFeed-Internal.ReadWrite",
                     "PeoplePredictions-Internal.Read",
                     "SubstrateSearch-Internal.ReadWrite"
-                ],
-                "f2d19332-a09d-48c8-a53b-c49ae5502dfc": [
-                    "User.Read"
                 ]
             }
         },
-        "e9cee14e-f26a-4349-886f-10048e3ef4b8": {
+        "eb539595-3fe1-474e-9c1d-feb3625d1be5": {
             "foci": true,
             "name": "Yammer Android",
             "preferred_interactive_redirurl": null,
@@ -24805,22 +24369,8 @@
                 "47ee738b-3f1a-4fc7-ab11-37e4822b007e": [
                     "Directory.AccessAsUser.All"
                 ],
-                "5e2795e3-ce8c-4cfb-b302-35fe5cd01597": [
-                    "designerappservice.all"
-                ],
-                "66a88757-258c-4c72-893c-3e8bed4d6899": [
-                    "SubstrateSearch-Internal.ReadWrite"
-                ],
                 "870c4f2e-85b6-4d43-bdda-6ed9a579b725": [
                     "UnifiedPolicy.User.Read"
-                ],
-                "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7": [
-                    "User.Read.All"
-                ],
-                "9ec59623-ce40-4dc8-a635-ed0275b5d58a": [
-                    "Purview.Content.Process.All",
-                    "Purview.MdaProtectionScopes.Read",
-                    "Purview.ProtectionScopes.Read.All"
                 ],
                 "a4f2693f-129c-4b96-982b-2c364b8314d7": [
                     "UserActivity.ReadWrite.CreatedByApp",
@@ -24830,10 +24380,6 @@
                 "b8066b99-6e67-41be-abfa-75db1a2c8809": [
                     "branding.search"
                 ],
-                "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce": [
-                    "CopilotEligibility.Read",
-                    "CopilotSettings.ReadWrite"
-                ],
                 "bdd48c81-3a58-4ea9-849c-ebea7f6b6360": [
                     "UserActivity.ReadWrite.CreatedByApp",
                     "UserSettings.ReadWrite.CreatedByApp",
@@ -24841,6 +24387,9 @@
                 ],
                 "c2ada927-a9e2-4564-aae2-70775a2fa0af": [
                     "UserPolicies.Read"
+                ],
+                "c5fde071-9440-4083-9e3c-b6712ad6e4d5": [
+                    "Proactive.Auth"
                 ],
                 "d32c68ad-72d2-4acb-a0c7-46bb2cf93873": [
                     "UserActivity.ReadWrite.CreatedByApp",
@@ -24860,11 +24409,9 @@
                     "PeoplePredictions-Internal.Read",
                     "PIMKeyService-Internal.ReadWrite",
                     "Place.ReadWrite.All",
-                    "ProfilePhoto.Read.All",
                     "RoamingUserSettings.ReadWrite",
                     "SubstrateSearch-Internal.ReadWrite",
-                    "Todo-Internal.ReadWrite",
-                    "User.Read.All"
+                    "Todo-Internal.ReadWrite"
                 ],
                 "f2d19332-a09d-48c8-a53b-c49ae5502dfc": [
                     "User.Read"
@@ -25486,12 +25033,15 @@
                     "Bookmark.Read.All",
                     "Building.Read.All",
                     "Calendar.Read.All",
+                    "Conversations.Read.All",
                     "Files.Read.All",
                     "FloorPlan.Read.All",
                     "Group.Read.All",
                     "NewsFeed.Read",
+                    "NewsFeed.ReadWrite",
                     "People.Read.All",
                     "QnA.Read.All",
+                    "Sites.Read.All",
                     "User.Read.All"
                 ],
                 "a4f2693f-129c-4b96-982b-2c364b8314d7": [
@@ -26185,17 +25735,11 @@
                 "00000002-0000-0000-c000-000000000000": [
                     "user_impersonation"
                 ],
-                "00000002-0000-0ff1-ce00-000000000000": [
-                    "user_impersonation"
-                ],
                 "00000003-0000-0000-c000-000000000000": [
                     "email",
                     "openid",
                     "profile",
                     "ServicePrincipalEndpoint.Read.All"
-                ],
-                "74658136-14ec-4630-ad9b-26e160ff0fc6": [
-                    "user_impersonation"
                 ],
                 "797f4846-ba00-4fd7-ba43-dac1f8f63013": [
                     "user_impersonation"
@@ -26508,7 +26052,6 @@
         }
     },
     "resourceidentifiers": {
-        "api://0ab9de21-b802-4d77-b279-1ad41ca233b4": "0ab9de21-b802-4d77-b279-1ad41ca233b4",
         "api://127.0.0.1/3016d0ce-47cc-4005-b11d-5fcabb1b643d": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
         "api://18e271e7-a818-46ad-8e73-07cb0ae64328": "18e271e7-a818-46ad-8e73-07cb0ae64328",
         "api://23761678-2a11-41be-8fc1-517cd080526a": "23761678-2a11-41be-8fc1-517cd080526a",
@@ -26548,12 +26091,8 @@
         "api://botid-18563b69-42ea-4693-9fe8-32ed3cab102d": "00000009-0000-0000-c000-000000000000",
         "api://botid-190e2548-e973-438f-904e-75ed471108a8": "00000009-0000-0000-c000-000000000000",
         "api://botid-1d8f972c-f346-4130-8eaa-dece10666c2d": "00000009-0000-0000-c000-000000000000",
-        "api://botid-25c0ac13-af11-43d3-ac26-9758831eb238": "2f7b4d11-d621-4079-9798-27f548d681f1",
-        "api://botid-2f7b4d11-d621-4079-9798-27f548d681f1": "2f7b4d11-d621-4079-9798-27f548d681f1",
         "api://botid-365f198c-f33d-4b87-b209-62033e2f4d6f": "00000009-0000-0000-c000-000000000000",
         "api://botid-4eb9ce96-03c5-42ec-93f8-c6417a473800": "00000009-0000-0000-c000-000000000000",
-        "api://botid-56233257-15ee-4d3d-bdcd-9aa975244e4c": "56233257-15ee-4d3d-bdcd-9aa975244e4c",
-        "api://botid-5e2795e3-ce8c-4cfb-b302-35fe5cd01597": "5e2795e3-ce8c-4cfb-b302-35fe5cd01597",
         "api://botid-61cccd33-6c1a-4329-b091-504c7ddd882f": "00000009-0000-0000-c000-000000000000",
         "api://botid-7b49e98b-e124-449c-a99f-16894b5572d8": "00000009-0000-0000-c000-000000000000",
         "api://botid-ab794c79-7fab-4b3e-a8af-a02a57d4e943": "2c9e12e5-a56c-4ba1-b768-7a141586c6fe",
@@ -26563,41 +26102,26 @@
         "api://botid-cbba985a-17bf-4a94-aedd-601b84e47e70": "00000009-0000-0000-c000-000000000000",
         "api://botid-f433e0e9-d3ff-42fb-abe1-e91e34f5f293": "00000009-0000-0000-c000-000000000000",
         "api://cedebc57-38a2-4f0a-8472-dfcbba5b04c6": "cedebc57-38a2-4f0a-8472-dfcbba5b04c6",
-        "api://copilotforfinance.microsoft.com/8c1a9936-578e-4d13-9bd9-9afe53ef7de8": "8c1a9936-578e-4d13-9bd9-9afe53ef7de8",
-        "api://copilotstudio.local.microsoft.com/a522f059-bb65-47c0-8934-7db6e5286414": "a522f059-bb65-47c0-8934-7db6e5286414",
-        "api://copilotstudio.preprod.microsoft.com/a522f059-bb65-47c0-8934-7db6e5286414": "a522f059-bb65-47c0-8934-7db6e5286414",
-        "api://copilotstudio.test.microsoft.com/a522f059-bb65-47c0-8934-7db6e5286414": "a522f059-bb65-47c0-8934-7db6e5286414",
         "api://daily.powerbi.com/00000009-0000-0000-c000-000000000000": "00000009-0000-0000-c000-000000000000",
         "api://daily.powerbi.com/botid-1d8f972c-f346-4130-8eaa-dece10666c2d": "00000009-0000-0000-c000-000000000000",
         "api://demolt.vivasales.dynamics.com/4787c7ff-7cea-43db-8d0d-919f15c6354b": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://demolt.vivasales.dynamics.com/botid-f236ff88-3eed-4956-beab-ede3593ed43c": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
-        "api://designer.microsoft.com/botid-5e2795e3-ce8c-4cfb-b302-35fe5cd01597": "5e2795e3-ce8c-4cfb-b302-35fe5cd01597",
         "api://dxt.powerbi.com/00000009-0000-0000-c000-000000000000": "00000009-0000-0000-c000-000000000000",
         "api://dxt.powerbi.com/botid-4eb9ce96-03c5-42ec-93f8-c6417a473800": "00000009-0000-0000-c000-000000000000",
         "api://ffc-visio.officeapps.live.com/va/00695ed2-3202-4156-8da1-69f60065e255": "00695ed2-3202-4156-8da1-69f60065e255",
         "api://ffc-visio.officeapps.live.com/va/00695ed2-3202-4156-8da1-69f60065e255/access_as_user": "00695ed2-3202-4156-8da1-69f60065e255",
-        "api://financecopilot.microsoft.com/8c1a9936-578e-4d13-9bd9-9afe53ef7de8": "8c1a9936-578e-4d13-9bd9-9afe53ef7de8",
         "api://forms.cloud.microsoft/c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87",
         "api://forms.office.com/c9a559d2-7aab-4f13-a6ed-e7e9c52aec87": "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87",
         "api://fre.vivasales.dynamics.com/0c9c6d7b-0ccd-4dbd-96d4-9a7985e2f396": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://fre.vivasales.dynamics.com/4787c7ff-7cea-43db-8d0d-919f15c6354b": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://fre.vivasales.dynamics.com/botid-42e07d43-6d64-456a-a2ac-1af63d30411e": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
-        "api://goals.cloud.microsoft/botid-4f550ec4-347e-412f-9119-ed6fdab0a63f": "4f550ec4-347e-412f-9119-ed6fdab0a63f",
-        "api://goals.microsoft.com/botid-4f550ec4-347e-412f-9119-ed6fdab0a63f": "4f550ec4-347e-412f-9119-ed6fdab0a63f",
-        "api://local.teams.office.com/3016d0ce-47cc-4005-b11d-5fcabb1b643d": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
-        "api://localhost:59375/8c1a9936-578e-4d13-9bd9-9afe53ef7de8": "8c1a9936-578e-4d13-9bd9-9afe53ef7de8",
-        "api://localhost:59376/8c1a9936-578e-4d13-9bd9-9afe53ef7de8": "8c1a9936-578e-4d13-9bd9-9afe53ef7de8",
-        "api://make.local.powerapps.com/botid-ff8162c9-1d12-4106-97fc-45ebc690373c": "2f7b4d11-d621-4079-9798-27f548d681f1",
-        "api://make.powerapps.com/botid-ff8162c9-1d12-4106-97fc-45ebc690373c": "2f7b4d11-d621-4079-9798-27f548d681f1",
-        "api://make.preview.powerapps.com/botid-ff8162c9-1d12-4106-97fc-45ebc690373c": "2f7b4d11-d621-4079-9798-27f548d681f1",
-        "api://make.test.powerapps.com/botid-ff8162c9-1d12-4106-97fc-45ebc690373c": "2f7b4d11-d621-4079-9798-27f548d681f1",
         "api://mesh.df.onecdn.static.microsoft/3016d0ce-47cc-4005-b11d-5fcabb1b643d": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
         "api://mesh.public.onecdn.static.microsoft/3016d0ce-47cc-4005-b11d-5fcabb1b643d": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
         "api://meshavatars.sdf.cdn.office.net/3016d0ce-47cc-4005-b11d-5fcabb1b643d": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
         "api://msit.powerbi.com/00000009-0000-0000-c000-000000000000": "00000009-0000-0000-c000-000000000000",
         "api://msit.powerbi.com/botid-7b49e98b-e124-449c-a99f-16894b5572d8": "00000009-0000-0000-c000-000000000000",
-        "api://partnerfre.vivasales.dynamics.com/4787c7ff-7cea-43db-8d0d-919f15c6354b": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
-        "api://partnerfre.vivasales.dynamics.com/botid-0d2ebec4-5894-455b-92d8-34ace77d3506": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
+        "api://partnerfre.salesproductivity.dynamics.com/4787c7ff-7cea-43db-8d0d-919f15c6354b": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
+        "api://partnerfre.salesproductivity.dynamics.com/botid-0d2ebec4-5894-455b-92d8-34ace77d3506": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://ppc-visio.officeapps.live.com/va/00695ed2-3202-4156-8da1-69f60065e255": "00695ed2-3202-4156-8da1-69f60065e255",
         "api://ppc-visio.officeapps.live.com/va/00695ed2-3202-4156-8da1-69f60065e255/access_as_user": "00695ed2-3202-4156-8da1-69f60065e255",
         "api://res-sdf.cdn.office.net/3016d0ce-47cc-4005-b11d-5fcabb1b643d": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
@@ -26607,18 +26131,12 @@
         "api://sg.vivasales.dynamics.com/0c9c6d7b-0ccd-4dbd-96d4-9a7985e2f396": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://sg.vivasales.dynamics.com/4787c7ff-7cea-43db-8d0d-919f15c6354b": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://sg.vivasales.dynamics.com/botid-f97b724b-5779-4a3c-aa7f-b9e438c78826": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
-        "api://support.microsoft.com/59929c62-edde-413a-b308-a5057f3d1cb5": "59929c62-edde-413a-b308-a5057f3d1cb5",
-        "api://support.microsoft.com/ee272b19-4411-433f-8f28-5c13cb6fd407": "ee272b19-4411-433f-8f28-5c13cb6fd407",
         "api://visio.officeapps.live.com/va/00695ed2-3202-4156-8da1-69f60065e255": "00695ed2-3202-4156-8da1-69f60065e255",
         "api://visio.officeapps.live.com/va/00695ed2-3202-4156-8da1-69f60065e255/access_as_user": "00695ed2-3202-4156-8da1-69f60065e255",
-        "api://vivapulseclient-cdn-ep.microsoft.com/56233257-15ee-4d3d-bdcd-9aa975244e4c": "56233257-15ee-4d3d-bdcd-9aa975244e4c",
-        "api://vivapulseclient-cdn-ep.microsoft.com/botid-56233257-15ee-4d3d-bdcd-9aa975244e4c": "56233257-15ee-4d3d-bdcd-9aa975244e4c",
         "api://vivasales.dynamics.com/0c9c6d7b-0ccd-4dbd-96d4-9a7985e2f396": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://vivasales.dynamics.com/4787c7ff-7cea-43db-8d0d-919f15c6354b": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://vivasales.dynamics.com/botid-2ac7db0e-bd8b-4b00-a166-05ced71e4cd5": "4787c7ff-7cea-43db-8d0d-919f15c6354b",
         "api://web.yammer.com/botid-26e27eed-f034-49e4-bbc5-031d3c4dc2c4": "00000005-0000-0ff1-ce00-000000000000",
-        "https://*.analytics.visualstudio.com/": "499b84ac-1321-427f-aa17-267ca6975798",
-        "https://*.analytics.vsallin.net/": "499b84ac-1321-427f-aa17-267ca6975798",
         "https://*.api.cds.appsplatform.us/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.cds.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.cds.microsoftdynamics.us/": "00000007-0000-0000-c000-000000000000",
@@ -26653,8 +26171,6 @@
         "https://*.api.crm20.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.crm21.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.crm22.dynamics.com/": "00000007-0000-0000-c000-000000000000",
-        "https://*.api.crm23.dynamics.com/": "00000007-0000-0000-c000-000000000000",
-        "https://*.api.crm24.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.crm3.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.crm4.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.crm5.dynamics.com/": "00000007-0000-0000-c000-000000000000",
@@ -26663,9 +26179,6 @@
         "https://*.api.crm8.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.crm9.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.api.crmppeau.dynamics.com/": "00000007-0000-0000-c000-000000000000",
-        "https://*.axcloud.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.azconfig.azure.us": "35ffadb3-7fc1-497e-b61b-381d28e744cc",
-        "https://*.azconfig.io": "35ffadb3-7fc1-497e-b61b-381d28e744cc",
         "https://*.azure-apim.net": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://*.callrecorder.infra.dod.teams.microsoft.us": "4580fd1d-e5a3-4f56-9ad1-aab0e3bf8f76",
         "https://*.ch.lcs.dynamics.com": "913c6de4-2a4a-4a61-a9ce-945d2b2ce2e0",
@@ -26712,8 +26225,6 @@
         "https://*.crm20.dynamics.com": "00000007-0000-0000-c000-000000000000",
         "https://*.crm21.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.crm22.dynamics.com/": "00000007-0000-0000-c000-000000000000",
-        "https://*.crm23.dynamics.com/": "00000007-0000-0000-c000-000000000000",
-        "https://*.crm24.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.crm3.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.crm4.dynamics.com/": "00000007-0000-0000-c000-000000000000",
         "https://*.crm5.dynamics.com/": "00000007-0000-0000-c000-000000000000",
@@ -26726,10 +26237,6 @@
         "https://*.dataservice.o365filtering.com": "00000007-0000-0ff1-ce00-000000000000",
         "https://*.dataservice.o365filtering.us": "00000007-0000-0ff1-ce00-000000000000",
         "https://*.dataservice.protection.office365.us": "00000007-0000-0ff1-ce00-000000000000",
-        "https://*.dev.operations.fr.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.dev.operations.no.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.dev.operations.sa.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.dev.operations.uae.dynamics.com": "00000015-0000-0000-c000-000000000000",
         "https://*.dps.mil/": "00000003-0000-0ff1-ce00-000000000000",
         "https://*.eu.lcs.dynamics.com": "913c6de4-2a4a-4a61-a9ce-945d2b2ce2e0",
         "https://*.eu.lcs.int.dynamics.com": "913c6de4-2a4a-4a61-a9ce-945d2b2ce2e0",
@@ -26755,17 +26262,6 @@
         "https://*.onenote.com/sponotification/event/": "2d4d3d8e-2be3-4bef-9f87-7875a61c29de",
         "https://*.onenote.gcc.osi.office365.us/": "2d4d3d8e-2be3-4bef-9f87-7875a61c29de",
         "https://*.onenote.osi.office365.us/": "2d4d3d8e-2be3-4bef-9f87-7875a61c29de",
-        "https://*.operations.ch.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.eu.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.fr.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.gov.microsoftdynamics.us": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.gov.test.microsoftdynamics.us": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.int.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.no.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.preprod.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.sa.dynamics.com": "00000015-0000-0000-c000-000000000000",
-        "https://*.operations.uae.dynamics.com": "00000015-0000-0000-c000-000000000000",
         "https://*.oscs.o365filtering.com": "00000007-0000-0ff1-ce00-000000000000",
         "https://*.oscs.protection.office365.us": "00000007-0000-0ff1-ce00-000000000000",
         "https://*.outlook.com/": "00000002-0000-0ff1-ce00-000000000000",
@@ -26942,18 +26438,12 @@
         "https://*.z99.vault.azure.net": "cfa8b339-82a2-471a-a3c9-0fc0be7a4093",
         "https://1.portal.windowsazure.com/": "c44b4083-3bb0-49c1-b47d-974e53cbdf3c",
         "https://2.bing.com": "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7",
-        "https://2.portal.windowsazure.com/": "c44b4083-3bb0-49c1-b47d-974e53cbdf3c",
         "https://4.bing.com": "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7",
-        "https://4psconstruct.api.bc.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
         "https://6.bing.com": "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7",
         "https://FEF.amsub0102.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
         "https://KonaCompute.net": "e9f49c6b-5ce5-44c8-925d-015017e9f7ad",
         "https://MsaiMeetingIntelligence.substrate.office.com": "038187f5-ca69-4382-8c0b-8d87708d099f",
         "https://accountlinking.binguxlivesite.net": "341de446-708a-48e3-b0b3-1e028625439b",
-        "https://activelearning.cloud.microsoft": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://activelearning.cloud.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://activelearning.int.cloud.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://activelearning.ppe.cloud.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
         "https://activity.microsoft.com": "d32c68ad-72d2-4acb-a0c7-46bb2cf93873",
         "https://activity.windows.com": "d32c68ad-72d2-4acb-a0c7-46bb2cf93873",
         "https://admin-ignite.microsoft.com": "00000006-0000-0ff1-ce00-000000000000",
@@ -27000,8 +26490,6 @@
         "https://analysis.windows.net/powerbi/api": "00000009-0000-0000-c000-000000000000",
         "https://analysis.windows.net/powerbi/api-management": "00000009-0000-0000-c000-000000000000",
         "https://analysis.windows.net/powerbi/connector/*": "00000009-0000-0000-c000-000000000000",
-        "https://analytics.dev.azure.com/": "499b84ac-1321-427f-aa17-267ca6975798",
-        "https://aobo-egress.sitops-internal.com": "fcd92efb-cd45-4652-9844-a3973dba245d",
         "https://apac.presence-interop.teams.microsoft.com/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://apac.presence.interop.services.sfb.trafficmanager.net/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://apac.presence.teams.microsoft.com/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
@@ -27047,7 +26535,6 @@
         "https://api.loganalytics.io/": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
         "https://api.manage.staffhub.office.com": "aa580612-c342-4ace-9055-8edee43ccb89",
         "https://api.medeina-dev.defender.microsoft.com/": "826870f9-9fbb-4f23-81b8-3a957080dfa2",
-        "https://api.medeina.defender.microsoft.com": "bb3d68c2-d09e-4455-94a0-e323996dbaa3",
         "https://api.office.net": "9e4a5442-a5c9-4f6f-b03f-5b9fcaaf24b1",
         "https://api.onedrive.com/": "6a9b9266-8161-4a7b-913a-a9eda19da220",
         "https://api.orginsights.viva.office.com": "9d827643-d003-4cca-9dc8-71213a8f1644",
@@ -27063,23 +26550,12 @@
         "https://api.securitycenter.windows.com/": "fc780465-2017-40d4-a0c5-307022471b92",
         "https://api.securitycenter.windows.us": "fc780465-2017-40d4-a0c5-307022471b92",
         "https://api.securitycenter.windows.us/": "fc780465-2017-40d4-a0c5-307022471b92",
-        "https://api.securitycopilot.microsoft.com": "bb3d68c2-d09e-4455-94a0-e323996dbaa3",
         "https://api.spaces.skype.com": "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe",
         "https://api.spaces.skype.com/": "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe",
         "https://api.staffhub.office.com": "aa580612-c342-4ace-9055-8edee43ccb89",
         "https://api.teams.contacts.skype.com": "6208afad-753e-4995-bbe1-1dfd204b3030",
         "https://api.yammer.com": "00000005-0000-0ff1-ce00-000000000000",
         "https://api.yammer.com/": "00000005-0000-0ff1-ce00-000000000000",
-        "https://api1.aimon.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api1.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api2.aimon.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api2.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api3.aimon.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api3.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api4.aimon.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api4.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api5.aimon.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
-        "https://api5.applicationinsights.io": "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
         "https://apiconnection.azure.net": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://apihub.azure.com": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://app.vssps.visualstudio.com/": "499b84ac-1321-427f-aa17-267ca6975798",
@@ -27114,10 +26590,11 @@
         "https://are-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://asia1.msgraph.msappproxy.net/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://asia1.msgraph.msappproxy.net:8082/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
-        "https://assetregistry.trafficmanager.net": "f9ee0641-efe0-4c37-a6b5-07c021b33ba4",
         "https://assist.microsoft.com": "2b8844d8-6c87-4fce-97a0-fbec9006e140",
-        "https://aue-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://aue-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
+        "https://augloop-int.officeppe.com": "99f53064-85db-4f9f-ab36-118a009b8857",
+        "https://augloop-int.officeppe.com/": "99f53064-85db-4f9f-ab36-118a009b8857",
+        "https://augloop-int.officeppe.com/v2": "99f53064-85db-4f9f-ab36-118a009b8857",
+        "https://augloop-int.officeppe.com/v2/": "99f53064-85db-4f9f-ab36-118a009b8857",
         "https://augloop.office.com": "4354e225-50c9-4423-9ece-2d5afd904870",
         "https://augloop.office.com/": "4354e225-50c9-4423-9ece-2d5afd904870",
         "https://augloop.office.com/v2": "4354e225-50c9-4423-9ece-2d5afd904870",
@@ -27125,20 +26602,8 @@
         "https://aus-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://aus1.msgraph.msappproxy.net/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://aus1.msgraph.msappproxy.net:8082/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
-        "https://australiaeast0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiaeast1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiaeast1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiaeast2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiaeast3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiaeast4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://australiasoutheast.api.loganalytics.io": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
         "https://australiasoutheast.api.loganalytics.io/": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
-        "https://australiasoutheast0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiasoutheast1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiasoutheast1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiasoutheast2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiasoutheast3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://australiasoutheast4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://auth.msft.communication.azure.com": "1fd5118e-2576-4263-8130-9503064c837a",
         "https://authorization.microsoft.com": "0469d4cd-df37-4d93-8a61-f8c75b809164",
         "https://azconfig.io": "35ffadb3-7fc1-497e-b61b-381d28e744cc",
@@ -27148,12 +26613,6 @@
         "https://bots.devspaces.skype.net": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://bots.devspaces.skype.net/v3/MsftBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://bots.devspaces.skype.net/v3/WhoBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
-        "https://bots.idev.customercareintelligence.net": "a522f059-bb65-47c0-8934-7db6e5286414",
-        "https://bots.idev.customercareintelligence.net/": "a522f059-bb65-47c0-8934-7db6e5286414",
-        "https://bots.int.customercareintelligence.net": "a522f059-bb65-47c0-8934-7db6e5286414",
-        "https://bots.int.customercareintelligence.net/": "a522f059-bb65-47c0-8934-7db6e5286414",
-        "https://bots.ppe.customercareintelligence.net": "a522f059-bb65-47c0-8934-7db6e5286414",
-        "https://bots.ppe.customercareintelligence.net/": "a522f059-bb65-47c0-8934-7db6e5286414",
         "https://bots.ppespaces.skype.net": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://bots.ppespaces.skype.net/v3/MsftBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://bots.ppespaces.skype.net/v3/WhoBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
@@ -27161,34 +26620,8 @@
         "https://bots.skype.com/v3/MsftBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://bots.skype.com/v3/WhoBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://bots.teams.skype.com/v3/WhoBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
-        "https://bpa.fis.office-int.com/": "e521cb67-22c8-4b2b-aaa5-e94bb3eec243",
-        "https://brazilsouth0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsouth1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsouth1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsouth2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsouth3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsouth4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsoutheast0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsoutheast1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsoutheast1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsoutheast2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsoutheast3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brazilsoutheast4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://brzs-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://brzs-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://brzs-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://canadacentral0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadacentral1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadacentral1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadacentral2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadacentral3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadacentral4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadaeast0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadaeast1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadaeast1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadaeast2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadaeast3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://canadaeast4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
+        "https://business-assist.microsoft.com": "2b8844d8-6c87-4fce-97a0-fbec9006e140",
+        "https://businessassist.microsoft.com": "2b8844d8-6c87-4fce-97a0-fbec9006e140",
         "https://canary.graph.microsoft.com": "00000003-0000-0000-c000-000000000000",
         "https://canary.graph.microsoft.com/": "00000003-0000-0000-c000-000000000000",
         "https://canary.msgraph.msappproxy.net/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
@@ -27230,11 +26663,7 @@
         "https://collab.mixedreality.microsoft.com": "3016d0ce-47cc-4005-b11d-5fcabb1b643d",
         "https://commerceapi.office.net": "982bda36-4632-4165-a46a-9863b1bbcf7d",
         "https://compliance.microsoft.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
-        "https://copilot.cloud-dev.microsoft/v2": "4765445b-32c6-49b0-83e6-1d93765276ca",
-        "https://copilot.cloud.microsoft/v2": "4765445b-32c6-49b0-83e6-1d93765276ca",
-        "https://copilot.microsoft.com": "bb893c22-978d-4cd4-a6f7-bb6cc0d6e6ce",
         "https://cortana.ai": "81473081-50b9-469a-b9d8-303109583ecb",
-        "https://cortana.ai/api": "2a486b53-dbd2-49c0-a2bc-278bdfc30833",
         "https://cqd.dod.teams.microsoft.us": "c61d67cf-295a-462c-972f-33af37008751",
         "https://cqd.gov.teams.microsoft.us": "c61d67cf-295a-462c-972f-33af37008751",
         "https://cqd.lync.com": "c61d67cf-295a-462c-972f-33af37008751",
@@ -27250,16 +26679,8 @@
         "https://deschutes.microsoft.com": "0af06dc6-e4b5-4f28-818e-e78e62d137a5",
         "https://designerappservice.officeapps.live.com": "5e2795e3-ce8c-4cfb-b302-35fe5cd01597",
         "https://dev-int.teams.microsoft.com": "e1979c22-8b73-4aed-a4da-572cc4d0b832",
-        "https://dev.azuresynapse.net": "1ac05c7e-12d2-4605-bf9d-549d7041c6b3",
-        "https://dev.azuresynapse.net/": "1ac05c7e-12d2-4605-bf9d-549d7041c6b3",
-        "https://dev.azuresynapse.usgovcloudapi.net": "1ac05c7e-12d2-4605-bf9d-549d7041c6b3",
-        "https://dev.azuresynapse.usgovcloudapi.net/": "1ac05c7e-12d2-4605-bf9d-549d7041c6b3",
-        "https://dev.botframework.com/": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
-        "https://dev.botframework.com/*": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
-        "https://dev.labs.azure.com": "835b2a73-6e10-4aa5-a979-21dfda45231c",
         "https://dev.teams.microsoft.com": "e1979c22-8b73-4aed-a4da-572cc4d0b832",
         "https://df.compliance.microsoft.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
-        "https://df.goals.cloud.microsoft": "c8423563-e8f6-49f2-924b-90d9f664378a",
         "https://df.protection.office.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
         "https://df.security.microsoft.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
         "https://df.thor.aesir.office.com": "f3a218b7-5c8f-460b-93af-56b072788c15",
@@ -27268,48 +26689,18 @@
         "https://dod-graph.microsoft.us": "00000003-0000-0000-c000-000000000000",
         "https://dod-graph.microsoft.us/": "00000003-0000-0000-c000-000000000000",
         "https://dod.loki.office365.us/": "394866fc-eedb-4f01-8536-3ff84b16be2a",
-        "https://dxp.aad.azure.com": "a57aca87-cbc0-4f3c-8b9e-dc095fdc8978",
         "https://easm-api-ppe.trafficmanager.net/": "b7faa489-a4c8-4b39-bb0c-842c3de2de6a",
         "https://easm-api-prod.trafficmanager.net/": "b7faa489-a4c8-4b39-bb0c-842c3de2de6a",
         "https://easm.defender.microsoft.com/": "b7faa489-a4c8-4b39-bb0c-842c3de2de6a",
-        "https://easmaas-ppe.trafficmanager.net": "b7faa489-a4c8-4b39-bb0c-842c3de2de6a",
-        "https://easmaas-prod.trafficmanager.net": "b7faa489-a4c8-4b39-bb0c-842c3de2de6a",
         "https://easportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://easportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
-        "https://eastasia0-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia0-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia1-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia1-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia2-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia3-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia4-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasia4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastasiar-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://eastus.api.loganalytics.io": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
         "https://eastus.api.loganalytics.io/": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
-        "https://eastus0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus20-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus21-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus21-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus22-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus23-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus24-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://eastus4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
+        "https://edge-staging.microsoft.com/identity/": "c5fde071-9440-4083-9e3c-b6712ad6e4d5",
+        "https://edge-test.microsoft.com/identity/": "c5fde071-9440-4083-9e3c-b6712ad6e4d5",
+        "https://edge.microsoft.com/identity/": "c5fde071-9440-4083-9e3c-b6712ad6e4d5",
         "https://edgesync.microsoft.com": "a4f2693f-129c-4b96-982b-2c364b8314d7",
         "https://edog-kmd.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
-        "https://edu-activelearning-int.trafficmanager.net": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://edu-activelearning-prod.trafficmanager.net": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://edu-ai.int.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://edu-ai.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://edu-ai.ppe.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
         "https://edu-readingassignments-ci.cloudapp.azure.com": "22d27567-b3f0-4dc2-9ec2-46ed368ba538",
         "https://edu-readingassignments-ci.westus2.cloudapp.azure.com": "22d27567-b3f0-4dc2-9ec2-46ed368ba538",
         "https://edu-readingassignments-int.cloudapp.azure.com": "22d27567-b3f0-4dc2-9ec2-46ed368ba538",
@@ -27321,25 +26712,6 @@
         "https://edu-readingassignments-prod.eastus2.cloudapp.azure.com": "22d27567-b3f0-4dc2-9ec2-46ed368ba538",
         "https://edu-readingassignments-prod.westus2.cloudapp.azure.com": "22d27567-b3f0-4dc2-9ec2-46ed368ba538",
         "https://edu-readingassignments.cloudapp.azure.com": "22d27567-b3f0-4dc2-9ec2-46ed368ba538",
-        "https://eduinsights.int.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduinsights.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduinsights.ppe.microsoft.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-int.trafficmanager.net": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-int.westus2.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-ppe.eastus2.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-ppe.southeurope.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-ppe.trafficmanager.net": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-ppe.westeurope.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-ppe.westus2.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-prod.eastus2.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-prod.southeurope.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-prod.trafficmanager.net": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-prod.westeurope.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-prod.westus2.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-reflect-int.trafficmanager.net": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-reflect-ppe.trafficmanager.net": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-reflect-prod.trafficmanager.net": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
-        "https://eduta-test.westus2.cloudapp.azure.com": "f7691d3f-18be-4a7b-8639-efbb9ff02349",
         "https://ehrconnectorsvc.gcc.teams.microsoft.com": "e97edbaf-39b2-4546-ba61-0a24e1bef890",
         "https://ehrconnectorsvc.teams.microsoft.com": "e97edbaf-39b2-4546-ba61-0a24e1bef890",
         "https://ejp.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
@@ -27359,8 +26731,6 @@
         "https://engage.cloud.microsoft/teams": "00000005-0000-0ff1-ce00-000000000000",
         "https://engage.cloud.microsoft/teams-branded-exp": "00000005-0000-0ff1-ce00-000000000000",
         "https://engage.cloud.microsoft/teamsmeeting": "00000005-0000-0ff1-ce00-000000000000",
-        "https://engagehub.azure.com": "fe1b2b53-eb41-4515-a3b4-d62059faf520",
-        "https://engagehub.microsoft.com": "fe1b2b53-eb41-4515-a3b4-d62059faf520",
         "https://enterprise.activity.windows.com": "d32c68ad-72d2-4acb-a0c7-46bb2cf93873",
         "https://enterprisenews.microsoft.com": "f920ab6b-8a48-4438-9255-1650179a3a0f",
         "https://entitlement.diagnostics-eudb.office.com": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
@@ -27373,13 +26743,6 @@
         "https://eur-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://eur1.msgraph.msappproxy.net/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://eur1.msgraph.msappproxy.net:8082/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
-        "https://eus-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://eus-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://eus-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://eus-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://eus-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://eus-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://eus-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://eus.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://eus.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://eusportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
@@ -27387,43 +26750,6 @@
         "https://fcs.iga.azure.com/": "810dcf14-1858-4bf2-8134-4c369fa3235b",
         "https://fcs.iga.azure.us/": "810dcf14-1858-4bf2-8134-4c369fa3235b",
         "https://feedservice.substrate.office.com": "35d54a08-36c9-4847-9018-93934c62740c",
-        "https://fef.amsua0102.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsua0202.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsua0402.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsua0502.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsua0602.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsua0702.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsub0202.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsub0302.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsub0502.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.amsuin01.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.bmsua01.manage-beta.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.bmsub01.manage-beta.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msua01.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msua02.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msua04.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msua05.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msua06.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msua07.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msua08.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msua09.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msub01.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msub02.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msub03.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msub05.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msub06.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msub07.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msub09.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msuc01.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msuc02.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msuc03.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msuc05.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msuc06.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.msud01.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.shmsua01.manage-selfhost.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://fef.shmsua02.manage-selfhost.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://financials.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
-        "https://firstparty.sphere.azure.net/api": "7c209960-a417-423c-b2e3-9251907e63fe",
         "https://forms.cloud.microsoft": "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87",
         "https://forms.cloud.microsoft/": "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87",
         "https://forms.office.com": "c9a559d2-7aab-4f13-a6ed-e7e9c52aec87",
@@ -27527,49 +26853,12 @@
         "https://home.office.com/": "4345a7b9-9a63-4910-a426-35363201d503",
         "https://ic3-testing.teams.office.com": "55bdc56c-2b15-4538-aa37-d0c008c8c430",
         "https://ic3.teams.office.com": "39aaf054-81a5-48c7-a4f8-0293012095b9",
-        "https://incadea-fastfit.api.bc.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
         "https://incidents.diagnostics-eudb.office.com": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
         "https://incidents.diagnostics.office.com": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
         "https://incidents.diagnosticssdf.office.com": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
         "https://ind-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
-        "https://infoma.api.bc.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
         "https://insiders.labs.azure.com": "835b2a73-6e10-4aa5-a979-21dfda45231c",
-        "https://israelcentral1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://israelcentral1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://italynorth1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://italynorth1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japaneast0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japaneast1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japaneast1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japaneast2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japaneast3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japaneast4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japanwest0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japanwest1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japanwest1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japanwest2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japanwest3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://japanwest4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://jpe-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://jpe-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://jpe-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://jpe-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://jpe-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://jpn-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
-        "https://jpw-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://jpw-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://koreacentral0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreacentral1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreacentral1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreacentral2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreacentral3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreacentral4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreasouth0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreasouth1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreasouth1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreasouth2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreasouth3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://koreasouth4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://labs.azure.com": "835b2a73-6e10-4aa5-a979-21dfda45231c",
         "https://lam-kmp.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://lcs.dynamics.com": "913c6de4-2a4a-4a61-a9ce-945d2b2ce2e0",
@@ -27590,12 +26879,7 @@
         "https://m365.cloud.microsoft/v2": "4765445b-32c6-49b0-83e6-1d93765276ca",
         "https://m365.go.microsoft/v2": "4765445b-32c6-49b0-83e6-1d93765276ca",
         "https://m365adminservices.microsoft.com": "6b91db1b-f05b-405a-a0b2-e3f60b28d645",
-        "https://manage-beta.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://manage-beta.microsoft.com/": "0000000a-0000-0000-c000-000000000000",
         "https://manage-gcc.office.com": "c5393580-f805-4401-95e8-94b7a6ef2fc2",
-        "https://manage-selfhost.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://manage.microsoft.com/": "0000000a-0000-0000-c000-000000000000",
         "https://manage.office.com": "c5393580-f805-4401-95e8-94b7a6ef2fc2",
         "https://manage.office365.us": "c5393580-f805-4401-95e8-94b7a6ef2fc2",
         "https://manage.protection.apps.mil": "c5393580-f805-4401-95e8-94b7a6ef2fc2",
@@ -27604,8 +26888,6 @@
         "https://management.core.windows.net/": "797f4846-ba00-4fd7-ba43-dac1f8f63013",
         "https://managementapi.securitycenter.windows.com": "fc780465-2017-40d4-a0c5-307022471b92",
         "https://managementapi.securitycenter.windows.com/": "fc780465-2017-40d4-a0c5-307022471b92",
-        "https://mexicocentral1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://mexicocentral1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://microsoft.sharepoint-df.com": "00000003-0000-0ff1-ce00-000000000000",
         "https://middletier.dod.teams.microsoft.us": "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe",
         "https://middletier.gov.teams.microsoft.us": "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe",
@@ -27613,7 +26895,6 @@
         "https://mil.analysis.usgovcloudapi.net/powerbi/api-management": "fc4979e5-0aa5-429f-b13a-5d1365be5566",
         "https://monitoringplatform.teams.microsoft.com": "f2537abf-644e-4a0d-9f7b-c91c45c643db",
         "https://msai-kmd.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
-        "https://msai.meetingintelligence.ai": "038187f5-ca69-4382-8c0b-8d87708d099f",
         "https://msbbotservice.microsoft.com": "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7",
         "https://msg.teams.microsoft.com": "4cba1704-a0c1-45ee-9d41-fe75b4ef9190",
         "https://msit.cosmic.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
@@ -27627,19 +26908,11 @@
         "https://nam.kmgcc.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://nam1.msgraph.msappproxy.net/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://nam1.msgraph.msappproxy.net:8082/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
-        "https://naprodprv3.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://ncu.prv.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://ncu.prv.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://ncu.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://ncu.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://ncuportalprv.office.com": "00000006-0000-0ff1-ce00-000000000000",
-        "https://neu-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://neu-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://neu-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://neu-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://neu-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://neu-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://neu-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://neu.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://neu.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://newzealandnorth-web.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
@@ -27721,7 +26994,6 @@
         "https://onenote.gcc.osi.office365.us/": "2d4d3d8e-2be3-4bef-9f87-7875a61c29de",
         "https://onenote.osi.apps.mil/": "2d4d3d8e-2be3-4bef-9f87-7875a61c29de",
         "https://onenote.osi.office365.us/": "2d4d3d8e-2be3-4bef-9f87-7875a61c29de",
-        "https://onestb.cloudapp.net/": "c44b4083-3bb0-49c1-b47d-974e53cbdf3c",
         "https://onestore-df.microsoft.com": "45a330b1-b1ec-4cc1-9161-9f03992aa49f",
         "https://onestore.corp.microsoft.com": "45a330b1-b1ec-4cc1-9161-9f03992aa49f",
         "https://onestore.dev.microsoft.com": "45a330b1-b1ec-4cc1-9161-9f03992aa49f",
@@ -27729,13 +27001,11 @@
         "https://outlook-sdf.office.com/": "00000002-0000-0ff1-ce00-000000000000",
         "https://outlook-sdf.office.com/FocusedInbox": "b669c6ea-1adf-453f-b8bc-6d526592b419",
         "https://outlook-sdf.office.com/FocusedInboxB2": "b669c6ea-1adf-453f-b8bc-6d526592b419",
-        "https://outlook-sdf.office.com/messagerecallnetcore": "0e90d0b8-039a-4936-a6f4-d25dd510be5d",
         "https://outlook-sdf.office.com/messagerecallnetcore/": "0e90d0b8-039a-4936-a6f4-d25dd510be5d",
         "https://outlook-sdf.office365.com/": "00000002-0000-0ff1-ce00-000000000000",
         "https://outlook-sdf.office365.com/tenantfeedback": "4439d626-9bfa-41ca-805d-5c264263bc71",
         "https://outlook-tdf-2.office.com/": "00000002-0000-0ff1-ce00-000000000000",
         "https://outlook-tdf.office.com/": "00000002-0000-0ff1-ce00-000000000000",
-        "https://outlook-tdf.office.com/messagerecallnetcore": "0e90d0b8-039a-4936-a6f4-d25dd510be5d",
         "https://outlook-tdf.office.com/messagerecallnetcore/": "0e90d0b8-039a-4936-a6f4-d25dd510be5d",
         "https://outlook-tdf.office.com/search": "66a88757-258c-4c72-893c-3e8bed4d6899",
         "https://outlook.com/": "00000002-0000-0ff1-ce00-000000000000",
@@ -27744,7 +27014,6 @@
         "https://outlook.office.com/FocusedInbox": "b669c6ea-1adf-453f-b8bc-6d526592b419",
         "https://outlook.office.com/FocusedInboxB2": "b669c6ea-1adf-453f-b8bc-6d526592b419",
         "https://outlook.office.com/autosuggest": "66a88757-258c-4c72-893c-3e8bed4d6899",
-        "https://outlook.office.com/messagerecallnetcore": "0e90d0b8-039a-4936-a6f4-d25dd510be5d",
         "https://outlook.office.com/messagerecallnetcore/": "0e90d0b8-039a-4936-a6f4-d25dd510be5d",
         "https://outlook.office.com/search": "66a88757-258c-4c72-893c-3e8bed4d6899",
         "https://outlook.office.com/tenantfeedback": "4439d626-9bfa-41ca-805d-5c264263bc71",
@@ -27761,11 +27030,8 @@
         "https://outlook.office365.com/weve": "3c896ded-22c5-450f-91f6-3d1ef0848f6e",
         "https://outlook.office365.com/wevengine": "3c896ded-22c5-450f-91f6-3d1ef0848f6e",
         "https://outlook.office365.com:443/": "00000002-0000-0ff1-ce00-000000000000",
-        "https://pagql.microsoft-int.com": "3e53edf8-185f-4fb1-b849-97faed43d817",
-        "https://pagql.microsoft.com": "3e53edf8-185f-4fb1-b849-97faed43d817",
         "https://partner.outlook.cn/autosuggest": "66a88757-258c-4c72-893c-3e8bed4d6899",
         "https://partner.outlook.cn/search": "66a88757-258c-4c72-893c-3e8bed4d6899",
-        "https://pas.windows.net/": "0469d4cd-df37-4d93-8a61-f8c75b809164",
         "https://passwordbreach.microsoft.com": "bdd48c81-3a58-4ea9-849c-ebea7f6b6360",
         "https://passwordreset.microsoftonline.com": "93625bc8-bfe2-437a-97e0-3d0060024faa",
         "https://passwordreset.microsoftonline.com/": "93625bc8-bfe2-437a-97e0-3d0060024faa",
@@ -27782,35 +27048,21 @@
         "https://portal.microsoft.com/*": "00000006-0000-0ff1-ce00-000000000000",
         "https://portal.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://portal.office.com/": "00000006-0000-0ff1-ce00-000000000000",
-        "https://portal.windowsazure.com/": "c44b4083-3bb0-49c1-b47d-974e53cbdf3c",
         "https://power-apis-usdod-001.azure-apihub.us": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
-        "https://power-apis-usgov001-public.azure-apihub.us": "d93420f9-abc8-46b7-b7fc-30ec1f007ee2",
-        "https://power-apis-usgov001-public.consent.azure-apihub.us": "d93420f9-abc8-46b7-b7fc-30ec1f007ee2",
         "https://power-apis-usgov001-sovereign.azure-apihub.us": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://power-apis-usgov001-sovereign.consent.azure-apihub.us": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://powerquery.microsoft.com": "f3b07414-6bf4-46e6-b63f-56941f3f4128",
-        "https://ppe.botframework.com/": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
         "https://ppe.edgesync.microsoft.com": "a4f2693f-129c-4b96-982b-2c364b8314d7",
-        "https://pptservicescast.officeapps.live.com": "1bcf809c-9b88-4be3-8b3c-7131d25fc05d",
         "https://presence.dod.teams.microsoft.us/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://presence.gcc.teams.microsoft.com/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://presence.gov.teams.microsoft.us/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://presence.teams.microsoft.com/": "1e70cd27-4707-4589-8ec5-9bd20c472a46",
         "https://print.print.azure.us": "da9b70f6-5323-4ce6-ae5c-88dcc5082966",
         "https://print.print.microsoft.com": "da9b70f6-5323-4ce6-ae5c-88dcc5082966",
-        "https://prod-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://prod.asyncgw.teams.microsoft.com": "7084e364-df71-4a4a-9e8f-d375b5529913",
-        "https://prod.fis.office-int.com/": "e521cb67-22c8-4b2b-aaa5-e94bb3eec243",
         "https://prod.shiftr.onmicrosoft.com": "aa580612-c342-4ace-9055-8edee43ccb89",
-        "https://prodbubble-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://prodware-scm.api.bc.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
-        "https://profiles.view.api.account.microsoft.com": "f7a2a81e-ab33-4560-a3dd-6ddca3c5ec6d",
-        "https://projectbabylon.azure.net": "73c2949e-da2d-457a-9607-fcc665198967",
-        "https://projectbabylon.azure.net/": "73c2949e-da2d-457a-9607-fcc665198967",
-        "https://projectmadeira.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
         "https://protection.office.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
         "https://proxy.cloudwebappproxy.net/registerapp": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
-        "https://prv.assist.microsoft.com": "2b8844d8-6c87-4fce-97a0-fbec9006e140",
         "https://prv.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://prv.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://ps.compliance.protection.outlook.com": "00000002-0000-0ff1-ce00-000000000000",
@@ -27822,8 +27074,6 @@
         "https://public.msgraph.msappproxy.net:8082/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://publicapi-prd.trafficmanager.net": "fc780465-2017-40d4-a0c5-307022471b92",
         "https://publicapi-prd.trafficmanager.net/": "fc780465-2017-40d4-a0c5-307022471b92",
-        "https://purview.azure.net": "73c2949e-da2d-457a-9607-fcc665198967",
-        "https://purview.azure.net/": "73c2949e-da2d-457a-9607-fcc665198967",
         "https://pushchannel.1drv.ms": "4747d38e-36c5-4bc3-979b-b0ef74df54d1",
         "https://pushchanneldf.1drv.ms": "4747d38e-36c5-4bc3-979b-b0ef74df54d1",
         "https://qatarcentral1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
@@ -27844,14 +27094,12 @@
         "https://reports.office365.us": "507bc9da-c4e2-40cb-96a7-ac90df92685c",
         "https://reports.office365.us/odata": "507bc9da-c4e2-40cb-96a7-ac90df92685c",
         "https://research-kmt.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
-        "https://retailservices-ppe.teams.microsoft.com": "75f31797-37c9-498e-8dc9-53c16a36afca",
         "https://retailservices.teams.microsoft.com": "75efb5bc-18a1-4e7b-8a66-2ad2503d79c6",
         "https://s2s.tasks.office.net": "09abbdfd-ed23-44ee-a2d9-a627aa1c90f3",
         "https://sa.lcs.dynamics.com": "913c6de4-2a4a-4a61-a9ce-945d2b2ce2e0",
         "https://saraonlinedev.azurewebsites.net/": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
         "https://saraonlineinternal.azurewebsites.net": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
         "https://saraonlinetest.azurewebsites.net": "57da3f69-2d82-4c17-9e57-2e6d78b2dc60",
-        "https://scratch.botframework.com/": "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
         "https://scu.prv.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://scu.prv.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://scu.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
@@ -27859,17 +27107,7 @@
         "https://scuportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://scuportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
         "https://scuportalprv.office.com": "00000006-0000-0ff1-ce00-000000000000",
-        "https://scus-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://scus-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://scus-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://sdfv2-kms.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
-        "https://sea-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://sea-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://sea-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://sea-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://sea-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://sea-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://sea-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://sea.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://sea.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://seaportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
@@ -27883,9 +27121,6 @@
         "https://securitycenter.onmicrosoft.com/windowsatpservice/": "fc780465-2017-40d4-a0c5-307022471b92",
         "https://securityoperations.microsoft.com": "fc780465-2017-40d4-a0c5-307022471b92",
         "https://securityoperations.microsoft.com/": "fc780465-2017-40d4-a0c5-307022471b92",
-        "https://serenicnavigator.api.bc.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
-        "https://service.flow.appsplatform.us": "7abdc2e3-67d5-4ccf-8138-e133192788e3",
-        "https://service.flow.appsplatform.us/": "7abdc2e3-67d5-4ccf-8138-e133192788e3",
         "https://service.flow.microsoft.com/": "7df0a125-d3be-4c96-aa54-591f83ff541c",
         "https://service.powerapps.com": "475226c6-020e-4fb2-8a90-7a972cbfc1d4",
         "https://service.powerapps.com/": "475226c6-020e-4fb2-8a90-7a972cbfc1d4",
@@ -27910,80 +27145,13 @@
         "https://signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://sip.compliance.microsoft.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
-        "https://sip.goals.cloud.microsoft": "c8423563-e8f6-49f2-924b-90d9f664378a",
         "https://sip.protection.office.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
         "https://sip.security.microsoft.com/": "80ccca67-54bd-44ab-8625-4b79c4dc7775",
         "https://siteapi.crm2.crmlivetie.com/": "00000007-0000-0000-c000-000000000000",
-        "https://southafricanorth0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricanorth1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricanorth1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricanorth2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricanorth3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricanorth4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricanorthR-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricawest0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricawest1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricawest1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricawest2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricawest3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricawest4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southafricawestR-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://southcentralus0-0sf.kmb.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
         "https://southcentralus0-0sf.kms.svc.ms": "dcad865d-9257-4521-ad4d-bae3e137b345",
-        "https://southcentralus0-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus0-akamai.medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus0-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus0-medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus1-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus1-akamai.medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus1-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus1-medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus2-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus2-akamai.medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus2-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus2-medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus3-akamai.medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus3-medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus4-akamai.medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralus4-medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southcentralusr-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://southeastasia.api.loganalytics.io": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
         "https://southeastasia.api.loganalytics.io/": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
-        "https://southeastasia0-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia0-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia1-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia1-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia2-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia3-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia4-mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasia4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southeastasiar-akamai.mediab.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southindia0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southindia1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southindia1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southindia2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southindia3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://southindia4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://spaincentral1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://sparkrock365.api.bc.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
-        "https://spdf-medias.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://spza-canary.net": "a0e1e353-1a3e-42cf-a8ea-3a9746eec58c",
-        "https://spza-prod.net": "a0e1e353-1a3e-42cf-a8ea-3a9746eec58c",
-        "https://spza-staging.net": "a0e1e353-1a3e-42cf-a8ea-3a9746eec58c",
-        "https://sql.azuresynapse-dogfood.net": "022907d3-0f1b-48f7-badc-1ba6abab6d66",
-        "https://sql.azuresynapse.net": "022907d3-0f1b-48f7-badc-1ba6abab6d66",
-        "https://sql.azuresynapse.net/": "022907d3-0f1b-48f7-badc-1ba6abab6d66",
         "https://stbotsdemo.cloudapp.net": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://stbotsdemo.cloudapp.net/v3/MsftBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://stbotsdemo.cloudapp.net/v3/WhoBot": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
@@ -28004,7 +27172,6 @@
         "https://substrate.office.com/": "ec156f81-f23a-47bd-b16f-9fb2c66420f9",
         "https://substrate.office.com/CompliancePolicy": "644c1b11-f63f-45fa-826b-a9d2801db711",
         "https://substrate.office.com/CompliancePolicy/api/v1.0/ClientSyncFileV2": "00000007-0000-0ff1-ce00-000000000000",
-        "https://substrate.office.com/CompliancePolicySyncService": "644c1b11-f63f-45fa-826b-a9d2801db711",
         "https://substrate.office.com/FocusedInbox": "b669c6ea-1adf-453f-b8bc-6d526592b419",
         "https://substrate.office.com/FocusedInboxB2": "b669c6ea-1adf-453f-b8bc-6d526592b419",
         "https://substrate.office.com/GraphConnectors": "56c1da01-2129-48f7-9355-af6d59d42766",
@@ -28019,7 +27186,6 @@
         "https://substrate.office.com/scd": "56c1da01-2129-48f7-9355-af6d59d42766",
         "https://substrate.office.com/scis": "aa813f0e-407a-459d-93af-805f2bf10f33",
         "https://substrate.office.com/search": "66a88757-258c-4c72-893c-3e8bed4d6899",
-        "https://substrate.office.com/sydney": "fb8d773d-7ef8-4ec0-a117-179f88add510",
         "https://substrate.office.com/tenantfeedback": "4439d626-9bfa-41ca-805d-5c264263bc71",
         "https://substrate.office.com/weve": "3c896ded-22c5-450f-91f6-3d1ef0848f6e",
         "https://substrate.office.com:443/": "ec156f81-f23a-47bd-b16f-9fb2c66420f9",
@@ -28028,35 +27194,12 @@
         "https://suite.office.net": "e8bdeda8-b4a3-4eed-b307-5e2456238a77",
         "https://sukportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://sukportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
-        "https://support.iam.ad.azure.com": "a57aca87-cbc0-4f3c-8b9e-dc095fdc8978",
         "https://svc.prv.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://svc.prv.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://svc.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://svc.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://sway.com/": "905fcf26-4eb7-48a0-9ff0-8dcc7194b5ba",
-        "https://swedencentral0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://swedencentral1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://swedencentral1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://swedencentral2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://swedensouth0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://swedensouth1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://swedensouth1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://swedensouth2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandnorth0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandnorth1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandnorth1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandnorth2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandnorth3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandnorth4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandwest0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandwest1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandwest1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandwest2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandwest3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://switzerlandwest4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://syncservice.o365syncservice.com": "870c4f2e-85b6-4d43-bdda-6ed9a579b725",
-        "https://tables.office.com/": "166f1b03-5b19-416f-a94b-1d7aa2d247dc",
-        "https://tables.officeppe.com/": "166f1b03-5b19-416f-a94b-1d7aa2d247dc",
         "https://tabs.teams.microsoft.com": "ab3be6b7-f5df-413d-ac2d-abf1e3fd9c0b",
         "https://tags.gov.teams.microsoft.us": "78462efa-e271-409c-a90b-ce3fbd93538a",
         "https://tags.teams.microsoft.com": "78462efa-e271-409c-a90b-ce3fbd93538a",
@@ -28066,12 +27209,10 @@
         "https://taiwannorthwest1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://tasks.gcc.teams.microsoft.com": "75f31797-37c9-498e-8dc9-53c16a36afca",
         "https://tasks.office.com": "09abbdfd-ed23-44ee-a2d9-a627aa1c90f3",
-        "https://tasks.teams.microsoft.com": "75f31797-37c9-498e-8dc9-53c16a36afca",
         "https://teams.cloud.microsoft/6bc3b958-689b-49f5-9006-36d165f30e00": "6bc3b958-689b-49f5-9006-36d165f30e00",
         "https://teams.microsoft.com": "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe",
         "https://teams.microsoft.com/": "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe",
         "https://teams.yammer.com": "00000005-0000-0ff1-ce00-000000000000",
-        "https://teamsappmonet.prod.teams.microsoft.com": "bf61aded-9a54-4603-be22-84d20158607b",
         "https://teamsgraph.dod.teams.microsoft.us": "ab3be6b7-f5df-413d-ac2d-abf1e3fd9c0b",
         "https://teamsgraph.dod.teams.microsoft.us/": "ab3be6b7-f5df-413d-ac2d-abf1e3fd9c0b",
         "https://teamsgraph.gcc.teams.microsoft.com": "ab3be6b7-f5df-413d-ac2d-abf1e3fd9c0b",
@@ -28085,7 +27226,6 @@
         "https://titles.msit.mos.microsoft.com": "e8be65d6-d430-4289-a665-51bf2a194bda",
         "https://titles.msitprv.mos.microsoft.com": "e8be65d6-d430-4289-a665-51bf2a194bda",
         "https://titles.prod.mos.microsoft.com": "e8be65d6-d430-4289-a665-51bf2a194bda",
-        "https://to-increase-food.api.bc.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
         "https://tokenstore.azure.net": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://tokenvault.azure.net": "fe053c5f-3692-4f14-aef2-ee34fc081cae",
         "https://uae.lcs.dynamics.com": "913c6de4-2a4a-4a61-a9ce-945d2b2ce2e0",
@@ -28221,10 +27361,6 @@
         "https://vvm-dev.teams.microsoft.com": "e97edbaf-39b2-4546-ba61-0a24e1bef890",
         "https://vvm-int.teams.microsoft.com": "e97edbaf-39b2-4546-ba61-0a24e1bef890",
         "https://vvm.teams.microsoft.com": "e97edbaf-39b2-4546-ba61-0a24e1bef890",
-        "https://warehouse.manage-beta.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://warehouse.manage-selfhost.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://warehouse.manage.microsoft.com": "0000000a-0000-0000-c000-000000000000",
-        "https://wcus0.app.vssps.visualstudio.com": "499b84ac-1321-427f-aa17-267ca6975798",
         "https://wcus1.msgraph.msappproxy.net/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://wcus1.msgraph.msappproxy.net:8082/": "47ee738b-3f1a-4fc7-ab11-37e4822b007e",
         "https://web.yammer.com/embed": "00000005-0000-0ff1-ce00-000000000000",
@@ -28235,32 +27371,8 @@
         "https://westcentralus.api.loganalytics.io/": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
         "https://westeurope.api.loganalytics.io": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
         "https://westeurope.api.loganalytics.io/": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
-        "https://westeurope0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westeurope1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westeurope1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westeurope2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westeurope3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westeurope4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westindia0-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westindia1-akamai.mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westindia1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westindia2-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westindia3-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westindia4-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westus1-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
         "https://westus2.api.loganalytics.io": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
         "https://westus2.api.loganalytics.io/": "ca7f3f0b-7d91-482c-8e09-c5d840d0eac5",
-        "https://westus21-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://westus31-mediap.svc.ms": "944f0bd1-117b-4b1c-af26-804ed95e767e",
-        "https://weu-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://weu-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://weu-001.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://weu-001.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://weu-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://weu-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://weu-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://weu-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://weu-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://weu.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://weu.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://weuportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
@@ -28268,26 +27380,12 @@
         "https://whiteboard.microsoft.com": "95de633a-083e-42f5-b444-a4295d8e9314",
         "https://who.bots.gcc.teams.microsoft.com": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
         "https://who.bots.teams.microsoft.com": "64f79cb9-9c82-4199-b85b-77e35b7dcbcb",
-        "https://wiise.api.bc.dynamics.com": "996def3d-b36c-4153-8607-a6fd3c01b89f",
         "https://wip.mam.manage.microsoft.com/": "0a5f63c0-b750-4f38-a71c-4fc0d58b89e2",
         "https://wns.windows.com/": "04436913-cf0d-4d2a-9cc6-2ffe7f1d3d1c",
-        "https://workspaceartifacts.projectarcadia.net": "1ac05c7e-12d2-4605-bf9d-549d7041c6b3",
-        "https://workspaceartifacts.projectarcadia.net/": "1ac05c7e-12d2-4605-bf9d-549d7041c6b3",
         "https://wukportal.office.com/": "00000006-0000-0ff1-ce00-000000000000",
         "https://wukportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
-        "https://wus-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus-011.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus-azsc-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus-azsc-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus-azsc-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://wus.signup.microsoft.com": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
         "https://wus.signup.microsoft.com/": "b4bddae8-ab25-483e-8670-df09b9f1d0ea",
-        "https://wus2-000.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus2-000.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus2-010.shredder.osi.office.net": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
-        "https://wus2-010.shredder.osi.office.net/": "b97b6bd4-a49f-4a0c-af18-af507d1da76c",
         "https://wusportal.office.com": "00000006-0000-0ff1-ce00-000000000000",
         "https://wusportal.office.com/*": "00000006-0000-0ff1-ce00-000000000000",
         "https://wusportalprv.office.com": "00000006-0000-0ff1-ce00-000000000000",

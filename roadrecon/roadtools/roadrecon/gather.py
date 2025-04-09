@@ -25,7 +25,6 @@ from roadtools.roadlib.metadef.database import (
 from sqlalchemy import bindparam, func, text
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
 
 warnings.simplefilter('ignore')
 token = None
@@ -125,14 +124,11 @@ def checktoken():
         auth.tokendata = token
         if 'useragent' in token:
             auth.set_user_agent(token['useragent'])
-        if 'originheader' in token:
-            auth.set_origin_value(token['originheader'])
         if 'refreshToken' in token:
-            print("- Attempting token refresh -")
             token = auth.authenticate_with_refresh(token)
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
             expiretime = time.time() + token['expiresIn']
-            print('+ Refreshed token +')
+            print('Refreshed token')
             return True
         elif time.time() > expiretime:
             print('Access token is expired, but no access to refresh token! Dumping will fail')
@@ -723,17 +719,8 @@ def main(args=None):
             dburl = 'sqlite:///' + args.database
     else:
         dburl = args.database
-    try:
-        _, tokendata = Authentication.parse_accesstoken(token['accessToken'])
-    except KeyError:
-        print('No access token found in tokenfile')
-        return
-    if tokendata['aud'] not in ('https://graph.windows.net', 'https://graph.windows.net/', '00000002-0000-0000-c000-000000000000'):
-        print(f"Wrong token audience, got {tokendata['aud']} but expected https://graph.windows.net")
-        print("Make sure to request a token with -r https://graph.windows.net")
-        return
 
-    headers['Authorization'] = f"Bearer {token['accessToken']}"
+    headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
 
     seconds = time.perf_counter()
     loop = asyncio.get_event_loop()

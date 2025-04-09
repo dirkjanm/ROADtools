@@ -1,0 +1,21 @@
+services:
+  frontend:
+    build:
+      context: frontend-ng
+      target: ${TARGET:-prod}
+    ports:
+      - 5173:5173
+    volumes:
+      - ./frontend-ng/:/usr/src/app/
+    restart: always
+    depends_on:
+      - backend
+  backend:
+    build:
+      context: .
+      target: ${TARGET:-prod}
+    volumes:
+      - ./:/app/
+    ports:
+      - 5000:5000
+    restart: always

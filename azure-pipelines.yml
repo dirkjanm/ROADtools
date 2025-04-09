@@ -13,14 +13,16 @@ jobs:
 
   strategy:
     matrix:
+      Python37:
+        python.version: '3.7'
+      Python38:
+        python.version: '3.8'
       Python39:
         python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
-      Python312:
-        python.version: '3.12'
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -32,7 +34,7 @@ jobs:
     displayName: 'Install pip'
 
   - script: |
-      pip install ".[async]"
+      pip install .
       find roadtools/ -name '*.py' -exec python -m py_compile {} \;
     displayName: 'Install ROADlib'
     workingDirectory: roadlib
@@ -82,21 +84,9 @@ jobs:
       set -e
       roadtx gettokens -u $rtuser -p $rtpass -r drs
       roadtx device -a join -c pipeline.pem -k pipeline.key
-      retry_if_fail() {
-        set +e
-        local exit_code=0
-        for i in 1 2 3 4 5; do
-            "$@"
-            exit_code=$?
-            if [ $exit_code -eq 0 ]; then
-                break
-            fi
-            if [ $i -lt 5 ]; then
-                sleep 10s
-            fi
-        done
-        set -e
-        return $exit_code
+      retry_if_fail()
+      {
+          for i in 1 2 3 4 5; do "$@" && break || sleep 10s; done
       }
       retry_if_fail roadtx prt -a request -c pipeline.pem -k pipeline.key -u $rtuser -p $rtpass >/dev/null
       retry_if_fail roadtx prtauth
@@ -112,10 +102,7 @@ jobs:
   - script: |
       pip install pytest pytest-flask
       py.test tests/
-    displayName: 'Run ROADrecon API tests and roadlib async tests'
-    env:
-      rtuser: $(rtuser)
-      rtpass: $(rtpass)
+    displayName: 'Run ROADrecon API tests'
 
 - job: Build
   dependsOn: Tests

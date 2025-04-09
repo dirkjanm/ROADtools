@@ -13,7 +13,6 @@ ISSUER = os.environ.get("ISSUER", '{ISSUER}')
 PRIVKEY = os.environ.get("PRIVKEY", '''{PRIVKEY}''')
 KEYID = os.environ.get("KEYID", '''{KEYID}''')
 CERT = os.environ.get('CERT','''{CERT}''')
-EAMENABLED = {EAM}
 """
 
 def main():
@@ -36,10 +35,6 @@ def main():
                         '--kid',
                         action='store',
                         help='Key ID to use (default: SHA1 thumbprint of generated certificate)')
-    parser.add_argument('--eam',
-                        action='store_true',
-                        help='Enable roadoidc as an External Authentication Method')
-
 
     args = parser.parse_args()
 
@@ -104,8 +99,7 @@ def main():
     filled_template = TEMPLATE.format(ISSUER=issuer,
                                       CERT=certpem.decode('utf-8'),
                                       PRIVKEY=pkpem.decode('utf-8'),
-                                      KEYID=kid,
-                                      EAM=str(bool(args.eam)))
+                                      KEYID=kid)
 
     print(f'Saving configuration to {configout}')
     with codecs.open(configout, "w", "utf-8") as f:

@@ -334,7 +334,6 @@ class User(Base, SerializeMixin):
         secondary=lnk_au_member_user,
         back_populates="memberUsers")
 
-
 class ServicePrincipal(Base, SerializeMixin):
     __tablename__ = "ServicePrincipals"
     objectType = Column(Text)

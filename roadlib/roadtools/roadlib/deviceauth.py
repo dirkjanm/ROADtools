@@ -240,7 +240,8 @@ class DeviceAuthentication():
         return reqjwt
 
     def get_prt_with_hello_key(self, username, assertion=None):
-        challenge = self.auth.get_srv_challenge_nonce()
+        authlib = self.auth
+        challenge = authlib.get_srv_challenge()['Nonce']
         if not assertion:
             assertion = self.create_hello_prt_assertion(username)
         # Construct
@@ -375,8 +376,6 @@ class DeviceAuthentication():
                 os_version = "14.5.0"
             elif device_type.lower() == "android":
                 os_version = "13.0"
-            else:
-                os_version = "1"
 
         if not device_domain:
             device_domain = "iminyour.cloud"
@@ -690,7 +689,7 @@ class DeviceAuthentication():
                 prt_request_data['client_info'] = '1'
             url = f'{authority_uri}/oauth2/v2.0/token'
 
-        res = self.auth.requests_post(url, data=prt_request_data)
+        res = self.auth.requests_post(url, data=prt_request_data, proxies=self.proxies, verify=self.verify)
 
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -706,12 +705,13 @@ class DeviceAuthentication():
 
         prtdata['session_key'] = binascii.hexlify(uwk).decode('utf-8')
         # Decrypt Kerberos keys
+        authlib = Authentication()
         for tgt in ['tgt_ad', 'tgt_cloud']:
             if tgt in prtdata:
                 tgtdata = json.loads(prtdata[tgt])
                 if tgtdata['keyType'] != 0:
                     # There is a key
-                    tgt_sessionkey = self.auth.decrypt_auth_response(tgtdata['clientKey'], uwk)
+                    tgt_sessionkey = authlib.decrypt_auth_response(tgtdata['clientKey'], uwk)
                     prtdata[tgt + '_sessionkey'] = binascii.hexlify(tgt_sessionkey).decode('utf-8')
 
         return prtdata
@@ -743,7 +743,7 @@ class DeviceAuthentication():
         # Sign with random key just to get jwt body in right encoding
         tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
         jbody = tempjwt.split('.')[1]
-        jwtbody = base64.urlsafe_b64decode(jbody+('='*(len(jbody)%4)))
+        jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
 
         # Now calculate the derived key based on random context plus jwt body
         _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)
@@ -756,9 +756,7 @@ class DeviceAuthentication():
             'client_info':'1'
         }
         if self.auth.use_cae:
-            self.auth.set_cae()
-        if self.auth.claims:
-            token_request_data['claims'] = json.dumps(self.auth.claims)
+            token_request_data['claims'] = '{"access_token":{"xms_cc":{"values":["CP1"]}}}'
         if reqtgt:
             token_request_data['tgt'] = True
         res = self.auth.requests_post(f'{authority_uri}/oauth2/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
@@ -781,13 +779,13 @@ class DeviceAuthentication():
         # Sign with random key just to get jwt body in right encoding
         tempjwt = jwt.encode(payload, os.urandom(32), algorithm='HS256', headers=headers)
         jbody = tempjwt.split('.')[1]
-        jwtbody = base64.urlsafe_b64decode(jbody+('='*(len(jbody)%4)))
+        jwtbody = base64.b64decode(jbody+('='*(len(jbody)%4)))
 
         # Now calculate the derived key based on random context plus jwt body
         _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)
 
         # Uncomment to use KDFv1
-        # _, derived_key = self.auth.calculate_derived_key(self.session_key, context)
+        # _, derived_key = authlib.calculate_derived_key(self.session_key, context)
         reqjwt = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
 
         token_request_data = {
@@ -798,8 +796,6 @@ class DeviceAuthentication():
         }
         if reqtgt:
             token_request_data['tgt'] = True
-        if self.auth.claims:
-            token_request_data['claims'] = json.dumps(self.auth.claims)
         res = self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/v2.0/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
@@ -858,7 +854,8 @@ class DeviceAuthentication():
         return self.auth.decrypt_auth_response_derivedkey(headerdata, ciphertext, iv, authtag, derived_key)
 
     def get_prt_with_password(self, username, password):
-        challenge = self.auth.get_srv_challenge_nonce()
+        authlib = Authentication()
+        challenge = authlib.get_srv_challenge()['Nonce']
         # Construct
         payload = {
             "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
@@ -874,8 +871,9 @@ class DeviceAuthentication():
         return self.request_token_with_devicecert_signed_payload(payload)
 
     def get_prt_with_samltoken(self, samltoken):
-        challenge = self.auth.get_srv_challenge_nonce()
-        # Construct request payload
+        authlib = Authentication()
+        challenge = authlib.get_srv_challenge()['Nonce']
+        # Construct
         payload = {
             "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
             "request_nonce": challenge,
@@ -888,25 +886,10 @@ class DeviceAuthentication():
         }
         return self.request_token_with_devicecert_signed_payload(payload)
 
-    def get_token_for_device(self, client_id, resource, redirect_uri=None):
-        challenge = self.auth.get_srv_challenge_nonce()
-        # Construct request payload
-        payload = {
-          "resource": resource,
-          "client_id": client_id,
-          "request_nonce": challenge,
-          "win_ver": "10.0.22621.608",
-          "grant_type": "device_token",
-          "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client_id}",
-          "iss": "aad:brokerplugin"
-        }
-        # Custom redirect_uri if needed
-        if redirect_uri:
-            payload['redirect_uri'] = redirect_uri
-        return self.request_token_with_devicecert_signed_payload(payload, reqtgt=False, reqclientinfo=False, returnreply=True)
-
     def get_prt_with_refresh_token(self, refresh_token):
-        challenge = self.auth.get_srv_challenge_nonce()
+        authlib = Authentication()
+        challenge = authlib.get_srv_challenge()['Nonce']
+
         payload = {
             "client_id": "29d9ed98-a469-4536-ade2-f981bc1d605e",
             "request_nonce": challenge,
@@ -919,24 +902,10 @@ class DeviceAuthentication():
         }
         return self.request_token_with_devicecert_signed_payload(payload)
 
-    def get_prt_with_refresh_token_v3(self, refresh_token):
-        '''
-        Request a PRT using a special refresh token using
-        prt_protocol_version v3
-        '''
-        challenge = self.auth.get_srv_challenge_nonce()
-        payload = {
-            "client_id": "29d9ed98-a469-4536-ade2-f981bc1d605e",
-            "request_nonce": challenge,
-            "scope": "openid aza",
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-        }
-        # payload['client_id'] = '38aa3b87-a06d-4817-b275-7a316988d93b'
-        return self.request_token_with_devicecert_signed_payload(payload, use_v3=True)
-
     def renew_prt(self):
-        challenge = self.auth.get_srv_challenge_nonce()
+        authlib = Authentication()
+        challenge = authlib.get_srv_challenge()['Nonce']
+
         payload = {
             "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
             "request_nonce": challenge,
@@ -950,19 +919,21 @@ class DeviceAuthentication():
             "win_ver": "10.0.19041.868",
         }
         responsedata = self.request_token_with_sessionkey_signed_payload(payload)
-        prtdata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
+        prtdata = authlib.decrypt_auth_response(responsedata, self.session_key, True)
         prtdata['session_key'] = binascii.hexlify(self.session_key).decode('utf-8')
         return prtdata
 
-    def aad_brokerplugin_prt_auth(self, client_id, resource=None, renew_prt=False, redirect_uri=None):
+    def aad_brokerplugin_prt_auth(self, client_id, resource, renew_prt=False, redirect_uri=None):
         """
         Auth using a PRT emulating the AAD Brokerplugin (WAM) client
         """
-        challenge = self.auth.get_srv_challenge_nonce()
-        client = self.auth.lookup_client_id(client_id).lower()
+        authlib = Authentication()
+        challenge = authlib.get_srv_challenge()['Nonce']
+        client = authlib.lookup_client_id(client_id).lower()
         payload = {
             "win_ver": "10.0.19041.1620",
             "scope": "openid",
+            "resource": authlib.lookup_resource_uri(resource),
             "request_nonce": challenge,
             "refresh_token": self.prt,
             "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client}",
@@ -973,9 +944,6 @@ class DeviceAuthentication():
             "iat": str(int(time.time())),
             "exp": str(int(time.time())+(3600)),
         }
-        # Resource is required to request an access token, but if we just want an id token and refresh token its optional
-        if resource:
-            payload['resource'] = self.auth.lookup_resource_uri(resource)
         # Request a new PRT, otherwise normal refresh token will be issued
         if renew_prt:
             payload['scope'] = "openid aza"
@@ -985,43 +953,5 @@ class DeviceAuthentication():
         elif client == '1b730954-1685-4b74-9bfd-dac224a7b894':
             payload['redirect_uri'] = 'https://login.microsoftonline.com/common/oauth2/nativeclient'
         responsedata = self.request_token_with_sessionkey_signed_payload(payload, False)
-        tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
-        return tokendata
-
-    def aad_brokerplugin_prt_auth_v3(self, client_id, scope=None, renew_prt=False, redirect_uri=None):
-        """
-        Auth using a PRT emulating the AAD Brokerplugin client on MacOS (and Android/etc)
-        Uses PRT protocol v3
-        """
-        challenge = self.auth.get_srv_challenge_nonce()
-        client = self.auth.lookup_client_id(client_id).lower()
-        payload = {
-            "scope": "profile offline_access openid https://graph.windows.net/.default aza",
-            # "resource": self.auth.lookup_resource_uri(resource),
-            "request_nonce": challenge,
-            "refresh_token": self.prt,
-            "iss": "0ec893e0-5785-4de6-99da-4ed124e5296c",
-            "grant_type": "refresh_token",
-            "client_id": f"{client}",
-            "aud": "login.microsoftonline.com",
-
-            "redirect_uri": "msauth://Microsoft.AAD.BrokerPlugin",
-            "aud": "https://login.windows.net/common/oauth2/v2.0/token",
-            # "client_id": "29d9ed98-a469-4536-ade2-f981bc1d605e",
-            # "iss": "29d9ed98-a469-4536-ade2-f981bc1d605e"
-        }
-        payload['scope'] = 'urn:aad:tb:update:prt/.default openid profile offline_access'
-        if not scope:
-            scope = self.auth.scope
-        payload['scope'] = scope
-        # Request new PRT instead of access token
-        if renew_prt and not 'aza' in scope.split(' '):
-            payload['scope'] += ' aza'
-        # Custom redirect_uri if needed
-        if redirect_uri:
-            payload['redirect_uri'] = redirect_uri
-        # elif client == '1b730954-1685-4b74-9bfd-dac224a7b894':
-        #     payload['redirect_uri'] = 'https://login.microsoftonline.com/common/oauth2/nativeclient'
-        responsedata = self.request_token_with_sessionkey_signed_payload_prtprotocolv3(payload, False)
-        tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
+        tokendata = authlib.decrypt_auth_response(responsedata, self.session_key, True)
         return tokendata
