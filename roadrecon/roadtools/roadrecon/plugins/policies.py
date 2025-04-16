@@ -231,20 +231,20 @@ class AccessPoliciesPlugin():
                 ot += ', '.join([escape(action) for action in clist])
             else:
                 if 'All' in clist:
-                    ot += 'All applications'
+                    ot += 'All resources'
                     break
                 if 'None' in clist:
                     ot += 'None'
                     break
                 if 'Office365' in clist:
-                    ot += 'All Office 365 applications'
+                    ot += 'All Office 365 applications '
                 if 'MicrosoftAdminPortals' in clist:
-                    ot += 'All Microsoft Admin Portals'
+                    ot += 'All Microsoft Admin Portals '
                 objects = self._get_application(clist)
                 if objects is not None: 
                     if len(objects) > 0:
                         if ctype == 'Applications':
-                            ot += 'Applications: '
+                            ot += 'Resources: '
                             ot += ', '.join([escape(uobj.displayName) for uobj in objects])
         return ot
 
@@ -521,9 +521,9 @@ class AccessPoliciesPlugin():
                 print(policy.objectId)
             detail = json.loads(policy.policyDetail[0])
             if detail['State'] == 'Reporting':
-                out['name'] += ' (<strong>Report only</strong>)'
+                out['name'] += ' (<i>Report only</i>)'
             elif detail['State'] != 'Enabled':
-                out['name'] += ' (<strong>Disabled</strong>)'
+                out['name'] += ' (<i>Disabled</i>)'
             if should_print:
                 pp.pprint(detail)
             try:
@@ -535,6 +535,7 @@ class AccessPoliciesPlugin():
                     print('Invalid policy - no conditions')
                 continue
             out['who'] = self._parse_who(conditions)
+            out['status'] = escape(detail['State'])
             out['applications'] = self._parse_application(conditions)
             out['authflows'] = self._parse_authflows(conditions)
             out['platforms'] = self._parse_platform(conditions)
@@ -612,7 +613,9 @@ class AccessPoliciesPlugin():
         for out in ol:
             table = '<thead><tr><td colspan="2">{0}</td></tr></thead><tbody>'.format(out['name'])
             table += '<tr><td>Applies to</td><td>{0}</td></tr>'.format(out['who'])
-            table += '<tr><td>Applications</td><td>{0}</td></tr>'.format(out['applications'])
+            if out['status'] != 'Enabled':
+                table += '<tr><td>Policy state</td><td>{0}</td></tr>'.format(out['status'])
+            table += '<tr><td>Resources</td><td>{0}</td></tr>'.format(out['applications'])
             if out['platforms'] != '':
                 table += '<tr><td>On platforms</td><td>{0}</td></tr>'.format(out['platforms'])
             if out['devices'] != '':
