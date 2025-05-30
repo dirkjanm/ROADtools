@@ -241,6 +241,7 @@ def main():
     appauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Application cert and key as PFX file')
     appauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
     appauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    appauth_parser.add_argument('--assertion', action='store', metavar='JWT', help='Signed JWT assertion for cert based auth')
     appauth_parser.add_argument('--cae',
                                 action='store_true',
                                 help='Request Continuous Access Evaluation tokens (requires use of scope parameter instead of resource)')
@@ -1022,6 +1023,11 @@ def main():
                 auth.authenticate_as_app_native_v2(client_secret=args.password)
             else:
                 auth.authenticate_as_app_native(client_secret=args.password)
+        elif args.assertion:
+            if args.scope:
+                auth.authenticate_as_app_native_v2(assertion=args.assertion)
+            else:
+                auth.authenticate_as_app_native(assertion=args.assertion)
         else:
             if not auth.loadappcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
                 return
