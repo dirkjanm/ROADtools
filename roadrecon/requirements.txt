@@ -1,7 +1,7 @@
 roadlib>=0.21
 flask<3
 sqlalchemy>=1.4
-marshmallow
+marshmallow<4
 flask-sqlalchemy>=2.5
 flask-marshmallow
 flask-cors
