@@ -119,7 +119,7 @@ import Card from 'primevue/card';
 import Tag from 'primevue/tag';
 import DataView from 'primevue/dataview';
 import {JsonViewer} from "vue3-json-viewer"
-import "vue3-json-viewer/dist/index.css";
+import "vue3-json-viewer/dist/vue3-json-viewer.css";
 import { showError } from '../services/toast';
 
 const filters = ref();
