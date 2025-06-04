@@ -212,6 +212,228 @@ def user_detail(id):
         abort(404)
     return user_schema.jsonify(user)
 
+@app.route("/api/policies", methods=["GET"])
+def get_policies():
+    policies = db.session.query(Policy).filter(or_(Policy.policyType == 18,Policy.policyType == 6)).order_by(Policy.displayName.asc()).all()
+    results = policies_schema.dump(policies)
+
+    for policy in results:
+        if policy['policyType'] == 18:
+            policy['policyDetail'] = json.loads(policy['policyDetail'][0])
+            if 'Conditions' in policy['policyDetail']:
+                conditions = policy['policyDetail']['Conditions']
+                if 'Applications' in conditions:
+                    applications = conditions['Applications']
+                    for key in applications.keys():
+                        resolved = []
+                        for (index, object_type) in enumerate(applications[key]):
+                            if 'Application' in applications[key][index]:
+                                for app in applications[key][index]['Applications']:
+                                    if app == "All":
+                                        resolved.append({
+                                            'displayName':'All',
+                                            'objectId':'None'
+                                        })
+                                    # If its an appId (UUID)
+                                    elif len(app) == 36:
+                                        application = db.session.query(ServicePrincipal).filter(ServicePrincipal.appId == app).first()
+                                        if application is not None:
+                                            resolved.append({
+                                                'displayName': application.displayName,
+                                                'objectId': app
+                                            })
+                                        else:
+                                            resolved.append({
+                                                'displayName': app,
+                                                'objectId': app
+                                            })
+                                    # Already resolved, just pass
+                                    else:
+                                        resolved.append({
+                                            'displayName':app,
+                                            'objectId':'None'
+                                        })
+                            applications[key][index]['Applications'] = resolved
+                if 'ServicePrincipals' in conditions:
+                    serviceprincipals = conditions['ServicePrincipals']
+                    for key in serviceprincipals.keys():
+                        resolved = []
+                        for (index, object_type) in enumerate(serviceprincipals[key]):
+                            if 'ServicePrincipals' in serviceprincipals[key][index]:
+                                for sp in serviceprincipals[key][index]['ServicePrincipals']:
+                                    if sp == "All":
+                                        resolved.append({
+                                            'displayName':'All',
+                                            'objectId':'None'
+                                        })
+                                    # If its an objectId (UUID)
+                                    elif len(sp) == 36:
+                                        serviceprincipal = db.session.query(ServicePrincipal).filter(ServicePrincipal.objectId == sp).first()
+                                        if serviceprincipal is not None:
+                                            resolved.append({
+                                                'displayName': serviceprincipal.displayName,
+                                                'objectId': sp
+                                            })
+                                        else:
+                                            resolved.append({
+                                                'displayName': sp,
+                                                'objectId': sp
+                                            })
+                                    elif sp == "None":
+                                        pass
+                                    # Already resolved, just pass
+                                    else:
+                                        resolved.append({
+                                            'displayName': sp,
+                                            'objectId':'None'
+                                        })
+                            serviceprincipals[key][index]['ServicePrincipals'] = resolved
+                if 'Users' in conditions:
+                    users = conditions['Users']
+                    for key in users.keys():
+                        for (index, object_type) in enumerate(users[key]):
+                            if 'Users' in object_type:
+                                resolved = []
+                                if 'Users' in users[key][index]:
+                                    for usr in users[key][index]['Users']:
+                                        if usr == 'None':
+                                            users[key][index] = users[key][index].pop('Users')
+                                            break
+                                        if usr == "All":
+                                            resolved.append({
+                                                'displayName':'All',
+                                                'objectId':'None'
+                                            })
+                                        # If its an appId (UUID)
+                                        elif len(usr) == 36:
+                                            user = db.session.query(User).filter(User.objectId == usr).first()
+                                            if user is not None:
+                                                resolved.append({
+                                                    'displayName': user.displayName,
+                                                    'objectId': usr
+                                                })
+                                            else:
+                                                resolved.append({
+                                                    'displayName': usr,
+                                                    'objectId': usr
+                                                })
+                                        # Already resolved, just pass
+                                        else:
+                                            resolved.append({
+                                                'displayName': usr,
+                                                'objectId':'None'
+                                            })
+                                if len(resolved) > 0:
+                                    users[key][index]['Users'] = resolved
+                            if 'Groups' in object_type:
+                                resolved = []
+                                if 'Groups' in users[key][index]:
+                                    for grp in users[key][index]['Groups']:
+                                        if grp == "All":
+                                            resolved.append({
+                                                'displayName':'All',
+                                                'objectId':'None'
+                                            })
+                                        # If its an appId (UUID)
+                                        elif len(grp) == 36:
+                                            group = db.session.query(Group).filter(Group.objectId == grp).first()
+                                            if group is not None:
+                                                resolved.append({
+                                                    'displayName': group.displayName,
+                                                    'objectId': grp
+                                                })
+                                            else:
+                                                resolved.append({
+                                                    'displayName': grp,
+                                                    'objectId': grp
+                                                })
+                                        elif grp == "None":
+                                            pass
+                                        # Already resolved, just pass
+                                        else:
+                                            resolved.append({
+                                                'displayName': grp,
+                                                'objectId':'None'
+                                            })
+                                users[key][index]['Groups'] = resolved
+                            if 'Roles' in object_type:
+                                resolved = []
+                                if 'Roles' in users[key][index]:
+                                    for rle in users[key][index]['Roles']:
+                                        if rle == "All":
+                                            resolved.append({
+                                                'displayName':'All',
+                                                'objectId':'None'
+                                            })
+                                        # If its an appId (UUID)
+                                        elif len(rle) == 36:
+                                            role = db.session.query(RoleDefinition).filter(RoleDefinition.objectId == rle).first()
+                                            if role is not None:
+                                                resolved.append({
+                                                    'displayName': role.displayName,
+                                                    'objectId': rle
+                                                })
+                                            else:
+                                                resolved.append({
+                                                    'displayName': rle,
+                                                    'objectId': rle
+                                                })
+                                        elif rle == "None":
+                                            pass
+                                        # Already resolved, just pass
+                                        else:
+                                            resolved.append({
+                                                'displayName': rle,
+                                                'objectId':'None'
+                                            })
+                                    users[key][index]['Roles'] = resolved
+                    #Cleaning up data from DB
+                    keys_to_remove = []
+                    for key, value in users.items():
+                        if isinstance(value, list) and all(isinstance(item, list) and item == ["None"] for item in value):
+                            keys_to_remove.append(key)
+                    for key in keys_to_remove:
+                        del users[key]
+                    if not users:
+                        del conditions['Users']
+                if 'Locations' in conditions:
+                    locations = conditions['Locations']
+                    for key in locations.keys():
+                        for (index, object_type) in enumerate(locations[key]):
+                            if "All" not in object_type['Locations']:
+                                translated = _translate_locations(object_type['Locations'])
+                            else:
+                                translated = object_type['Locations']
+                        conditions['Locations'][key] = translated
+        elif policy['policyType'] == 6:
+            policy['policyDetail'] = json.loads(policy['policyDetail'][0])
+
+            detail = None
+            oldpolicy = False
+
+            if 'KnownNetworkPolicies' in policy['policyDetail']:
+                    detail = policy['policyDetail']['KnownNetworkPolicies']
+                    oldpolicy = True
+            else:
+                detail = policy['policyDetail']
+            if not oldpolicy:
+                policy['trusted'] = ("trusted" in detail.get("Categories","") if detail.get("Categories") else False)
+                policy['appliestounknowncountry'] = str(detail.get("ApplyToUnknownCountry")) if detail.get("ApplyToUnknownCountry") is not None else False
+                policy['ipranges'] = ",".join(parse_compressed_cidr(detail))
+                policy['categories'] = ",".join(detail.get("Categories")) if detail.get("Categories") is not None else ""
+                policy['associated_policies'] = ",".join(parse_associated_policies(policy['policyIdentifier'],policy['trusted'],policies))
+                policy['country_codes'] = ",".join(detail.get("CountryIsoCodes")) if detail.get("CountryIsoCodes") else None
+            else:
+                policy['name'] = detail.get("NetworkName")
+                policy['trusted'] = ("trusted" in detail.get("Categories","") if detail.get("Categories") else False)
+                policy['appliestounknowncountry'] = str(detail.get("ApplyToUnknownCountry")) if detail.get("ApplyToUnknownCountry") is not None else False
+                policy['ipranges'] = ",".join(detail.get('CidrIpRanges')) if detail.get("CidrIpRanges") else ""
+                policy['categories'] = ", ".join(detail.get("Categories")) if detail.get("Categories") is not None else ""
+                policy['associated_policies'] = ",".join(parse_associated_policies(detail.get('NetworkId'),policy['trusted'],policies))
+                policy['country_codes'] =  ",".join(detail.get("CountryIsoCodes")) if detail.get("CountryIsoCodes") else None
+
+    return jsonify(results)
+
 @app.route("/api/devices", methods=["GET"])
 def get_devices():
     all_devices = db.session.query(Device).all()
@@ -415,30 +637,32 @@ def process_approle(approles, ar):
     rsp = db.session.get(ServicePrincipal, ar.resourceId)
     if ar.principalType == 'ServicePrincipal':
         sp = db.session.get(ServicePrincipal, ar.principalId)
-    if ar.principalType == 'User':
+    elif ar.principalType == 'User':
         sp = db.session.get(User, ar.principalId)
-    if ar.principalType == 'Group':
+    elif ar.principalType == 'Group':
         sp = db.session.get(Group, ar.principalId)
     if ar.id == '00000000-0000-0000-0000-000000000000':
-        approles.append({'objid':sp.objectId,
-                         'ptype':ar.principalType,
-                         'pname':sp.displayName,
-                         'app':ar.resourceDisplayName,
-                         'value':'Default',
-                         'desc':'Default Role',
-                         'spid':ar.resourceId,
-                        })
+        if sp is not None and ar is not None:
+            approles.append({'objectId':sp.objectId,
+                            'principalType':ar.principalType,
+                            'principalDisplayName':sp.displayName,
+                            'resourceDisplayName':ar.resourceDisplayName,
+                            'value':'Default',
+                            'desc':'Default Role',
+                            'spid':ar.resourceId,
+                            })
     else:
         for approle in rsp.appRoles:
             if approle['id'] == ar.id:
-                approles.append({'objid':sp.objectId,
-                                 'ptype':ar.principalType,
-                                 'pname':sp.displayName,
-                                 'app':ar.resourceDisplayName,
-                                 'value':approle['value'],
-                                 'desc':approle['displayName'],
-                                 'spid':ar.resourceId,
-                                })
+                if sp is not None and ar is not None:
+                    approles.append({'objectId':sp.objectId,
+                                    'principalType':ar.principalType,
+                                    'principalDisplayName':sp.displayName,
+                                    'resourceDisplayName':ar.resourceDisplayName,
+                                    'value':approle['value'],
+                                    'desc':approle['displayName'],
+                                    'spid':ar.resourceId,
+                                    })
 
 @app.route("/api/approles", methods=["GET"])
 def get_approles():
