@@ -229,7 +229,7 @@ export default {
       if(event.data.principal){
         this.$router.push({ name: 'RowDetail', params: { objectId: event.data.principal.objectId, objectType: event.data.principal.objectType } });
       }
-      else if(event.data.consentType == "user"){
+      else if(event.data.type == "user"){
         this.$router.push({ name: 'RowDetail', params: { objectId: event.data.userid, objectType: "User" } });
       }
       else{
