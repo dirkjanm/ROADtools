@@ -87,8 +87,8 @@ export default {
               this.serviceprincipals[i].microsoftFirstParty = this.serviceprincipals[i].microsoftFirstParty ? "True" : "False"
               this.serviceprincipals[i].passwordCredentials = this.serviceprincipals[i].passwordCredentials.length > 0 ? "True" : "False"
               this.serviceprincipals[i].keyCredentials = this.serviceprincipals[i].keyCredentials.length > 0 ? "True" : "False"
-              this.serviceprincipals[i].appRoles = this.serviceprincipals[i].appRoles.length > 0 ? this.serviceprincipals[i].appRoles.length : ""
-              this.serviceprincipals[i].oauth2Permissions = this.serviceprincipals[i].oauth2Permissions.length > 0 ? this.serviceprincipals[i].oauth2Permissions.length : ""
+              this.serviceprincipals[i].appRoles = this.serviceprincipals[i].appRoles.length > 0 ? this.serviceprincipals[i].appRoles.length : 0
+              this.serviceprincipals[i].oauth2Permissions = this.serviceprincipals[i].oauth2Permissions.length > 0 ? this.serviceprincipals[i].oauth2Permissions.length : 0
               this.serviceprincipals[i].ownerUsers = this.serviceprincipals[i].ownerUsers.length > 0 ? "True" : "False"
             }
         })
