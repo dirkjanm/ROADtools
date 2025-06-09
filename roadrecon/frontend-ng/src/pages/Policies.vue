@@ -182,7 +182,7 @@
                           v-if="policy.policyDetail.Conditions.Applications">Applications</span>
                         <div class="flex flex-wrap" v-if="policy.policyDetail.Conditions.Applications">
                           <div class="flex-1 m-4 p-tag-success p-4 rounded-2xl"
-                            v-if="policy.policyDetail.Conditions.Applications.Include">
+                            v-if="policy.policyDetail.Conditions.Applications.Include.length > 0">
                             <div
                               class="card bg-surface-0 dark:bg-surface-900 text-surface-500 dark:text-surface-300 flex justify-between !rounded-2xl">
                               <div class="overview-info">
@@ -397,8 +397,8 @@
                                       <p v-if="control != Block">{{ control }}</p>
                                       <p v-else>Deny logon</p>
                                     </li>
-                                    <li v-if="item.AuthStrengthIds">
-                                      <p>{{ resolve_authstrength(item.AuthStrengthIds) }}</p>
+                                    <li v-for="(stid) in item.AuthStrengthIds">
+                                      <p>{{ resolve_authstrength(stid) }}</p>
                                     </li>
                                   </ul>
                                 </template>
@@ -419,7 +419,9 @@
                                   <ul v-for="(item, index) in policy.policyDetail.SessionControls"
                                     class="m-0 text-surface-500 dark:text-surface-300 font-semibold ml-4">
                                     <li>
-                                      <p>{{ item }}</p>
+                                      <p v-if="item == 'SignInFrequency' && policy.policyDetail.SignInFrequencyTimeSpan">{{ item }} : {{ policy.policyDetail.SignInFrequencyTimeSpan.split(".")[0] }} day(s) {{ policy.policyDetail.SignInFrequencyTimeSpan.split(".")[1] }}</p>
+                                      <p v-else-if="item == 'PersistentBrowserSessionMode' && policy.policyDetail.PersistentBrowserSessionMode">{{ item }} : {{ policy.policyDetail.PersistentBrowserSessionMode }}</p>
+                                      <p v-else>{{ item }}</p>
                                     </li>
                                   </ul>
                                 </template>
@@ -683,7 +685,16 @@ export default {
         '00000000-0000-0000-0000-000000000003': 'Passwordless MFA',
         '00000000-0000-0000-0000-000000000004': 'Phishing-resistant MFA'
       }
-      return built_in[guid]
+      try {
+        if (guid == null || guid == '') {
+          return 'No Auth Strength';
+        }
+        result = built_in[guid]
+      } catch (e) {
+        console.error("Error resolving auth strength:", e);
+        return guid;
+      }
+      return result
     },
     goto(refName) {
     	var element = this.$refs[refName];

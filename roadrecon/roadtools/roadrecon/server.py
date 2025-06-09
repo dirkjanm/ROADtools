@@ -51,7 +51,7 @@ class RTModelSchema(ma.SQLAlchemyAutoSchema):
 class UsersSchema(ma.Schema):
     class Meta:
         model = User
-        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'dirSyncEnabled', 'userType')
+        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled', 'strongAuthenticationDetail', 'userType', 'searchableDeviceKey')
 
 class PoliciesSchema(ma.Schema):
     class Meta:
@@ -66,7 +66,7 @@ class DevicesSchema(ma.Schema):
 class DirectoryRoleSchema(ma.Schema):
     class Meta:
         model = DirectoryRole
-        fields = ('displayName', 'description', 'objectId', 'objectType')
+        fields = ('displayName', 'description', 'objectId', 'objectType', 'objectId', 'objectType')
 
 class OAuth2PermissionGrantsSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -351,35 +351,41 @@ def get_policies():
                 if 'Applications' in conditions:
                     applications = conditions['Applications']
                     for key in applications.keys():
-                        resolved = []
                         for (index, object_type) in enumerate(applications[key]):
-                            if 'Application' in applications[key][index]:
-                                for app in applications[key][index]['Applications']:
-                                    if app == "All":
-                                        resolved.append({
-                                            'displayName':'All',
-                                            'objectId':'None'
-                                        })
-                                    # If its an appId (UUID)
-                                    elif len(app) == 36:
-                                        application = db.session.query(ServicePrincipal).filter(ServicePrincipal.appId == app).first()
-                                        if application is not None:
-                                            resolved.append({
-                                                'displayName': application.displayName,
-                                                'objectId': app
-                                            })
+                            resolved = []
+                            if 'Applications' in object_type:
+                                if 'Applications' in applications[key][index]:
+                                    for app in applications[key][index]['Applications']:
+                                        if app == "All":
+                                            print(applications,file=sys.stderr)
+                                            break
+                                        # If its an appId (UUID)
+                                        elif len(app) == 36:
+                                            application = db.session.query(ServicePrincipal).filter(ServicePrincipal.appId == app).first()
+                                            if application is not None:
+                                                resolved.append({
+                                                    'displayName': application.displayName,
+                                                    'objectId': app
+                                                })
+                                            else:
+                                                resolved.append({
+                                                    'displayName': app,
+                                                    'objectId': app
+                                                })
+                                        # Already resolved, just pass
                                         else:
                                             resolved.append({
-                                                'displayName': app,
-                                                'objectId': app
+                                                'displayName':app,
+                                                'objectId':'None'
                                             })
-                                    # Already resolved, just pass
-                                    else:
-                                        resolved.append({
-                                            'displayName':app,
-                                            'objectId':'None'
-                                        })
-                            applications[key][index]['Applications'] = resolved
+                            if len(resolved) > 0:
+                                applications[key][index]['Applications'] = resolved
+                            else:
+                                applications[key][index] = []
+                        if len(applications[key][index]) == 0:
+                            del applications[key][index]
+                    if len(applications[key]) == 0:
+                        del conditions['Applications']
                 if 'ServicePrincipals' in conditions:
                     serviceprincipals = conditions['ServicePrincipals']
                     for key in serviceprincipals.keys():
@@ -669,7 +675,8 @@ def get_mfa():
             'has_app': has_app,
             'has_phonenr': has_phonenr,
             'has_fido': has_fido,
-            'strongAuthenticationDetail': user.strongAuthenticationDetail
+            'strongAuthenticationDetail': user.strongAuthenticationDetail,
+            'searchableDeviceKey': user.searchableDeviceKey
         })
     return jsonify(out)
 
@@ -760,9 +767,9 @@ def process_approle(approles, ar):
     rsp = db.session.get(ServicePrincipal, ar.resourceId)
     if ar.principalType == 'ServicePrincipal':
         sp = db.session.get(ServicePrincipal, ar.principalId)
-    elif ar.principalType == 'User':
+    if ar.principalType == 'User':
         sp = db.session.get(User, ar.principalId)
-    elif ar.principalType == 'Group':
+    if ar.principalType == 'Group':
         sp = db.session.get(Group, ar.principalId)
     if ar.id == '00000000-0000-0000-0000-000000000000':
         if sp is not None and ar is not None:
@@ -879,12 +886,12 @@ def get_oauth2permissions():
         grant = {}
         rsp = db.session.get(ServicePrincipal, permgrant.clientId)
         if permgrant.consentType == 'Principal':
-            grant['consentType'] = 'user'
+            grant['type'] = 'user'
             user = db.session.get(User, permgrant.principalId)
             grant['userid'] = user.objectId
             grant['userdisplayname'] = user.displayName
         else:
-            grant['consentType'] = 'all'
+            grant['type'] = 'all'
             grant['userid'] = None
             grant['userdisplayname'] = None
         targetapp = db.session.get(ServicePrincipal, permgrant.resourceId)
@@ -920,6 +927,8 @@ def get_allroles():
                 'scopeIds': sids
             }
             principalType, principal = resolve_objectid(assignment.principalId)
+            if principal == None:
+                break
             aobj['principal'] = principal
 
             roleobj['assignments'].append(aobj)
@@ -947,6 +956,8 @@ def get_allroles():
                 'scopeIds': sids
             }
             principalType, principal = resolve_objectid(assignment.principalId)
+            if principal == None:
+                break
             aobj['principal'] = principal
             roleobj['assignments'].append(aobj)
             if principalType == 'Group':
