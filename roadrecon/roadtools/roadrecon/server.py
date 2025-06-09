@@ -1,17 +1,27 @@
+import sys
 from flask import Flask, request, jsonify, abort, send_from_directory, redirect, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from marshmallow_sqlalchemy import ModelConverter
 from marshmallow import fields
-from roadtools.roadlib.metadef.database import User, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
+from roadtools.roadlib.metadef.database import User, Policy, JSON, Group, DirectoryRole, ServicePrincipal, AppRoleAssignment, TenantDetail, Application, Device, OAuth2PermissionGrant, AuthorizationPolicy, DirectorySetting, AdministrativeUnit, RoleDefinition
 import os
+import logging
 import argparse
-from sqlalchemy import func, and_, or_, select
+from sqlalchemy import func, and_, or_, select, desc, asc, cast
+from sqlalchemy.event import listens_for
+from sqlalchemy.pool import _ConnectionRecord
 import mimetypes
+import json
+import zlib
+import base64
+from html import escape
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+logging.getLogger('werkzeug').setLevel(logging.DEBUG)
 
 # This will get initialized later on
 db = None
@@ -41,7 +51,12 @@ class RTModelSchema(ma.SQLAlchemyAutoSchema):
 class UsersSchema(ma.Schema):
     class Meta:
         model = User
-        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'mobile', 'dirSyncEnabled', 'strongAuthenticationDetail', 'userType', 'searchableDeviceKey')
+        fields = ('objectId', 'objectType', 'userPrincipalName', 'displayName', 'mail', 'lastDirSyncTime', 'accountEnabled', 'department', 'lastPasswordChangeDateTime', 'jobTitle', 'dirSyncEnabled', 'userType')
+
+class PoliciesSchema(ma.Schema):
+    class Meta:
+        model = Policy
+        fields = ('objectId', 'objectType', 'deletionTimestamp', 'displayName', 'keyCredentials', 'policyType', 'policyDetail', 'policyIdentifier', 'tenantDefaultPolicy')
 
 class DevicesSchema(ma.Schema):
     class Meta:
@@ -51,7 +66,7 @@ class DevicesSchema(ma.Schema):
 class DirectoryRoleSchema(ma.Schema):
     class Meta:
         model = DirectoryRole
-        fields = ('displayName', 'description')
+        fields = ('displayName', 'description', 'objectId', 'objectType')
 
 class OAuth2PermissionGrantsSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -111,6 +126,10 @@ class UserSchema(RTModelSchema):
     ownedApplications = fields.Nested(ApplicationsSchema, many=True)
     ownedGroups = fields.Nested(GroupsSchema, many=True)
 
+class PolicySchema(RTModelSchema):
+    class Meta(RTModelSchema.Meta):
+        model = Policy
+
 class DeviceSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = Device
@@ -167,6 +186,7 @@ class AuthorizationPolicySchema(RTModelSchema):
 
 # Instantiate all schemas
 user_schema = UserSchema()
+policy_schema = PolicySchema()
 device_schema = DeviceSchema()
 group_schema = GroupSchema()
 application_schema = ApplicationSchema()
@@ -176,12 +196,121 @@ serviceprincipal_schema = ServicePrincipalSchema()
 administrativeunit_schema = AdministrativeUnitSchema()
 authorizationpolicy_schema = AuthorizationPolicySchema(many=True)
 users_schema = UsersSchema(many=True)
+policies_schema = PoliciesSchema(many=True)
 devices_schema = DevicesSchema(many=True)
 groups_schema = GroupsSchema(many=True)
 applications_schema = ApplicationsSchema(many=True)
 serviceprincipals_schema = ServicePrincipalsSchema(many=True)
 directoryroles_schema = DirectoryRolesSchema(many=True)
 administrativeunits_schema = AdministrativeUnitsSchema(many=True)
+
+
+def _translate_locations(locs):
+    policies = db.session.query(Policy).filter(Policy.policyType == 6).all()
+    out = []
+    # Not sure if there can be multiple
+    for policy in policies:
+        for pdetail in policy.policyDetail:
+            detaildata = json.loads(pdetail)
+            if 'KnownNetworkPolicies' in detaildata and detaildata['KnownNetworkPolicies']['NetworkId'] in locs:
+                out.append(detaildata['KnownNetworkPolicies']['NetworkName'])
+    # New format
+    for loc in locs:
+        policies = db.session.query(Policy).filter(Policy.policyType == 6, Policy.policyIdentifier == loc).all()
+        for policy in policies:
+            out.append(policy.displayName)
+    return out
+
+def parse_compressed_cidr(detail):
+    if not 'CompressedCidrIpRanges' in detail:
+            return ''
+    compressed = detail['CompressedCidrIpRanges']
+    b = base64.b64decode(compressed)
+    cstr = zlib.decompress(b, -zlib.MAX_WBITS)
+    decoded_cidrs = escape(cstr.decode()).split(",")
+    return decoded_cidrs
+
+def parse_associated_policies(location_object, is_trusted_location,condition_policy_list):
+    found_pols = []
+
+    for pol in condition_policy_list:
+        if not pol.policyDetail:
+            continue
+        parsed = json.loads(pol.policyDetail[0])
+        if not parsed.get('Conditions') or not parsed.get('Conditions').get('Locations'):
+            continue
+
+        cloc = parsed.get('Conditions').get('Locations')
+        incl = cloc.get('Include') or []
+        excl = cloc.get('Exclude') or []
+        for i in incl:
+            if location_object in i.get('Locations') or (is_trusted_location and "AllTrusted" in i.get('Locations')):
+                found_pols.append(pol.displayName)
+
+        for i in excl:
+            if location_object in i.get('Locations') or (is_trusted_location and "AllTrusted" in i.get('Locations')):
+                found_pols.append(pol.displayName)
+
+    return found_pols
+
+# Function to build a dynamic filter
+def build_dynamic_filter(schema, search_string):
+    search_string = f"%{search_string}%"  # SQL wildcard for partial match
+    filters = []
+
+    # Iterate through each field defined in the schema's Meta class
+    for field in schema._declared_fields.keys():
+        # Ensure the attribute exists in the User model
+        if hasattr(User, field):
+            filters.append(getattr(User, field).like(search_string))  # Build the filter for each field
+
+    # Return an OR combination of all filters
+    return or_(*filters)
+
+def query_all_items(request,schema,model,fields):
+    page = request.args.get('page', type=int)
+    rows = request.args.get('rows', type=int)
+    search = request.args.get('search', type=str)
+    sortedField = request.args.get('sortedField', type=str)
+    sortOrder = request.args.get('sortOrder', type=int)
+
+    query = db.session.query(model)
+    
+    if search:
+        # For now only search on the userPrincipalName and displayName fields, others will be added with advanced filtering
+        #filter = build_dynamic_filter(user_schema, search)
+        filters = []
+        for field in fields:
+            filters.append(getattr(model,field).like(f'%{search}%'))
+        
+        query = query.filter(or_(*filters))
+    
+    if sortedField:
+        field = getattr(model, sortedField)
+        if hasattr(field, 'type') and isinstance(field.type, JSON):
+            # For JSON fields, use the length of the JSON array for sorting
+            field = func.json_array_length(cast(field, db.Text))
+        elif hasattr(field, 'property') and hasattr(field.property, 'direction'):
+            # Handle relationship fields
+            field = field.property.direction.mapper.class_.id
+        if sortOrder == 1:
+            query = query.order_by(field.desc())
+        elif sortOrder == -1:
+            query = query.order_by(field.asc())
+
+    if page is None and rows is None:
+        all_items = query.all()
+        result = {
+            'items': schema.dump(all_items),
+            'total': None
+        }
+    else:
+        all_items = query.paginate(page=page, per_page=rows)
+        result = {
+            'items': schema.dump(all_items),
+            'total': all_items.total
+        }
+    return jsonify(result)
 
 @app.route("/")
 def get_index():
@@ -200,10 +329,7 @@ def get_gui(path):
 
 @app.route("/api/users", methods=["GET"])
 def get_users():
-    all_users = db.session.query(User).all()
-    result = users_schema.dump(all_users)
-    return jsonify(result)
-
+    return query_all_items(request, users_schema, User, ["userPrincipalName"])
 
 @app.route("/api/users/<id>", methods=["GET"])
 def user_detail(id):
@@ -436,10 +562,7 @@ def get_policies():
 
 @app.route("/api/devices", methods=["GET"])
 def get_devices():
-    all_devices = db.session.query(Device).all()
-    result = devices_schema.dump(all_devices)
-    return jsonify(result)
-
+    return query_all_items(request, devices_schema, Device, ["displayName"])
 
 @app.route("/api/devices/<id>", methods=["GET"])
 def device_detail(id):
@@ -458,9 +581,7 @@ def user_groups(id):
 
 @app.route("/api/groups", methods=["GET"])
 def get_groups():
-    all_groups = db.session.query(Group).all()
-    result = groups_schema.dump(all_groups)
-    return jsonify(result)
+    return query_all_items(request, groups_schema, Group, ["displayName"])
 
 @app.route("/api/groups/<id>", methods=["GET"])
 def group_detail(id):
@@ -471,9 +592,7 @@ def group_detail(id):
 
 @app.route("/api/administrativeunits", methods=["GET"])
 def get_administrativeunits():
-    all_administrativeunits = db.session.query(AdministrativeUnit).all()
-    result = administrativeunits_schema.dump(all_administrativeunits)
-    return jsonify(result)
+    return query_all_items(request, administrativeunits_schema, AdministrativeUnit, ["displayName"])
 
 @app.route("/api/administrativeunits/<id>", methods=["GET"])
 def administrativeunit_detail(id):
@@ -484,15 +603,22 @@ def administrativeunit_detail(id):
 
 @app.route("/api/serviceprincipals", methods=["GET"])
 def get_sps():
-    all_sps = db.session.query(ServicePrincipal).all()
-    return serviceprincipals_schema.jsonify(all_sps)
+    return query_all_items(request, serviceprincipals_schema, ServicePrincipal, ["displayName"])
 
 @app.route("/api/serviceprincipals/<id>", methods=["GET"])
 def sp_detail(id):
     sp = db.session.get(ServicePrincipal, id)
     if not sp:
         abort(404)
-    return serviceprincipal_schema.jsonify(sp)
+    result = serviceprincipal_schema.dump(sp)
+    for (i,elem) in enumerate(sp.appRolesAssigned):
+        resource_data = get_approle_by_resources_(sp.appRolesAssigned[i].resourceId)
+        result['appRolesAssigned'][i]['desc'] = resource_data[0]['desc']
+        result['appRolesAssigned'][i]['value'] = resource_data[0]['value']
+    if len(sp.appRolesAssignedTo) > 0:
+        principal_data = get_approles_by_principal_(sp.appRolesAssigned[0].resourceId)
+        result['appRolesAssignedTo'] = principal_data
+    return jsonify(result)
 
 @app.route("/api/serviceprincipals-by-appid/<id>", methods=["GET"])
 def sp_detail_by_appid(id):
@@ -503,9 +629,7 @@ def sp_detail_by_appid(id):
 
 @app.route("/api/applications", methods=["GET"])
 def get_applications():
-    all_applications = db.session.query(Application).all()
-    result = applications_schema.dump(all_applications)
-    return jsonify(result)
+    return query_all_items(request, applications_schema, Application, ["displayName"])
 
 @app.route("/api/mfa", methods=["GET"])
 def get_mfa():
@@ -545,8 +669,7 @@ def get_mfa():
             'has_app': has_app,
             'has_phonenr': has_phonenr,
             'has_fido': has_fido,
-            'strongAuthenticationDetail': user.strongAuthenticationDetail,
-            'searchableDeviceKey': user.searchableDeviceKey
+            'strongAuthenticationDetail': user.strongAuthenticationDetail
         })
     return jsonify(out)
 
@@ -666,38 +789,102 @@ def process_approle(approles, ar):
 
 @app.route("/api/approles", methods=["GET"])
 def get_approles():
-    approles = []
-    for ar in db.session.query(AppRoleAssignment).all():
-        process_approle(approles, ar)
-    return jsonify(approles)
+    page = request.args.get('page', type=int)
+    rows = request.args.get('rows', type=int)
+    search = request.args.get('search', type=str)
+    sortedField = request.args.get('sortedField', type=str)
+    sortOrder = request.args.get('sortOrder', type=int)
 
-@app.route("/api/approles_by_resource/<spid>", methods=["GET"])
-def get_approles_by_resource(spid):
+    approles = []
+    query = db.session.query(AppRoleAssignment)
+
+    if search:
+        # For now only search on the userPrincipalName and displayName fields, others will be added with advanced filtering
+        #filter = build_dynamic_filter(user_schema, search)
+        filters = []
+        filters.append(AppRoleAssignment.principalDisplayName.like(f'%{search}%'))
+        
+        query = query.filter(or_(*filters))
+    
+    if sortedField:
+        if sortOrder == 1:
+            query = query.order_by(getattr(AppRoleAssignment,sortedField).desc())
+        elif sortOrder == -1:
+            query = query.order_by(getattr(AppRoleAssignment,sortedField).asc())
+
+    if page is None and rows is None:
+        result = query.all()
+    else:
+        result = query.paginate(page=page, per_page=rows)
+    
+    for ar in result:
+        process_approle(approles, ar)
+    
+    result = {'items':approles,'total':result.total}
+
+    return jsonify(result)
+
+def get_approle_by_resources_(spid):
     approles = []
     for ar in db.session.query(AppRoleAssignment).filter(AppRoleAssignment.resourceId == spid):
         process_approle(approles, ar)
-    return jsonify(approles)
+    return approles
 
-@app.route("/api/approles_by_principal/<pid>", methods=["GET"])
-def get_approles_by_principal(pid):
+@app.route("/api/approles_by_resource/<spid>", methods=["GET"])
+def get_approles_by_resource(spid):
+    return jsonify(get_approle_by_resources_(spid))
+
+def get_approles_by_principal_(pid):
     approles = []
     for ar in db.session.query(AppRoleAssignment).filter(AppRoleAssignment.principalId == pid):
         process_approle(approles, ar)
-    return jsonify(approles)
+    return approles
+
+@app.route("/api/approles_by_principal/<pid>", methods=["GET"])
+def get_approles_by_principal(pid):
+    jsonify(get_approles_by_principal_(pid))
 
 @app.route("/api/oauth2permissions", methods=["GET"])
 def get_oauth2permissions():
+    page = request.args.get('page', type=int)
+    rows = request.args.get('rows', type=int)
+    search = request.args.get('search', type=str)
+    sortedField = request.args.get('sortedField', type=str)
+    sortOrder = request.args.get('sortOrder', type=int)
+
+    query = db.session.query(OAuth2PermissionGrant)
+
+    if search:
+        # For now only search on the userPrincipalName and displayName fields, others will be added with advanced filtering
+        #filter = build_dynamic_filter(user_schema, search)
+        filters = []
+        filters.append(ServicePrincipal.displayName.like(f'%{search}%'))
+        
+        query = query.filter(or_(*filters))
+
+    if sortedField:
+        if sortOrder == 1:
+            query = query.order_by(getattr(OAuth2PermissionGrant,sortedField).desc())
+        elif sortOrder == -1:
+            query = query.order_by(getattr(OAuth2PermissionGrant,sortedField).asc())
+
+    if page is None and rows is None:
+        result = query.all()
+        result.total = len(result)
+    else:
+        result = query.paginate(page=page, per_page=rows)
+
     oauth2permissions = []
-    for permgrant in db.session.query(OAuth2PermissionGrant).all():
+    for permgrant in result:
         grant = {}
         rsp = db.session.get(ServicePrincipal, permgrant.clientId)
         if permgrant.consentType == 'Principal':
-            grant['type'] = 'user'
+            grant['consentType'] = 'user'
             user = db.session.get(User, permgrant.principalId)
             grant['userid'] = user.objectId
             grant['userdisplayname'] = user.displayName
         else:
-            grant['type'] = 'all'
+            grant['consentType'] = 'all'
             grant['userid'] = None
             grant['userdisplayname'] = None
         targetapp = db.session.get(ServicePrincipal, permgrant.resourceId)
@@ -708,7 +895,8 @@ def get_oauth2permissions():
         grant['expiry'] = permgrant.expiryTime.strftime("%Y-%m-%dT%H:%M:%S")
         grant['scope'] = permgrant.scope
         oauth2permissions.append(grant)
-    return jsonify(oauth2permissions)
+
+    return jsonify({'items':oauth2permissions,'total':result.total})
 
 @app.route("/api/roledefinitions", methods=["GET"])
 def get_allroles():
@@ -841,6 +1029,7 @@ def main(args=None):
                             help='HTTP Server port (default=5000)',
                             default=5000)
         args = parser.parse_args()
+    
     if not ':/' in args.database:
         if args.database[0] != '/':
             app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.getcwd(), args.database)
@@ -852,7 +1041,7 @@ def main(args=None):
     if args.profile:
         from werkzeug.middleware.profiler import ProfilerMiddleware
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5])
-    app.run(debug=args.debug, port=args.port)
+    app.run(debug=args.debug, host='0.0.0.0', port=args.port)
 
 if __name__ == '__main__':
     main()
