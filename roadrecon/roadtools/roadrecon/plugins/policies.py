@@ -229,6 +229,10 @@ class AccessPoliciesPlugin():
             if ctype == 'Acrs':
                 ot += 'Action: '
                 ot += ', '.join([escape(action) for action in clist])
+            elif ctype == 'NetworkAccess':
+                # clist should be a dict, for example {"TrafficProfiles":"Internet"}
+                ot += 'Network access: '
+                ot += ', '.join([f"{escape(action)}: {escape(target)}" for action, target in clist.items()])
             else:
                 if 'All' in clist:
                     ot += 'All resources'
