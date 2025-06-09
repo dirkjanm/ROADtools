@@ -491,9 +491,25 @@ class AccessPoliciesPlugin():
     def _parse_sessioncontrols(self, cond):
         if not 'SessionControls' in cond:
             return ''
-        ucond = cond['SessionControls']
+        ucond = []
+        for condition in cond['SessionControls']:
+            if condition == 'SignInFrequency':
+                siftype = cond.get('SignInFrequencyType')
+                if not siftype:
+                    ucond.append('SignInFrequency (Unknown setting)')
+                elif siftype == 30:
+                    ucond.append('SignInFrequency (Every time)')
+                elif siftype == 10:
+                    sifduration = cond.get('SignInFrequencyTimeSpan', '')
+                    ucond.append(f'SignInFrequency (Every {sifduration})')
+                else:
+                    ucond.append(f'SignInFrequency (Unknown SIF type {siftype})')
+            elif condition == 'PersistentBrowserSessionMode':
+                pbmode = cond.get('PersistentBrowserSessionMode')
+                ucond.append(f'PersistentBrowserSession: {pbmode}')
+            else:
+                ucond.append(condition)
         return ', '.join(ucond)
-
 
     def _parse_compressed_cidr(self,detail):
         if not 'CompressedCidrIpRanges' in detail:
