@@ -99,8 +99,15 @@ export default {
               for(var j=0;j<this.directoryroles[i].assignments.length;j++){
                 this.directoryroles[i].assignments[j].scopeNames = this.directoryroles[i].assignments[j].scopeNames[0]
                 this.directoryroles[i].assignments[j].type = this.directoryroles[i].assignments[j].type == "assignment" ? "Active" : "Disabled"
-                this.directoryroles[i].assignments[j].principal.dirSyncEnabled = this.directoryroles[i].assignments[j].principal.dirSyncEnabled ? "AD" : "Cloud"
-                this.directoryroles[i].assignments[j].principal.accountEnabled = this.directoryroles[i].assignments[j].principal.accountEnabled ? "Enabled" : "Disabled"
+                if(this.directoryroles[i].assignments[j].principal){
+                  if(this.directoryroles[i].assignments[j].principal.objectType == "User"){
+                    this.directoryroles[i].assignments[j].principal.dirSyncEnabled = this.directoryroles[i].assignments[j].principal.dirSyncEnabled ? "AD" : "Cloud"
+                    this.directoryroles[i].assignments[j].principal.accountEnabled = this.directoryroles[i].assignments[j].principal.accountEnabled ? "Enabled" : "Disabled"
+                  }
+                  if(this.directoryroles[i].assignments[j].principal.objectType == "ServicePrincipal"){
+                    this.directoryroles[i].assignments[j].principal.accountEnabled = this.directoryroles[i].assignments[j].principal.accountEnabled ? "Enabled" : "Disabled"
+                  }
+                }
               }
             }
         })
