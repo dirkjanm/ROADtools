@@ -106,7 +106,7 @@ class DeviceAuthentication():
                 if transport_only:
                     # Only load as transport key
                     self.transportkeydata = keyf.read()
-                    self.transportprivkey = serialization.load_pem_private_key(self.keydata, password=None)
+                    self.transportprivkey = serialization.load_pem_private_key(self.transportkeydata, password=None)
                 else:
                     self.transportkeydata = self.keydata = keyf.read()
                     self.transportprivkey = self.privkey = serialization.load_pem_private_key(self.keydata, password=None)
