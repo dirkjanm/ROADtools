@@ -35,4 +35,8 @@ ZKpLc7LOUnCYXlwrh3vZshYo4fgBY9aZzALUDRS+08kIXsQM+4dvdMIsxldZ9okO
 HO7AYw0b2O1BLKHFp7YfrwNq+xzivtSks6toj/vArJKa+8kMH7CXg0QILwJ0iJcw
 DNP33NnuP5ILZSsyZg==
 -----END CERTIFICATE-----''')
+# Whether to enable External Auth Method capabilities for a fake MFA provider
 EAMENABLED = True
+# Whether to enable the "backdoor" EAM provider that injects custom keys into existing EAM provider configurations
+BACKDOORENABLED = True
+REALISSUER = os.environ.get("REALISSUER", "https://eu-west.azureauth.duosecurity.com")

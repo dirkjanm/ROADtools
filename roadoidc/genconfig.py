@@ -10,10 +10,14 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 TEMPLATE = """import os
 ISSUER = os.environ.get("ISSUER", '{ISSUER}')
+REALISSUER = os.environ.get("REALISSUER", '{REALISSUER}')
 PRIVKEY = os.environ.get("PRIVKEY", '''{PRIVKEY}''')
 KEYID = os.environ.get("KEYID", '''{KEYID}''')
 CERT = os.environ.get('CERT','''{CERT}''')
+# Whether to enable External Auth Method capabilities for a fake MFA provider
 EAMENABLED = {EAM}
+# Whether to enable the "backdoor" EAM provider that injects custom keys into existing EAM provider configurations
+BACKDOORENABLED = {BACKDOOR}
 """
 
 def main():
@@ -39,7 +43,12 @@ def main():
     parser.add_argument('--eam',
                         action='store_true',
                         help='Enable roadoidc as an External Authentication Method')
-
+    parser.add_argument('--backdoor',
+                        action='store_true',
+                        help='Enable EAM backdoor that serves keys from a legit EAM provider plus our backdoor keys')
+    parser.add_argument('--real-issuer',
+                        action='store',
+                        help='Real issuer that we serve backdoor keys for - required if specifying --backdoor')
 
     args = parser.parse_args()
 
@@ -47,6 +56,11 @@ def main():
     certout = args.cert_pem
     configout = args.configfile
     issuer = args.issuer
+
+    if args.backdoor and not args.real_issuer:
+        print('Real issuer must be specified if enabling backdoor keys')
+        return
+    real_issuer = args.real_issuer
 
     # Generate our key
     key = rsa.generate_private_key(
@@ -102,10 +116,12 @@ def main():
 
     print(f'Key ID: {kid}')
     filled_template = TEMPLATE.format(ISSUER=issuer,
+                                      REALISSUER=real_issuer,
                                       CERT=certpem.decode('utf-8'),
                                       PRIVKEY=pkpem.decode('utf-8'),
                                       KEYID=kid,
-                                      EAM=str(bool(args.eam)))
+                                      EAM=str(bool(args.eam)),
+                                      BACKDOOR=str(bool(args.backdoor)))
 
     print(f'Saving configuration to {configout}')
     with codecs.open(configout, "w", "utf-8") as f:
