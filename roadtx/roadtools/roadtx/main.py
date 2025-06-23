@@ -70,6 +70,9 @@ def main():
     rttsauth_parser.add_argument('--origin',
                                  action='store',
                                  help='Origin header to use in refresh token redemption (for single page app flows)')
+    rttsauth_parser.add_argument('--autobroker',
+                                 action='store_true',
+                                 help='Find broker parameters in built-in first party apps automatically (for Nested App Auth)')
     rttsauth_parser.add_argument('-bc',
                                  '--broker-client',
                                  action='store',
@@ -960,7 +963,6 @@ def main():
             except FileNotFoundError:
                 print('This command requires the .roadtools_auth file, which was not found. Use the gettokens command to supply a refresh token manually.')
                 return
-        auth.set_client_id(tokenobject['_clientId'])
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
         auth.set_scope(args.scope)
@@ -976,8 +978,57 @@ def main():
             auth.tenant = tokenobject['tenantId']
         if args.client:
             auth.set_client_id(args.client)
+        elif '_clientId' in tokenobject:
+            auth.set_client_id(tokenobject['_clientId'])
+        else:
+            print('Could not determine client ID of refresh token, please specify with -c')
+            return
         if args.cae:
             auth.use_cae = args.cae
+        if args.autobroker:
+            # Automatic broker app selection
+
+            # Load scope data - contains redirect URLs for the broker
+            current_dir = os.path.abspath(os.path.dirname(__file__))
+            datafile = os.path.join(current_dir, 'firstpartyscopes.json')
+            with codecs.open(datafile,'r','utf-8') as infile:
+                data = json.load(infile)
+            if not args.client:
+                print('Client ID is required for autobroker flag, please specify with -c')
+                return
+            if args.broker_client:
+                originclient = auth.lookup_client_id(args.broker_client)
+            elif '_clientId' in tokenobject:
+                originclient = auth.lookup_client_id(tokenobject['_clientId'])
+            else:
+                print('Could not determine client, guessing the client based on redirect URL found')
+                originclient = 'guess'
+            try:
+                targetclient = data['apps'][auth.lookup_client_id(args.client)]
+            except KeyError:
+                print(f'Unknown client with ID {args.client} is not found in roadtx built-in client list. Please specify broker parameters manually.')
+                return
+            validru = False
+            for redirect_url in targetclient['redirect_uris']:
+                if originclient == 'guess' and redirect_url.startswith('brk-'):
+                    validru = True
+                    finalru = redirect_url
+                    break
+                if redirect_url.startswith(f'brk-{originclient}'):
+                    validru = True
+                    finalru = redirect_url
+                    break
+            if not validru:
+                print(f'Could not find a valid broker redirect URL on this client matching the original client ID {originclient}')
+                return
+            parsed = urlparse(finalru)
+            if originclient == 'guess':
+                # We know the client ID now
+                originclient = parsed.scheme.lower()[4:]
+            # Copy correct origin
+            auth.set_origin_value(f'https://{parsed.hostname}')
+            args.broker_redirect_url = finalru
+            args.broker_client = originclient
         if not args.tokens_stdout:
             if args.scope:
                 print(f'Requesting token with scope {auth.scope}')
@@ -995,6 +1046,9 @@ def main():
                 auth.authenticate_with_refresh_native_v2(tokenobject['refreshToken'], client_secret=args.password, additionaldata=additionaldata)
             else:
                 auth.authenticate_with_refresh_native(tokenobject['refreshToken'], client_secret=args.password, additionaldata=additionaldata)
+            # Save original client ID if doing broker auth
+            if args.broker_client:
+                auth.tokendata['_clientId'] = args.broker_client
             auth.save_tokens(args)
         except AuthenticationException as ex:
             try:
