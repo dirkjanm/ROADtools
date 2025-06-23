@@ -65,6 +65,11 @@ def main():
     gui_parser.add_argument('--profile',
                             action='store_true',
                             help='Enable flask profiler')
+    gui_parser.add_argument('--host',
+                            type=str,
+                            action='store',
+                            help='HTTP Server host to bind to (default=127.0.0.1)',
+                            default='127.0.0.1')
     gui_parser.add_argument('--port',
                             type=int,
                             action='store',

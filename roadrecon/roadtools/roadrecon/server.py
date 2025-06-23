@@ -611,6 +611,11 @@ def main(args=None):
         parser.add_argument('--profile',
                             action='store_true',
                             help='Enable flask profiler')
+        parser.add_argument('--host',
+                            type=str,
+                            action='store',
+                            help='Host IP to bind to (default=127.0.0.1)',
+                            default='127.0.0.1')
         parser.add_argument('--port',
                             type=int,
                             action='store',
@@ -628,7 +633,7 @@ def main(args=None):
     if args.profile:
         from werkzeug.middleware.profiler import ProfilerMiddleware
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5])
-    app.run(debug=args.debug, port=args.port)
+    app.run(host=args.host, port=args.port, debug=args.debug)
 
 if __name__ == '__main__':
     main()
