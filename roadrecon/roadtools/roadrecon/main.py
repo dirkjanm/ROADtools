@@ -54,34 +54,27 @@ def main():
 
     # Construct GUI options
     gui_parser = subparsers.add_parser('gui', help='Launch the web-based GUI')
-    gui_parser.add_argument(
-        '-d',
-        '--database',
-        action='store',
-        help='Database file. Can be the local database name for SQLite, or an SQLAlchemy compatible URL such as postgresql+psycopg2://dirkjan@/roadtools',
-        default='roadrecon.db'
-    )
-    
+    gui_parser.add_argument('-d',
+                            '--database',
+                            action='store',
+                            help='Database file. Can be the local database name for SQLite, or an SQLAlchemy compatible URL such as postgresql+psycopg2://dirkjan@/roadtools',
+                            default='roadrecon.db')
     gui_parser.add_argument('--debug',
-        action='store_true',
-        help='Enable flask debug')
-    
+                            action='store_true',
+                            help='Enable flask debug')
     gui_parser.add_argument('--profile',
-        action='store_true',
-        help='Enable flask profiler')
-    
+                            action='store_true',
+                            help='Enable flask profiler')
     gui_parser.add_argument('--host',
-        type=str,
-        action='store',
-        help='HTTP Server host to bind to (default=127.0.0.1)',
-        default='127.0.0.1')
-    
+                            type=str,
+                            action='store',
+                            help='HTTP Server host to bind to (default=127.0.0.1)',
+                            default='127.0.0.1')
     gui_parser.add_argument('--port',
-        type=int,
-        action='store',
-        help='HTTP Server port (default=5000)',
-        default=5000
-    )
+                            type=int,
+                            action='store',
+                            help='HTTP Server port (default=5000)',
+                            default=5000)
 
     # Construct plugins module options
     plugin_parser = subparsers.add_parser('plugin', help='Run a ROADrecon plugin')
@@ -105,10 +98,10 @@ def main():
 
         # Every plugin uses at least the database, so add that option
         pparser.add_argument('-d',
-             '--database',
-             action='store',
-             help='Database file. Can be the local database name for SQLite, or an SQLAlchemy compatible URL such as postgresql+psycopg2://dirkjan@/roadtools',
-             default='roadrecon.db')
+                             '--database',
+                             action='store',
+                             help='Database file. Can be the local database name for SQLite, or an SQLAlchemy compatible URL such as postgresql+psycopg2://dirkjan@/roadtools',
+                             default='roadrecon.db')
         plugin_module.add_args(pparser)
 
 

@@ -599,47 +599,28 @@ def create_app_test():
 def main(args=None):
     global db
     if not args:
-        parser = argparse.ArgumentParser(
-            add_help=True,
-            description='ROADrecon GUI',
-            formatter_class=argparse.RawDescriptionHelpFormatter
-        )
-
-        parser.add_argument(
-            '-d',
-            '--database',
-            action='store',
-            help='Database file. Can be the local database name for SQLite, or an SQLAlchemy compatible URL such as postgresql+psycopg2://dirkjan@/roadtools',
-            default='roadrecon.db'
-        )
-
-        parser.add_argument(
-            '--debug',
-            action='store_true',
-            help='Enable flask debug'
-        )
-
-        parser.add_argument(
-            '--profile',
-            action='store_true',
-            help='Enable flask profiler'
-        )
-
-        parser.add_argument(
-            '--host',
-            type=str,
-            action='store',
-            help='Host IP to bind to (default=127.0.0.1)',
-            default='127.0.0.1'
-        )
-
-        parser.add_argument(
-            '--port',
-            type=int,
-            action='store',
-            help='HTTP Server port (default=5000)',
-            default=5000
-        )
+        parser = argparse.ArgumentParser(add_help=True, description='ROADrecon GUI', formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser.add_argument('-d',
+                            '--database',
+                            action='store',
+                            help='Database file. Can be the local database name for SQLite, or an SQLAlchemy compatible URL such as postgresql+psycopg2://dirkjan@/roadtools',
+                            default='roadrecon.db')
+        parser.add_argument('--debug',
+                            action='store_true',
+                            help='Enable flask debug')
+        parser.add_argument('--profile',
+                            action='store_true',
+                            help='Enable flask profiler')
+        parser.add_argument('--host',
+                            type=str,
+                            action='store',
+                            help='Host IP to bind to (default=127.0.0.1)',
+                            default='127.0.0.1')
+        parser.add_argument('--port',
+                            type=int,
+                            action='store',
+                            help='HTTP Server port (default=5000)',
+                            default=5000)
         args = parser.parse_args()
     if not ':/' in args.database:
         if args.database[0] != '/':
@@ -652,7 +633,6 @@ def main(args=None):
     if args.profile:
         from werkzeug.middleware.profiler import ProfilerMiddleware
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[5])
-    
     app.run(host=args.host, port=args.port, debug=args.debug)
 
 if __name__ == '__main__':
