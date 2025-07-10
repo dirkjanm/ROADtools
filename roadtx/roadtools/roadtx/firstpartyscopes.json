@@ -22263,6 +22263,19 @@
                 ]
             }
         },
+        "de8bc8b5-d9f9-48b1-a8ad-b748da725064": {
+            "name": "Graph Explorer",
+            "public_client": true,
+            "foci": false,
+            "preferred_interactive_redirurl": "https://developer.microsoft.com/en-us/graph/graph-explorer",
+            "preferred_noninteractive_redirurl": "https://developer.microsoft.com/en-us/graph/graph-explorer",
+            "redirect_uris": [
+                "https://developer.microsoft.com/en-us/graph/graph-explorer"
+            ],
+            "origin": "https://developer.microsoft.com",
+            "default_scope": "https://graph.microsoft.com/.default",
+            "requires_pkce": true
+        },
         "52c2e0b5-c7b6-4d11-a89c-21e42bcec444": {
             "foci": false,
             "name": "Graph Files Manager",

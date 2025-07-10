@@ -10,7 +10,7 @@ WELLKNOWN_RESOURCES = {
     "azrm": "https://management.core.windows.net/",
     "azurerm": "https://management.core.windows.net/",
     "outlook": "https://outlook.office.com/",
-    "sharepoint": "00000003-0000-0ff1-ce00-000000000000"
+    "sharepoint": "00000003-0000-0ff1-ce00-000000000000",
 }
 
 WELLKNOWN_CLIENTS = {
@@ -23,7 +23,9 @@ WELLKNOWN_CLIENTS = {
     "edge": "ecd6b820-32c2-49b6-98a6-444530e5a77a",
     "msbroker": "29d9ed98-a469-4536-ade2-f981bc1d605e",
     "broker": "29d9ed98-a469-4536-ade2-f981bc1d605e",
-    "companyportal": "9ba1a5c7-f17a-4de9-a1f1-6178c8d51223"
+    "companyportal": "9ba1a5c7-f17a-4de9-a1f1-6178c8d51223",
+    "graph": "de8bc8b5-d9f9-48b1-a8ad-b748da725064",
+    "msgraph": "de8bc8b5-d9f9-48b1-a8ad-b748da725064",
 }
 
 WELLKNOWN_USER_AGENTS = {
@@ -43,10 +45,10 @@ WELLKNOWN_USER_AGENTS = {
     "safari": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.1",
     "safari_macos": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.1",
     "safari_ios": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.",
-    "empty": "No user agent header"
+    "empty": "No user agent header",
 }
 
-DSSO_BODY_KERBEROS = '''<?xml version='1.0' encoding='UTF-8'?>
+DSSO_BODY_KERBEROS = """<?xml version='1.0' encoding='UTF-8'?>
 <s:Envelope
     xmlns:s='http://www.w3.org/2003/05/soap-envelope'
     xmlns:wsse='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'
@@ -73,9 +75,9 @@ DSSO_BODY_KERBEROS = '''<?xml version='1.0' encoding='UTF-8'?>
         </wst:RequestSecurityToken>
     </s:Body>
 </s:Envelope>
-'''
+"""
 
-DSSO_BODY_USERPASS = '''<?xml version='1.0' encoding='UTF-8'?>
+DSSO_BODY_USERPASS = """<?xml version='1.0' encoding='UTF-8'?>
 <s:Envelope xmlns:s='http://www.w3.org/2003/05/soap-envelope' xmlns:a='http://www.w3.org/2005/08/addressing' xmlns:u='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd'>
   <s:Header>
     <a:Action s:mustUnderstand='1'>http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</a:Action>
@@ -107,13 +109,17 @@ DSSO_BODY_USERPASS = '''<?xml version='1.0' encoding='UTF-8'?>
     </trust:RequestSecurityToken>
   </s:Body>
 </s:Envelope>
-'''
+"""
 
-SAML_TOKEN_TYPE_V1 = 'urn:oasis:names:tc:SAML:1.0:assertion'
-SAML_TOKEN_TYPE_V2 = 'urn:oasis:names:tc:SAML:2.0:assertion'
-GRANT_TYPE_SAML1_1 = 'urn:ietf:params:oauth:grant-type:saml1_1-bearer'
+SAML_TOKEN_TYPE_V1 = "urn:oasis:names:tc:SAML:1.0:assertion"
+SAML_TOKEN_TYPE_V2 = "urn:oasis:names:tc:SAML:2.0:assertion"
+GRANT_TYPE_SAML1_1 = "urn:ietf:params:oauth:grant-type:saml1_1-bearer"
 GRANT_TYPE_SAML2 = "urn:ietf:params:oauth:grant-type:saml2-bearer"
 
 # http://docs.oasis-open.org/wss-m/wss/v1.1.1/os/wss-SAMLTokenProfile-v1.1.1-os.html#_Toc307397288
-WSS_SAML_TOKEN_PROFILE_V1_1 = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1"
-WSS_SAML_TOKEN_PROFILE_V2 = "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0"
+WSS_SAML_TOKEN_PROFILE_V1_1 = (
+    "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV1.1"
+)
+WSS_SAML_TOKEN_PROFILE_V2 = (
+    "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0"
+)
