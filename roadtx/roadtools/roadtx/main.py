@@ -2000,7 +2000,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.client is not None:
+    if hasattr(args, "client") and args.client is not None:
         auth.set_client_id(args.client)
         enrich_args_from_firstparty(auth.client_id, args)
 
