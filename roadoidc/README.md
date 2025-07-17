@@ -100,6 +100,6 @@ In Entra ID, this is set up as follows (you will need Global Admin rights to con
 * In Entra ID, go to Security -> Authentication methods -> Policies -> Add external method
 * Fill in an appropriate name for the method. The name doesn't matter but will be shown to users signing in, and cannot be changed afterwards.
 * The client ID can be anything since this is not checked by roadoidc. A random GUID will work.
-* The discovery endpoint should be the `issuer` URL, plus the `eam/.well-known/openid-configuration` suffix. For example, if you host roadoidc on `https://yourappname.azurewebsites.net`, the discovery endpoint would be `https://yourappname.azurewebsites.net/.well-known/openid-configuration`
+* The discovery endpoint should be the `issuer` URL, plus the `eam/.well-known/openid-configuration` suffix. For example, if you host roadoidc on `https://yourappname.azurewebsites.net`, the discovery endpoint would be `https://yourappname.azurewebsites.net/eam/.well-known/openid-configuration`
 * The App ID should be the ID of the application we created above.
 * Scope the EAM to the users (or all users) you want to bypass the MFA requirement for. Again, don't use this for real/production environments, especially with a broad scope.
