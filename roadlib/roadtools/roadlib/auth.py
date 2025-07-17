@@ -618,7 +618,7 @@ class Authentication():
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
-    def generate_app_assertion(self, use_v2=True):
+    def generate_app_assertion(self, use_v2=True, use_x5c=False):
         data = self.appcertificate.public_bytes(
             serialization.Encoding.DER
         )
@@ -628,6 +628,8 @@ class Authentication():
         headers = {
             "x5t": base64.urlsafe_b64encode(thumbprint).decode('utf-8'),
         }
+        if use_x5c:
+            headers['x5c'] = [base64.b64encode(data).decode('utf-8')]
         if use_v2:
             suffix = '/oauth2/v2.0/token'
         else:
@@ -1731,6 +1733,38 @@ class Authentication():
             headers['Origin'] = self.origin
             kwargs['headers'] = headers
         return requests.post(*args, timeout=30.0, **kwargs)
+
+    def requests_put(self, *args, **kwargs):
+        '''
+        Wrapper around requests.post to set all the options uniformly
+        '''
+        kwargs['proxies'] = self.proxies
+        kwargs['verify'] = self.verify
+        if self.user_agent:
+            headers = kwargs.get('headers',{})
+            headers['User-Agent'] = self.user_agent
+            kwargs['headers'] = headers
+        if self.origin:
+            headers = kwargs.get('headers',{})
+            headers['Origin'] = self.origin
+            kwargs['headers'] = headers
+        return requests.put(*args, timeout=30.0, **kwargs)
+
+    def requests_patch(self, *args, **kwargs):
+        '''
+        Wrapper around requests.post to set all the options uniformly
+        '''
+        kwargs['proxies'] = self.proxies
+        kwargs['verify'] = self.verify
+        if self.user_agent:
+            headers = kwargs.get('headers',{})
+            headers['User-Agent'] = self.user_agent
+            kwargs['headers'] = headers
+        if self.origin:
+            headers = kwargs.get('headers',{})
+            headers['Origin'] = self.origin
+            kwargs['headers'] = headers
+        return requests.patch(*args, timeout=30.0, **kwargs)
 
     def parse_args(self, args):
         self.username = args.username

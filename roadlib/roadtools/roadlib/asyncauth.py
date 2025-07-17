@@ -976,6 +976,30 @@ class AsyncAuthentication(Authentication):
         self.requestcounter += 1
         return response
 
+    async def requests_patch(self, *args, **kwargs):
+        '''
+        Wrapper around aiohttp.post to set all the options uniformly
+        '''
+        if not self.ahsession:
+            # Don't save cookies
+            jar = aiohttp.DummyCookieJar()
+            self.ahsession = aiohttp.ClientSession(cookie_jar=jar)
+        if self.proxies and 'https' in self.proxies:
+            kwargs['proxy'] = self.proxies['https']
+        kwargs['ssl'] = self.verify
+        if self.user_agent:
+            headers = kwargs.get('headers',{})
+            headers['User-Agent'] = self.user_agent
+            kwargs['headers'] = headers
+        if self.origin:
+            headers = kwargs.get('headers',{})
+            headers['Origin'] = self.origin
+            kwargs['headers'] = headers
+        async with self.ahsession.patch(*args, **kwargs) as response:
+            await response.read()
+        self.requestcounter += 1
+        return response
+
     async def close_session(self):
         '''
         Close aiohttp client session
