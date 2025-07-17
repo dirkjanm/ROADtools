@@ -24,6 +24,7 @@ def main():
     parser.add_argument('-p', '--proxy', action='store', help="Proxy requests through a proxy (format: proxyip:port). Ignores TLS validation if specified, unless --secure is used.")
     parser.add_argument('-pt', '--proxy-type', action='store', default="http", help="Proxy type to use. Supported: http / socks4 / socks5. Default: http")
     parser.add_argument('-s', '--secure', action='store_true', help="Enforce certificate validation even if using a proxy")
+    parser.add_argument('-i', '--insecure', action='store_true', help="Do not validate certificates (insecure)")
 
     # Add subparsers for modules
     subparsers = parser.add_subparsers(dest='command')
@@ -927,12 +928,16 @@ def main():
     args = parser.parse_args()
     deviceauth = DeviceAuthentication(auth)
 
+    # Handle proxy
     if args.proxy:
         auth.proxies = deviceauth.proxies = {
             'https': f'{args.proxy_type}://{args.proxy}'
         }
         if not args.secure:
             auth.verify = deviceauth.verify = False
+    # Disable TLS cert validation
+    if args.insecure:
+        auth.verify = deviceauth.verify = False
 
     if args.command in ('auth', 'gettokens', 'gettoken'):
         auth.parse_args(args)
