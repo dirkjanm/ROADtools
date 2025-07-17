@@ -920,6 +920,18 @@ def main():
                                   action='store',
                                   help='Primary Refresh Token session key (as hex key)')
 
+    # Graph request
+    graphrequest_parser = subparsers.add_parser('graphrequest', help='Send request to Microsoft Graph or other REST APIs')
+    graphrequest_parser.add_argument('--access-token', action='store', help='Access token for Microsoft Graph. If not specified, taken from .roadtools_auth')
+    graphrequest_parser.add_argument('-ua', '--user-agent', action='store',
+                                     help='Custom user agent to use. Default: python-requests user agent is used')
+    graphrequest_parser.add_argument('-f', '--tokenfile', action='store', help='File to read the token from (default: .roadtools_auth)', default='.roadtools_auth')
+    graphrequest_parser.add_argument('-m', '--method', action='store', help='HTTP method to use (default: GET)', default='GET')
+    graphrequest_parser.add_argument('-i', '--ignore', action='store_true', help='Ignore audience mismatches in the token')
+    graphrequest_parser.add_argument('-d', '--data', action='store', help='JSON data to send with the request (must be valid JSON)')
+    graphrequest_parser.add_argument('-df', '--datafile', action='store', help='File containing JSON data to send with the request')
+    graphrequest_parser.add_argument('url', action='store', help='URL to request')
+
     if len(sys.argv) < 2:
         parser.print_help()
         sys.exit(1)
@@ -1979,6 +1991,56 @@ def main():
         except KeyboardInterrupt:
             return
         return
+    elif args.command == 'graphrequest':
+        if args.access_token:
+            tokenobject, tokendata = auth.parse_accesstoken(args.access_token)
+        else:
+            try:
+                with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
+                    tokenobject = json.load(infile)
+                _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+            except FileNotFoundError:
+                print('No auth data found. Ether supply an access token with --access-token or make sure a token is present on disk in .roadtools_auth')
+                return
+        auth.set_user_agent(args.user_agent)
+        if not args.url.lower().startswith('https://') and not args.url.lower().startswith('https://graph.microsoft.com'):
+            args.url = 'https://graph.microsoft.com' + args.url
+        # Validate token audience if we talk to MS Graph
+        parsed = urlparse(args.url)
+        if not args.ignore and parsed.hostname.lower() == 'graph.microsoft.com' and tokendata['aud'] != '00000003-0000-0ff1-ce00-000000000000' and not tokendata['aud'].endswith('graph.microsoft.com') and not tokendata['aud'].endswith('graph.microsoft.com/'):
+            print(f"Wrong token audience, got {tokendata['aud']} but expected an audience ending with graph.microsoft.com")
+            print("Make sure to request a token with -r https://graph.microsoft.com")
+            return
+        headers = {
+            'Authorization': f'Bearer {tokenobject["accessToken"]}'
+        }
+        if args.datafile:
+            try:
+                with codecs.open(args.datafile, 'r', 'utf-8') as infile:
+                    data = json.load(infile)
+            except FileNotFoundError:
+                print('The datafile specified was not found')
+                return
+        elif args.data:
+            try:
+                data = json.loads(args.data)
+            except json.decoder.JSONDecodeError as ex:
+                print(f'Invalid JSON data provided: {str(ex)}')
+                return
+        if args.method.upper() == 'GET':
+            response = auth.requests_get(args.url, headers=headers)
+        elif args.method.upper() == 'POST':
+            response = auth.requests_post(args.url, headers=headers, json=data)
+        elif args.method.upper() == 'PATCH':
+            response = auth.requests_patch(args.url, headers=headers, json=data)
+        elif args.method.upper() == 'PUT':
+            response = auth.requests_put(args.url, headers=headers, json=data)
+        if response.status_code != 200:
+            print(response.status_code)
+        try:
+            print(json.dumps(response.json(), indent=4))
+        except json.decoder.JSONDecodeError:
+            print(response.text)
 
 if __name__ == '__main__':
     main()

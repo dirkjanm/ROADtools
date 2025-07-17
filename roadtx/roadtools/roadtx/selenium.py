@@ -228,6 +228,10 @@ class SeleniumAuthentication():
 
         # Quick check of mfa not needed
         try:
+            try:
+                WebDriverWait(driver, 1).until(lambda d: d.find_element(By.ID, "idonotexist"))
+            except TimeoutException:
+                pass
             els = WebDriverWait(driver, 2).until(lambda d: '?code=' in d.current_url or d.find_element(By.ID, "idSIButton9"))
             if not '?code=' in driver.current_url:
                 # handle KMSI first

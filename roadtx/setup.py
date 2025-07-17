@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='roadtx',
-      version='1.17.1',
+      version='1.18.0',
       description='ROADtools Token eXchange',
       author='Dirk-jan Mollema',
       author_email='dirkjan@outsidersecurity.nl',
@@ -18,7 +18,7 @@ setup(name='roadtx',
       packages=['roadtools.roadtx'],
       package_data={'roadtools.roadtx': ['firstpartyscopes.json']},
       install_requires=[
-          'roadlib>=1.3',
+          'roadlib>=1.4',
           'requests',
           'selenium',
           'selenium-wire',
