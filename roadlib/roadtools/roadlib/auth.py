@@ -193,7 +193,6 @@ class Authentication():
         """
         alphabet = string.ascii_letters + string.digits
         self.pkce_secret = ''.join(secrets.choice(alphabet) for i in range(43))
-        print(f"pkce: {self.pkce_secret}")
 
     def get_pkce_challenge(self):
         """
@@ -676,6 +675,10 @@ class Authentication():
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
     def generate_acs_assertion(self):
+        """
+        Generate assertion in the format that ACS expects
+        Requires certificate for app based auth to be loaded
+        """
         data = self.appcertificate.public_bytes(
             serialization.Encoding.DER
         )
@@ -695,10 +698,13 @@ class Authentication():
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
     def get_acs_actortoken(self, resourceurl, assertion):
+        """
+        Request token with ACS
+        """
         data = {
             'grant_type': 'http://oauth.net/grant_type/jwt/1.0/bearer',
-            'assertion':assertion,
-            'resource':f'{resourceurl}@{self.tenant}'
+            'assertion': assertion,
+            'resource': f'{resourceurl}@{self.tenant}'
         }
 
         res = self.requests_post(f'https://accounts.accesscontrol.windows.net/{self.tenant}/tokens/OAuth/2', data=data)
