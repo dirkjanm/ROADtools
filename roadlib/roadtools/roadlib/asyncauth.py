@@ -428,6 +428,25 @@ class AsyncAuthentication(Authentication):
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
+    async def get_acs_actortoken(self, resourceurl, assertion):
+        data = {
+            'grant_type': 'http://oauth.net/grant_type/jwt/1.0/bearer',
+            'assertion':assertion,
+            'resource':f'{resourceurl}@{self.tenant}'
+        }
+
+        res = await self.requests_post(f'https://accounts.accesscontrol.windows.net/{self.tenant}/tokens/OAuth/2', data=data)
+        if res.status != 200:
+            raise AuthenticationException(await res.text())
+        tokendata = await res.json()
+        if not 'access_token' in tokendata:
+            print('No token found')
+            # print(tokendata)
+        else:
+            print('Token issued')
+            # with codecs.open('.roadtools_actortoken', 'w', 'utf-8') as outfile:
+            #     json.dump(tokendata, outfile)
+        return tokendata
 
     async def authenticate_with_refresh_native(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
         """
