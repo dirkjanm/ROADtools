@@ -16,7 +16,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common import exceptions
-from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, \
+    NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException
 import pyotp
 
 # Decorator for selenium functions
@@ -241,6 +242,9 @@ class SeleniumAuthentication():
                     pass
                 try:
                     driver.find_element(By.ID, "idSIButton9").click()
+                except (ElementClickInterceptedException, ElementNotInteractableException):
+                    pass
+                try:
                     WebDriverWait(driver, 2).until(lambda d: '?code=' in d.current_url)
                 except NoSuchElementException:
                     raise TimeoutException
