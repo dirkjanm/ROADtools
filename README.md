@@ -23,7 +23,7 @@ ROADrecon is a tool for exploring information in Azure AD from both a Red Team a
 * Provide plugins to query this database and output it to a useful format.
 * Provide an extensive interface built in Angular that queries the offline database directly for its analysis.
 
-ROADrecon uses `async` Python features and is only compatible with Python 3.7 and newer (development is done with Python 3.8, tests are run with versions up to Python 3.11). 
+ROADrecon uses `async` Python features and is only compatible with Python 3.9 and newer (development is done with Python 3.11, tests are run with versions up to Python 3.13). 
 
 ### Installation
 There are multiple ways to install ROADrecon:
