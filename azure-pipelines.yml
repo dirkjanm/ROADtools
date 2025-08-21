@@ -140,27 +140,24 @@ jobs:
       customCommand: 'run build -- --configuration production'
 
   - script: |
-      pip install --upgrade setuptools wheel
+      pip install --upgrade setuptools wheel build
     displayName: 'Update setuptools'
 
   - script: |
       pip install .
-      python setup.py sdist
-      python setup.py bdist_wheel
+      python -m build
     displayName: 'Create roadlib package'
     workingDirectory: roadlib
 
   - script: |
       pip install .
-      python setup.py sdist
-      python setup.py bdist_wheel
+      python -m build
     displayName: 'Create ROADrecon package'
     workingDirectory: roadrecon
 
   - script: |
       pip install .
-      python setup.py sdist
-      python setup.py bdist_wheel
+      python -m build
     displayName: 'Create roadtx package'
     workingDirectory: roadtx
 
