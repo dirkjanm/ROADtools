@@ -178,7 +178,7 @@ def main():
                                 help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
                                 default='https://graph.windows.net')
     prtauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                 help='Custom redirect URL used when authenticating (default: ms-appx-web://Microsoft.AAD.BrokerPlugin/<clientid>)')
+                                 help='Custom redirect URL used when authenticating (default: find automatically for the client ID given)')
     prtauth_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (default: roadtx.prt)')
     prtauth_parser.add_argument('--prt',
                                 action='store',
@@ -379,7 +379,7 @@ def main():
                                 help='Resource to authenticate to. Either a full URL or alias (list with roadtx listaliases)',
                                 default='https://graph.windows.net')
     devauth_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
-                                 help='Custom redirect URL used when authenticating (default: ms-appx-web://Microsoft.AAD.BrokerPlugin/<clientid>)')
+                                 help='Custom redirect URL used when authenticating (default: find automatically for the client ID given)')
     devauth_parser.add_argument('--tokenfile',
                                 action='store',
                                 help='File to store the credentials (default: .roadtools_auth)',
@@ -1288,7 +1288,13 @@ def main():
         auth.set_user_agent(args.user_agent)
         if args.tenant:
             auth.tenant = args.tenant
-        tokenreply = deviceauth.get_token_for_device(args.client, args.resource, redirect_uri=args.redirect_url)
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        if args.redirect_url:
+            redirect_url = args.redirect_url
+        else:
+            redirect_url = find_redirurl_for_client(auth.client_id, interactive=False, broker=True)
+        tokenreply = deviceauth.get_token_for_device(auth.client_id, auth.resource_uri, redirect_uri=redirect_url)
         auth.outfile = args.tokenfile
         auth.tokendata = auth.tokenreply_to_tokendata(tokenreply)
         auth.save_tokens(args)
