@@ -15,8 +15,17 @@ setup(name='roadrecon',
           'Programming Language :: Python :: 3.12',
           'Programming Language :: Python :: 3.13',
       ],
-      packages=['roadtools.roadrecon', 'roadtools.roadrecon.plugins'],
-      package_data={'roadtools.roadrecon.plugins': ['*.yaml']},
+      packages=[
+        'roadtools.roadrecon',
+        'roadtools.roadrecon.plugins',
+        'roadtools.roadrecon.dist_gui',
+        'roadtools.roadrecon.dist_gui.assets'
+      ],
+      package_data={
+        'roadtools.roadrecon.plugins': ['*.yaml'],
+        'roadtools.roadrecon.dist_gui': ['*'],
+        'roadtools.roadrecon.dist_gui.assets': ['*'],
+      },
       install_requires=[
           'roadlib>=0.21',
           'flask<3',
