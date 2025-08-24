@@ -1,3 +1,6 @@
 dist_gui/*
 !dist_gui/.gitkeep
+!dist_gui/assets/
+dist_gui/assets/*
+!dist_gui/assets/.gitkeep
 *.db
