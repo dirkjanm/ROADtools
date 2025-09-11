@@ -1804,6 +1804,18 @@ class Authentication():
             headers['Origin'] = self.origin
             kwargs['headers'] = headers
         return requests.patch(*args, timeout=30.0, **kwargs)
+    
+    def requests_delete(self, *args, **kwargs):
+        '''
+        Wrapper around requests.delete to set all the options uniformly
+        '''
+        kwargs['proxies'] = self.proxies
+        kwargs['verify'] = self.verify
+        if self.user_agent:
+            headers = kwargs.get('headers',{})
+            headers['User-Agent'] = self.user_agent
+            kwargs['headers'] = headers
+        return requests.delete(*args, timeout=30.0, **kwargs)
 
     def parse_args(self, args):
         self.username = args.username

@@ -2041,6 +2041,8 @@ def main():
             response = auth.requests_patch(args.url, headers=headers, json=data)
         elif args.method.upper() == 'PUT':
             response = auth.requests_put(args.url, headers=headers, json=data)
+        elif args.method.upper() == 'DELETE':
+            response = auth.requests_delete(args.url, headers=headers)
         if response.status_code != 200:
             print(response.status_code)
         try:
