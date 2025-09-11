@@ -674,6 +674,45 @@ class Authentication():
         }
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
+    def generate_acs_assertion(self):
+        """
+        Generate assertion in the format that ACS expects
+        Requires certificate for app based auth to be loaded
+        """
+        data = self.appcertificate.public_bytes(
+            serialization.Encoding.DER
+        )
+        digest = hashes.Hash(hashes.SHA1())
+        digest.update(data)
+        thumbprint = digest.finalize()
+        headers = {
+            "x5t": base64.urlsafe_b64encode(thumbprint).decode('utf-8'),
+        }
+        payload = {
+            "iss": f"{self.client_id}@{self.tenant}",
+            "aud": f"00000001-0000-0000-c000-000000000000/accounts.accesscontrol.windows.net@{self.tenant}",
+            "iat": str(int(time.time())),
+            "nbf": str(int(time.time())),
+            "exp": str(int(time.time())+(300)),
+        }
+        return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
+
+    def get_acs_actortoken(self, resourceurl, assertion):
+        """
+        Request token with ACS
+        """
+        data = {
+            'grant_type': 'http://oauth.net/grant_type/jwt/1.0/bearer',
+            'assertion': assertion,
+            'resource': f'{resourceurl}@{self.tenant}'
+        }
+
+        res = self.requests_post(f'https://accounts.accesscontrol.windows.net/{self.tenant}/tokens/OAuth/2', data=data)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        tokendata = res.json()
+        return tokendata
+
     def authenticate_with_refresh(self, oldtokendata):
         """
         Authenticate with a refresh token, refreshes the refresh token
