@@ -736,8 +736,7 @@ def main(args=None):
     headers['Authorization'] = f"Bearer {token['accessToken']}"
 
     seconds = time.perf_counter()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run(args))
+    asyncio.run(run(args))
     elapsed = time.perf_counter() - seconds
     print("ROADrecon gather executed in {0:0.2f} seconds and issued {1} HTTP requests.".format(elapsed, urlcounter))
 
