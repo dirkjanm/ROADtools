@@ -259,6 +259,77 @@ def main():
                                 action='store_true',
                                 help='Do not store tokens on disk, pipe to stdout instead')
 
+    acsauth_parser = subparsers.add_parser('actortoken', aliases=('getactortokens', 'getactortoken'), help='Get actor token with ACS')
+    acsauth_parser.add_argument('-c',
+                                '--client',
+                                action='store',
+                                help='Client ID (application ID) to use when authenticating.',
+                                default='00000002-0000-0ff1-ce00-000000000000')
+    acsauth_parser.add_argument('-r',
+                                '--resource',
+                                action='store',
+                                help='Resource to authenticate to',
+                                default='00000002-0000-0ff1-ce00-000000000000/outlook.office.com')
+    acsauth_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='Tenant ID or domain to auth to',
+                                required=True)
+    acsauth_parser.add_argument('--cert-pem', action='store', metavar='file', help='Certificate file with Application certificate')
+    acsauth_parser.add_argument('--key-pem', action='store', metavar='file', help='Private key file for Application')
+    acsauth_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Application cert and key as PFX file')
+    acsauth_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    acsauth_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    acsauth_parser.add_argument('--assertion', action='store', metavar='JWT', help='Signed JWT assertion for cert based auth')
+    acsauth_parser.add_argument('-af', '--actortoken-file',
+                                action='store',
+                                help='File to store the actor token in (default: .roadtools_actortoken)',
+                                default='.roadtools_actortoken')
+    acsauth_parser.add_argument('--tokens-stdout',
+                                 action='store_true',
+                                 help='Do not store tokens on disk, pipe to stdout instead')
+
+    aitoken_parser = subparsers.add_parser('impersonationtoken', aliases=('getimpersonationtokens', 'getimpersonationtoken'), help='Create impersonation token from an Actor Token')
+    aitoken_parser.add_argument('-u',
+                                '--upn',
+                                action='store',
+                                help='UPN to impersonate',
+                                default='not@validated.com')
+    aitoken_parser.add_argument('-n',
+                                '--nameid',
+                                action='store',
+                                help='netId / nameid / puid to use',
+                                required=True)
+    aitoken_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='Tenant ID to target',
+                                required=True)
+    aitoken_parser.add_argument('-r',
+                                '--resource',
+                                action='store',
+                                help='Resource to authenticate to (default: 00000002-0000-0ff1-ce00-000000000000/outlook.office.com)',
+                                default='00000002-0000-0ff1-ce00-000000000000/outlook.office.com')
+    aitoken_parser.add_argument('-c',
+                                '--client',
+                                action='store',
+                                help='Client ID (application ID) to use when authenticating. (default: 00000002-0000-0ff1-ce00-000000000000)',
+                                default='00000002-0000-0ff1-ce00-000000000000')
+    aitoken_parser.add_argument('--tokenfile',
+                                action='store',
+                                help='File to store the credentials (default: .roadtools_auth)',
+                                default='.roadtools_auth')
+    aitoken_parser.add_argument('-af', '--actortoken-file',
+                                action='store',
+                                help='File to read the actor token from (default: .roadtools_actortoken)',
+                                default='.roadtools_actortoken')
+    aitoken_parser.add_argument('-at', '--actor-token',
+                                action='store',
+                                help='Actor token to use. If unspecified, read from the actortoken-file')
+    aitoken_parser.add_argument('--tokens-stdout',
+                                 action='store_true',
+                                 help='Do not store tokens on disk, pipe to stdout instead')
+
     # Application auth - on behalf of
     oboauth_parser = subparsers.add_parser('appauthobo', help='Authenticate with the on-behalf-of flow')
     oboauth_parser.add_argument('-c',
@@ -1158,6 +1229,38 @@ def main():
             auth.authenticate_as_app_native_v2(assertion=assertion)
         else:
             auth.authenticate_as_app_native(assertion=assertion)
+        auth.save_tokens(args)
+    elif args.command in ('actortoken', 'getactortoken', 'getactortokens'):
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
+        auth.outfile = args.actortoken_file
+        print(f"Requesting actor token for {args.resource}@{args.tenant}")
+        if args.assertion:
+            auth.get_acs_actortoken(args.resource, args.assertion)
+        else:
+            if not auth.loadappcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+                return
+            assertion = auth.generate_acs_assertion()
+            auth.get_acs_actortoken(args.resource, assertion)
+        auth.save_tokens(args)
+    elif args.command in ('impersonationtoken', 'getimpersonationtoken', 'getimpersonationtokens'):
+        auth.set_client_id(args.client)
+        auth.set_resource_uri(args.resource)
+        auth.tenant = args.tenant
+        auth.outfile = args.tokenfile
+        if args.actor_token:
+            tokenobject, tokendata = auth.parse_accesstoken(args.actor_token)
+        else:
+            try:
+                with codecs.open(args.actortoken_file, 'r', 'utf-8') as infile:
+                    tokenobject = json.load(infile)
+                _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
+            except FileNotFoundError:
+                print('No auth data found. Ether supply an access token with --actor-token or make sure a token is present on disk in .roadtools_actortoken')
+                return
+        print(f"Generating impersonation token for {args.upn} ({args.nameid}) @ {args.resource}@{args.tenant}")
+        auth.get_acs_impersonationtoken(tokenobject['accessToken'], args.upn, args.nameid)
         auth.save_tokens(args)
     elif args.command == 'device':
         auth.set_user_agent(args.user_agent)
