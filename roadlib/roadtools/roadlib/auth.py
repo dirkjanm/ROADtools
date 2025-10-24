@@ -697,7 +697,7 @@ class Authentication():
         }
         return jwt.encode(payload, algorithm='RS256', key=self.appkeydata, headers=headers)
 
-    def get_acs_actortoken(self, resourceurl, assertion):
+    def get_acs_actortoken(self, resourceurl, assertion, returnreply=False):
         """
         Request token with ACS
         """
@@ -710,8 +710,38 @@ class Authentication():
         res = self.requests_post(f'https://accounts.accesscontrol.windows.net/{self.tenant}/tokens/OAuth/2', data=data)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
-        tokendata = res.json()
-        return tokendata
+        tokenreply = res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
+
+    def get_acs_impersonationtoken(self, actortoken, upn, nameid, nii="urn:office:idp:activedirectory", tenant=None, returntoken=False):
+        if not tenant:
+            tenant = self.tenant
+        tokendata = {
+          "nameid": nameid,
+          "upn": upn,
+          "smtp": upn,
+          "sip": upn,
+          "nii": nii,
+          "actortoken": actortoken,
+          "iat": int(time.time()),
+          "nbf": int(time.time()),
+          "exp": int(time.time())+(300),
+          "iss": f"{self.client_id}@{tenant}",
+          "aud": f"{self.resource_uri}@{tenant}"
+        }
+        itoken = jwt.encode(tokendata, key=None, algorithm ="none")
+        self.tokendata = {
+            'accessToken': itoken,
+            'tokenType': 'Bearer',
+            'tenantId': tenant,
+            'expiresIn': 300,
+        }
+        if returntoken:
+            return itoken
+        return self.tokendata
 
     def authenticate_with_refresh(self, oldtokendata):
         """

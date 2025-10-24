@@ -428,7 +428,7 @@ class AsyncAuthentication(Authentication):
         self.tokendata = self.tokenreply_to_tokendata(tokenreply)
         return self.tokendata
 
-    async def get_acs_actortoken(self, resourceurl, assertion):
+    async def get_acs_actortoken(self, resourceurl, assertion, returnreply=False):
         """
         Request token with ACS
         """
@@ -441,8 +441,11 @@ class AsyncAuthentication(Authentication):
         res = await self.requests_post(f'https://accounts.accesscontrol.windows.net/{self.tenant}/tokens/OAuth/2', data=data)
         if res.status != 200:
             raise AuthenticationException(await res.text())
-        tokendata = await res.json()
-        return tokendata
+        tokenreply = await res.json()
+        if returnreply:
+            return tokenreply
+        self.tokendata = self.tokenreply_to_tokendata(tokenreply)
+        return self.tokendata
 
     async def authenticate_with_refresh_native(self, refresh_token, client_secret=None, additionaldata=None, returnreply=False):
         """
