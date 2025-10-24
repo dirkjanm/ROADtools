@@ -524,6 +524,17 @@ def get_allroles():
                         'scopeIds': sids,
                         'principal': mp
                     })
+                for member in group.memberServicePrincipals:
+                    mp = serviceprincipals_schema.dump([member])[0]
+                    mp['displayName'] = f"{principal['displayName']} member SP: {mp['displayName']}"
+                    roleobj['assignments'].append({
+                        'type': 'assignment',
+                        'scope': assignment.resourceScopes,
+                        'scopeTypes': stypes,
+                        'scopeNames': snames,
+                        'scopeIds': sids,
+                        'principal': mp
+                    })
 
         for assignment in role.eligibleAssignments:
             stypes, snames, sids = translate_rolescopes(assignment.resourceScopes)
@@ -542,6 +553,18 @@ def get_allroles():
                 for member in group.memberUsers:
                     mp = users_schema.dump([member])[0]
                     mp['displayName'] = f"{principal['displayName']} member: {mp['displayName']}"
+                    roleobj['assignments'].append({
+                        'type': 'eligible',
+                        'scope': assignment.resourceScopes,
+                        'scopeTypes': stypes,
+                        'scopeNames': snames,
+                        'scopeIds': sids,
+                        'principal': mp
+                    })
+                # SPs with eligible assignments probably don't make sense but who knows
+                for member in group.memberServicePrincipals:
+                    mp = serviceprincipals_schema.dump([member])[0]
+                    mp['displayName'] = f"{principal['displayName']} member SP: {mp['displayName']}"
                     roleobj['assignments'].append({
                         'type': 'eligible',
                         'scope': assignment.resourceScopes,
