@@ -6,13 +6,14 @@ import codecs
 import binascii
 import base64
 import time
+import re
 from collections import defaultdict
 from urllib.parse import urlparse, parse_qs, quote_plus
 from roadtools.roadlib.auth import Authentication, get_data, AuthenticationException
 from roadtools.roadlib.constants import WELLKNOWN_CLIENTS, WELLKNOWN_RESOURCES, WELLKNOWN_USER_AGENTS
 from roadtools.roadlib.deviceauth import DeviceAuthentication
 from roadtools.roadtx.selenium import SeleniumAuthentication
-from roadtools.roadtx.utils import find_redirurl_for_client
+from roadtools.roadtx.utils import find_redirurl_for_client, parse_encrypted_token
 from roadtools.roadtx.federation import EncryptedPFX, SAMLSigner, encode_object_guid
 import pyotp
 
@@ -585,6 +586,7 @@ def main():
     # Describe token
     describe_parser = subparsers.add_parser('describe', help='Decode and describe an access token')
     describe_parser.add_argument('-t', '--token', default=None, action='store', metavar='TOKEN', help='Token data to describe. Defaults to reading from stdin')
+    describe_parser.add_argument('--encrypted', action='store_true', help='Describe the header of encrypted tokens if possible (experimental)')
     describe_parser.add_argument('-f', '--tokenfile', action='store', help='File to read the token from (default: .roadtools_auth)', default='.roadtools_auth')
     describe_parser.add_argument('-v', '--verbose', action='store_true', help='Show extra information')
 
@@ -1825,10 +1827,14 @@ def main():
                 except KeyError:
                     print('Unrecognized input format')
                     return
-        if tokendata[0:2] == '0.':
-            print('The supplied data looks like an encrypted token or nonce, nothing to decode here!')
-            return
-        header, body, signature = auth.parse_jwt(tokendata)
+        if re.match(r'^\d\.', tokendata):
+            if args.encrypted:
+                parse_encrypted_token(tokendata)
+                return
+            else:
+                print('The supplied data looks like an encrypted token or nonce to analyze use --encrypted')
+                return
+        header, body, _ = auth.parse_jwt(tokendata)
         print(json.dumps(header, sort_keys=True, indent=4))
         print(json.dumps(body, sort_keys=True, indent=4))
     elif args.command in ('getscope', 'findscope'):
