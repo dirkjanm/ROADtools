@@ -108,7 +108,15 @@ async def ratelimit():
     if tokencounter < 1:
         # print('Ratelimit reached')
         await asyncio.sleep(0.1)
-        await ratelimit()
+        while True:
+            now = time.time()
+            to_add = MAX_REQ_PER_SEC * (now - tokenfilltime)
+            tokencounter = min(MAX_REQ_PER_SEC, tokencounter + to_add)
+            tokenfilltime = now
+            if tokencounter > 1:
+                break
+            await asyncio.sleep(0.1)
+        tokencounter -= 1
     else:
         tokencounter -= 1
 
