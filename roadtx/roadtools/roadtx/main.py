@@ -146,6 +146,7 @@ def main():
     prt_parser.add_argument('-s', '--prt-sessionkey', action='store', help='Primary Refresh Token session key (as hex key)')
 
     prt_parser.add_argument('-v3', '--prt-protocol-v3', action='store_true', help='Use PRT protocol version 3.0')
+    prt_parser.add_argument('-v4', '--prt-protocol-v4', action='store_true', help='Use PRT protocol version 4.0')
 
     prt_parser.add_argument('-hk', '--hello-key', action='store', help='Windows Hello PEM file')
     prt_parser.add_argument('-ha', '--hello-assertion', action='store', help='Windows Hello assertion as JWT')
@@ -1357,7 +1358,13 @@ def main():
                         return
                 else:
                     refresh_token = args.refresh_token
-                if args.prt_protocol_v3:
+                if args.prt_protocol_v4:
+                    payload = deviceauth.gen_prtv4_req_payload(refresh_token)
+                    response = deviceauth.request_token_with_devicekey_signed_payload_prtprotocolv4(payload, asjson=True)
+                    decrypted = deviceauth.calculate_derived_key_ecdh(response, "HOI")
+                    prtdata = json.loads(decrypted)
+                    prtdata['session_key'] = ''
+                elif args.prt_protocol_v3:
                     prtdata = deviceauth.get_prt_with_refresh_token_v3(refresh_token)
                 else:
                     prtdata = deviceauth.get_prt_with_refresh_token(refresh_token)
@@ -1370,7 +1377,8 @@ def main():
                 print('You must specify a username + password or refresh token that can be used to request a PRT')
                 return
             print(f"Obtained PRT: {prtdata['refresh_token']}")
-            print(f"Obtained session key: {prtdata['session_key']}")
+            if prtdata['session_key']:
+                print(f"Obtained session key: {prtdata['session_key']}")
             deviceauth.saveprt(prtdata, args.prt_file)
         if args.action == 'renew':
             if args.prt and args.prt_sessionkey:
@@ -1384,6 +1392,11 @@ def main():
             if args.prt_protocol_v3:
                 prtdata = deviceauth.aad_brokerplugin_prt_auth_v3('broker', scope='aza openid', renew_prt=True)
                 prtdata['session_key'] = binascii.hexlify(deviceauth.session_key).decode('utf-8')
+            elif args.prt_protocol_v4:
+                if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+                    return
+                prtdata = deviceauth.aad_brokerplugin_prt_auth_v4('broker', scope='aza openid', renew_prt=True, redirect_uri='msauth://Microsoft.AAD.BrokerPlugin')
+                prtdata['session_key'] = ''
             else:
                 prtdata = deviceauth.renew_prt()
             deviceauth.saveprt(prtdata, args.prt_file)
@@ -1406,10 +1419,18 @@ def main():
         else:
             print('You must either supply a PRT and session key on the command line or a file that contains them')
             return
+        # Calculate scope for PRTv3 and PRTv4 if not supplied
+        if not args.scope and args.resource is not None:
+            # Use translated version from auth object
+            scope = f"{auth.resource_uri}/.default"
+        else:
+            scope = auth.scope
         if args.prt_protocol_v3:
-            if not args.scope and args.resource is not None:
-                args.scope = f"{args.resource}/.default"
-            tokendata = deviceauth.aad_brokerplugin_prt_auth_v3(args.client, args.scope, redirect_uri=redirect_url)
+            tokendata = deviceauth.aad_brokerplugin_prt_auth_v3(args.client, scope, redirect_uri=redirect_url)
+        elif args.prt_protocol_v4:
+            if not deviceauth.loadcert(args.cert_pem, args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64):
+                return
+            tokendata = deviceauth.aad_brokerplugin_prt_auth_v4(args.client, scope, redirect_uri=redirect_url)
         else:
             tokendata = deviceauth.aad_brokerplugin_prt_auth(args.client, args.resource, redirect_uri=redirect_url)
         # We need to convert this to a token format roadlib understands
