@@ -569,6 +569,39 @@ def main():
                                    help='Custom user agent to use. By default the user agent from FireFox is used without modification')
 
 
+    # Deviceless PRT request
+    macosprt_parser = subparsers.add_parser('devicelessprt', help='Devicelss prt from code')
+    clienthelptext = 'Client ID (application ID) to use when authenticating. Accepts aliases (list with roadtx listaliases)'
+    macosprt_parser.add_argument('-c',
+                                 '--client',
+                                 action='store',
+                                 help=clienthelptext,
+                                 default='broker')
+    macosprt_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password secret of the application if not a public app')
+    macosprt_parser.add_argument('-k', '--key-pem', action='store', metavar='file', help='Private key file containing transport key')
+    macosprt_parser.add_argument('--cert-pfx', action='store', metavar='file', help='Device cert and key as PFX file')
+    macosprt_parser.add_argument('--pfx-pass', action='store', metavar='password', help='PFX file password')
+    macosprt_parser.add_argument('--pfx-base64', action='store', metavar='BASE64', help='PFX file as base64 string')
+    macosprt_parser.add_argument('-ru', '--redirect-url', action='store', metavar='URL',
+                                 help='Redirect URL used when authenticating (default: https://login.microsoftonline.com/common/oauth2/nativeclient)',
+                                 default="https://login.microsoftonline.com/common/oauth2/nativeclient")
+    macosprt_parser.add_argument('-t',
+                                 '--tenant',
+                                 action='store',
+                                 help='Tenant ID or domain to auth to')
+    macosprt_parser.add_argument('--tokenfile',
+                                 action='store',
+                                 help='File to store the credentials (default: .roadtools_auth)',
+                                 default='.roadtools_auth')
+    macosprt_parser.add_argument('--tokens-stdout',
+                                 action='store_true',
+                                 help='Do not store tokens on disk, pipe to stdout instead')
+    macosprt_parser.add_argument('-f', '--prt-file', default="roadtx.prt", action='store', metavar='FILE', help='PRT storage file (default: roadtx.prt)')
+
+    macosprt_parser.add_argument('code',
+                                 action='store',
+                                 help="Code to auth with that you got from Azure AD")
+
     # List aliases
     subparsers.add_parser('listaliases', help='List aliases that can be used as client ID or resource URL')
 
@@ -1472,6 +1505,12 @@ def main():
             auth.authenticate_with_desktopsso_token(dsso_code)
             auth.outfile = args.tokenfile
             auth.save_tokens(args)
+    elif args.command == 'devicelessprt':
+        if args.key_pem or args.cert_pfx or args.pfx_pass or args.pfx_base64:
+            deviceauth.loadkey(args.key_pem, args.cert_pfx, args.pfx_pass, args.pfx_base64)
+        auth.set_client_id(args.client)
+        prtdata = deviceauth.get_deviceless_prt(args.code, args.redirect_url)
+        deviceauth.saveprt(prtdata, args.prt_file)
     elif args.command == 'listaliases':
         print('Well-known clients. Can be used as alias with -c or --client')
         print()
