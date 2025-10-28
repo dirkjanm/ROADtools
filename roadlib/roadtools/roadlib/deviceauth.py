@@ -785,6 +785,7 @@ class DeviceAuthentication():
 
         # Now calculate the derived key based on random context plus jwt body
         _, derived_key = self.auth.calculate_derived_key_v2(self.session_key, context, jwtbody)
+        # _, derived_key = self.auth.calculate_derived_key(self.session_key, context)
         reqjwt = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
 
         token_request_data = {
@@ -844,10 +845,51 @@ class DeviceAuthentication():
         responsedata = res.text
         return responsedata
 
-    def calculate_derived_key_ecdh(self, responsedata, apv):
+    def gen_prtv4_req_payload(self, refresh_token, apv='HOI'):
+        payload = {
+            "refresh_token": refresh_token,
+            "client_id": "29d9ed98-a469-4536-ade2-f981bc1d605e",
+            "scope": "openid aza",
+            "jwe_crypto": {
+                "apv": apv,
+                "alg": "ECDH-ES",
+                "enc": "A256GCM"
+            },
+            "grant_type": "refresh_token",
+            "request_nonce": self.auth.get_srv_challenge_nonce()
+        }
+        return payload
+
+    def request_token_with_devicekey_signed_payload_prtprotocolv4(self, payload, reqtgt=True, asjson=False):
+        """
+        Request a token (access / refresh / PRT) using a payload signed
+        with the device key from the secure enclave. Uses PRT Protocol version 4
+        """
+        certder = self.certificate.public_bytes(serialization.Encoding.DER)
+        certbytes = base64.b64encode(certder)
+        headers = {
+            'x5c':[certbytes.decode('utf-8')]
+        }
+
+        # Sign with device key (ES256)
+        reqjwt = jwt.encode(payload, self.keydata, algorithm='ES256', headers=headers)
+
+        token_request_data = {
+            'prt_protocol_version':'4.0',
+            'grant_type':'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'request':reqjwt,
+            'client_info':'1'
+        }
+        res = self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/v2.0/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
+        if res.status_code != 200:
+            raise AuthenticationException(res.text)
+        responsedata = res.text
+        return responsedata
+
+    def decrypt_auth_response_ecdh(self, responsedata, apv, asjson=False):
         '''
         Use ECDH with transport key to calculate the derived key
-        using Concat KDF
+        using Concat KDF. Then decrypt response using this key.
         '''
         def jwk_to_crypto(jwk):
             public_numbers = ec.EllipticCurvePublicNumbers(
@@ -893,7 +935,7 @@ class DeviceAuthentication():
             otherinfo=otherinfo,
         )
         derived_key = ckdf.derive(exchanged_key)
-        return self.auth.decrypt_auth_response_derivedkey(headerdata, ciphertext, iv, authtag, derived_key)
+        return self.auth.decrypt_auth_response_derivedkey(headerdata, ciphertext, iv, authtag, derived_key, asjson=asjson)
 
     def get_prt_with_password(self, username, password):
         challenge = self.auth.get_srv_challenge_nonce()
@@ -1055,4 +1097,43 @@ class DeviceAuthentication():
             payload['redirect_uri'] = redirect_uri
         responsedata = self.request_token_with_sessionkey_signed_payload_prtprotocolv3(payload, False)
         tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
+        return tokendata
+
+    def aad_brokerplugin_prt_auth_v4(self, client_id, scope=None, renew_prt=False, redirect_uri=None, apv='HOI'):
+        """
+        Auth using a PRT, emulating the broker client on MacOS with Secure Enclave stored
+        EC device key. Uses PRT protocol v4
+        """
+        client = self.auth.lookup_client_id(client_id).lower()
+        if not scope:
+            scope = self.auth.scope
+        payload = {
+            "refresh_token": self.prt,
+            "jwe_crypto": {
+                "apv": apv,
+                "alg": "ECDH-ES",
+                "enc": "A256GCM"
+            },
+            "grant_type": "refresh_token",
+            "iat": str(int(time.time())),
+            "nbf": str(int(time.time())),
+            "exp": str(int(time.time())+(3600)),
+            "scope": scope,
+            "grant_type": "refresh_token",
+            "purpose": "prt_usage",
+            "iss": "29d9ed98-a469-4536-ade2-f981bc1d605e",
+            "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client}",
+            "aud": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            "client_id": client,
+            "request_nonce": self.auth.get_srv_challenge_nonce()
+        }
+        # Request new PRT instead of access token
+        if renew_prt and not 'aza' in scope.split(' '):
+            payload['scope'] += ' aza'
+        # Custom redirect_uri if needed
+        if redirect_uri:
+            payload['redirect_uri'] = redirect_uri
+        response = self.request_token_with_devicekey_signed_payload_prtprotocolv4(payload, asjson=True)
+        decrypted = self.decrypt_auth_response_ecdh(response, apv)
+        tokendata = json.loads(decrypted)
         return tokendata
