@@ -2055,7 +2055,7 @@ def main():
             except FileNotFoundError:
                 print('No auth data found. Ether supply an access token with --access-token or make sure a token is present on disk in .roadtools_auth')
                 return
-        if tokendata['aud'] not in ['https://outlook.office.com','https://outlook.office365.com','https://outlook.office.com/','00000002-0000-0ff1-ce00-000000000000','https://outlook.office365.com/']:
+        if tokendata['aud'] not in ['https://outlook.office.com','https://outlook.office365.com','https://outlook.office.com/','00000002-0000-0ff1-ce00-000000000000','00000002-0000-0ff1-ce00-000000000000/outlook.office.com','https://outlook.office365.com/']:
             print(f"Wrong token audience, got {tokendata['aud']} but expected: https://outlook.office.com")
             print("Make sure to request a token with -r https://outlook.office.com")
             return
@@ -2085,10 +2085,10 @@ def main():
             except FileNotFoundError:
                 print('No auth data found. Ether supply an access token with --access-token or make sure a token is present on disk in .roadtools_auth')
                 return
-        if tokendata['aud'] == '00000003-0000-0ff1-ce00-000000000000' and not args.host:
+        if tokendata['aud'].startswith('00000003-0000-0ff1-ce00-000000000000') and not args.host:
             print('You must specify the SharePoint host to use with this token. Example --host https://company-my.sharepoint.com')
             return
-        if tokendata['aud'] != '00000003-0000-0ff1-ce00-000000000000' and not tokendata['aud'].endswith('sharepoint.com'):
+        if tokendata['aud'] != '00000003-0000-0ff1-ce00-000000000000' and not  tokendata['aud'].startswith('00000003-0000-0ff1-ce00-000000000000') and not tokendata['aud'].endswith('sharepoint.com'):
             print(f"Wrong token audience, got {tokendata['aud']} but expected an audience ending with sharepoint.com")
             print("Make sure to request a token with -r https://mycompany-my.sharepoint.com")
             return
