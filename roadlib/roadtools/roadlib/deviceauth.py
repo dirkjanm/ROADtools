@@ -259,6 +259,26 @@ class DeviceAuthentication():
         }
         return self.request_token_with_devicecert_signed_payload(payload)
 
+    def get_prt_with_hello_key_v3(self, username, assertion=None):
+        challenge = self.auth.get_srv_challenge_nonce()
+        if not assertion:
+            assertion = self.create_hello_prt_assertion(username)
+        # Construct
+        payload = {
+            "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
+            "request_nonce": challenge,
+            "scope": "openid aza offline_access",
+            # Not sure if these matter
+            "group_sids": [],
+            "win_ver": "10.0.19041.868",
+            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            # Windows includes this, but it is not required or used
+            # user is instead taken from JWT assertion
+            "username": username,
+            "assertion": assertion
+        }
+        return self.request_token_with_devicecert_signed_payload(payload, use_v3=True)
+
     def register_winhello_key(self, pubkeycngblob, access_token):
         headers = {
             'Authorization': f'Bearer {access_token}',
