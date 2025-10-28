@@ -639,7 +639,6 @@ def main():
     otpparser.add_argument('-kp', '--keepass', action='store', metavar='KPFILE', default='roadtx.kdbx', help='KeePass file (default: roadtx.kdbx)')
     otpparser.add_argument('-kpp', '--keepass-password', action='store', metavar='KPPASS', help='KeePass file password. Can also be provided via KPPASS environment variable.')
 
-
     # Interactive auth using Selenium
     urlhelp = 'Url to initiate browsing. Will be constructed from below parameters if not supplied.'
     intauth_parser = subparsers.add_parser('interactiveauth', help='Interactive authentication in Selenium browser window, optional autofill')
@@ -1744,7 +1743,6 @@ def main():
                 time.sleep(99999)
             except KeyboardInterrupt:
                 return
-            return
     elif args.command == 'browserprtinject':
         auth.set_client_id(args.client)
         auth.set_resource_uri(args.resource)
