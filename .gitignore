@@ -18,6 +18,8 @@ __pycache__
 geckodriver
 *.log
 .env
+*.txt
+.roadtools_a*
 # Include roadtx data file
 !roadtx/roadtools/roadtx/*.json
 roadlib/roadtools/roadlib/*.xml

@@ -1348,7 +1348,11 @@ def main():
                 print('You must either supply a PRT and session key on the command line or a file that contains them')
                 return
             print("Renewing PRT")
-            prtdata = deviceauth.renew_prt()
+            if args.prt_protocol_v3:
+                prtdata = deviceauth.aad_brokerplugin_prt_auth_v3('broker', scope='aza openid', renew_prt=True)
+                prtdata['session_key'] = binascii.hexlify(deviceauth.session_key).decode('utf-8')
+            else:
+                prtdata = deviceauth.renew_prt()
             deviceauth.saveprt(prtdata, args.prt_file)
     elif args.command == 'prtauth':
         auth.set_user_agent(args.user_agent)
