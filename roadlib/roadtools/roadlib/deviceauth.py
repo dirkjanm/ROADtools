@@ -368,6 +368,25 @@ class DeviceAuthentication():
         }
         return json.dumps(jwk, separators=(',', ':'))
 
+    def get_deviceless_prt(self, code, redirect_uri='https://login.microsoftonline.com/common/oauth2/nativeclient'):
+        oldscope = self.auth.scope
+        self.auth.scope = 'aza profile offline_access openid'
+        if not self.privkey:
+            self.privkey = self.transportprivkey = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=2048,
+            )
+        data = {
+            'stk_jwk': self.create_public_jwk_from_key(self.privkey),
+            'prt_protocol_version': 3.0,
+        }
+        prtdata = self.auth.authenticate_with_code_native_v2(code, redirect_uri, additionaldata=data, returnreply=True)
+        self.auth.scope = oldscope
+        sessionkey_jwe = prtdata['session_key_jwe']
+        uwk = self.decrypt_jwe_with_transport_key(sessionkey_jwe)
+        prtdata['session_key'] = binascii.hexlify(uwk).decode('utf-8')
+        return prtdata
+
     def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None, deviceticket=None, device_domain=None):
         """
         Registers or joins a device in Azure AD. Requires an access token to the device registration service.
@@ -715,7 +734,6 @@ class DeviceAuthentication():
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         prtdata = res.json()
-
         # Return the reply if wanted, needed for non-prt flows using similar requests
         if returnreply:
             return prtdata
@@ -1017,18 +1035,13 @@ class DeviceAuthentication():
         client = self.auth.lookup_client_id(client_id).lower()
         payload = {
             "scope": "profile offline_access openid https://graph.windows.net/.default aza",
-            # "resource": self.auth.lookup_resource_uri(resource),
             "request_nonce": challenge,
             "refresh_token": self.prt,
-            "iss": "0ec893e0-5785-4de6-99da-4ed124e5296c",
             "grant_type": "refresh_token",
             "client_id": f"{client}",
-            "aud": "login.microsoftonline.com",
-
             "redirect_uri": "msauth://Microsoft.AAD.BrokerPlugin",
             "aud": "https://login.windows.net/common/oauth2/v2.0/token",
-            # "client_id": "29d9ed98-a469-4536-ade2-f981bc1d605e",
-            # "iss": "29d9ed98-a469-4536-ade2-f981bc1d605e"
+            "iss": "29d9ed98-a469-4536-ade2-f981bc1d605e"
         }
         payload['scope'] = 'urn:aad:tb:update:prt/.default openid profile offline_access'
         if not scope:
@@ -1040,8 +1053,6 @@ class DeviceAuthentication():
         # Custom redirect_uri if needed
         if redirect_uri:
             payload['redirect_uri'] = redirect_uri
-        # elif client == '1b730954-1685-4b74-9bfd-dac224a7b894':
-        #     payload['redirect_uri'] = 'https://login.microsoftonline.com/common/oauth2/nativeclient'
         responsedata = self.request_token_with_sessionkey_signed_payload_prtprotocolv3(payload, False)
         tokendata = self.auth.decrypt_auth_response(responsedata, self.session_key, True)
         return tokendata
