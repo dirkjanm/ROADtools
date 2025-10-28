@@ -242,7 +242,7 @@ class SeleniumAuthentication():
                     pass
                 try:
                     driver.find_element(By.ID, "idSIButton9").click()
-                except (ElementClickInterceptedException, ElementNotInteractableException):
+                except (ElementClickInterceptedException, ElementNotInteractableException, NoSuchElementException):
                     pass
                 try:
                     WebDriverWait(driver, 2).until(lambda d: '?code=' in d.current_url)
