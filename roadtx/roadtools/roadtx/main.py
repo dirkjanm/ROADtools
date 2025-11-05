@@ -16,6 +16,7 @@ from roadtools.roadtx.selenium import SeleniumAuthentication
 from roadtools.roadtx.utils import find_redirurl_for_client, parse_encrypted_token
 from roadtools.roadtx.federation import EncryptedPFX, SAMLSigner, encode_object_guid
 import pyotp
+import requests
 
 RR_HELP = 'ROADtools Token eXchange by Dirk-jan Mollema (@_dirkjan) / Outsider Security (outsidersecurity.nl)'
 
@@ -2218,7 +2219,7 @@ def main():
             print(response.status_code)
         try:
             print(json.dumps(response.json(), indent=4))
-        except json.decoder.JSONDecodeError:
+        except (requests.exceptions.JSONDecodeError, json.decoder.JSONDecodeError):
             print(response.text)
 
 if __name__ == '__main__':
