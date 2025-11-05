@@ -57,7 +57,7 @@ jobs:
       roadrecon -h
       roadrecon-gui -h
       roadrecon plugin bloodhound -h
-      roadrecon auth -u $rtuser -p $rtpass -c d3590ed6-52b3-4102-aeff-aad2292ab01c
+      roadrecon auth -u $rtuser -p $rtpass
       roadrecon dump
       roadrecon plugin policies
       roadrecon plugin xlsexport
