@@ -1675,7 +1675,7 @@ def main():
         service = selauth.get_service(args.driver_path)
         if not service:
             return
-        selauth.driver = selauth.get_webdriver(service, intercept=custom_ua)
+        selauth.driver = selauth.get_webdriver(service, intercept=True)
         if custom_ua:
             result = selauth.selenium_login_with_custom_useragent(url, args.username, password, otpseed, keep=args.keep_open, capture=args.capture_code, federated=args.federated, devicecode=args.device_code)
         else:

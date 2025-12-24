@@ -145,6 +145,12 @@ class SeleniumAuthentication():
                     newredir += f'#{parsed.fragment}'
                 del response.headers['Location']
                 response.headers['Location'] = newredir
+            if request.url.startswith('https://login.microsoftonline.com/common/oauth2/nativeclient'):
+                # Replace body with empty one to prevent redirect
+                body = b'A nice blank page to give roadtx some time to capture the authorization code...'
+                response.body = encoding.encode(body, response.headers.get('Content-Encoding', 'identity'))
+                del response.headers['Content-Length']
+                response.headers['Content-Length'] = len(response.body)
             if request.url.startswith('https://login.microsoftonline.com/appverify'):
                 body = encoding.decode(response.body, response.headers.get('Content-Encoding', 'identity'))
                 if b'document.location.replace' in body:
@@ -328,16 +334,14 @@ class SeleniumAuthentication():
             del request.headers['User-Agent']
             request.headers['User-Agent'] = self.auth.user_agent
         self.driver.request_interceptor = interceptor
-        if self.redir_has_custom_scheme():
-            self.driver.response_interceptor = self.redir_interceptor
+        self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
 
     def selenium_login_regular(self, url, identity=None, password=None, otpseed=None, keep=False, capture=False, federated=False, devicecode=None):
         '''
         Wrapper for plain login but with redirect URL rewrite support
         '''
-        if self.redir_has_custom_scheme():
-            self.driver.response_interceptor = self.redir_interceptor
+        self.driver.response_interceptor = self.redir_interceptor
         return self.selenium_login(url, identity=identity, password=password, otpseed=otpseed, keep=keep, capture=capture, federated=federated, devicecode=devicecode)
 
     def selenium_login_with_prt(self, url, identity=None, password=None, otpseed=None, keep=False, prtcookie=None, capture=False):
@@ -493,6 +497,14 @@ class SeleniumAuthentication():
                         newredir += f'#{parsed.fragment}'
                     del response.headers['Location']
                     response.headers['Location'] = newredir
+
+                if request.url.startswith('https://login.microsoftonline.com/common/oauth2/nativeclient'):
+                    # Replace body with empty one to prevent redirect
+                    body = b'A nice blank page to give roadtx some time to capture the authorization code...'
+                    response.body = encoding.encode(body, response.headers.get('Content-Encoding', 'identity'))
+                    del response.headers['Content-Length']
+                    response.headers['Content-Length'] = len(response.body)
+
 
         self.driver.request_interceptor = interceptor
         self.driver.response_interceptor = response_interceptor
