@@ -73,6 +73,18 @@ async def dumphelper(url, method=requests.get):
                     if req.status == 404 and 'a0b1b346-4d3e-4e8b-98f8-753987be4970' in url:
                         return
                     print('Error %d for URL %s' % (req.status, nexturl))
+                    if req.status == 403:
+                        # Handle access denied cases in AAD graph
+                        try:
+                            message = await req.json()
+                            try:
+                                errmessage = message['odata.error']['message']['value']
+                                if 'Access blocked to AAD Graph API' in errmessage:
+                                    print('Access to AAD Graph API blocked. Try requesting a token with a different client ID, then re-run roadrecon gather')
+                            except KeyError:
+                                pass
+                        except:
+                            pass
                     # print(await req.text())
                     # print(req.headers)
                     print('')
