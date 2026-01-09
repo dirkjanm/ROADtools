@@ -16,6 +16,7 @@ from xml.sax.saxutils import escape as xml_escape
 import xml.etree.ElementTree as ET
 from xml.dom.minidom import parseString
 import os
+import importlib
 from cryptography.hazmat.primitives import serialization, padding, hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.kbkdf import CounterLocation, KBKDFHMAC, Mode
@@ -114,6 +115,17 @@ class Authentication():
         Overrides user agent (accepts aliases)
         """
         self.user_agent = self.lookup_user_agent(useragent)
+
+    def get_redirect_for_client(self, client_id, interactive=False, broker=False):
+        """
+        Try to resolve a valid redirect URI for a client, using roadtx lookup if available.
+        Falls back to the native client redirect.
+        """
+        try:
+            utils = importlib.import_module('roadtools.roadtx.utils')
+            return utils.find_redirurl_for_client(client_id, interactive=interactive, broker=broker)
+        except Exception:
+            return 'https://login.microsoftonline.com/common/oauth2/nativeclient'
 
     def user_discovery_v1(self, username):
         """
@@ -1155,7 +1167,7 @@ class Authentication():
         cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
         return cookie
 
-    def authenticate_with_prt_v2(self, prt, sessionkey):
+    def authenticate_with_prt_v2(self, prt, sessionkey, redirurl=None):
         """
         KDF version 2 PRT auth
         """
@@ -1164,9 +1176,9 @@ class Authentication():
             return False
 
         cookie = self.create_prt_cookie_kdf_ver_2(prt, sessionkey, nonce)
-        return self.authenticate_with_prt_cookie(cookie)
+        return self.authenticate_with_prt_cookie(cookie, redirurl=redirurl)
 
-    def authenticate_with_prt(self, prt, context, derived_key=None, sessionkey=None):
+    def authenticate_with_prt(self, prt, context, derived_key=None, sessionkey=None, redirurl=None):
         """
         Authenticate with a PRT and given context/derived key
         Uses KDF version 1 (legacy)
@@ -1187,7 +1199,7 @@ class Authentication():
             "request_nonce": nonce
         }
         cookie = jwt.encode(payload, derived_key, algorithm='HS256', headers=headers)
-        return self.authenticate_with_prt_cookie(cookie)
+        return self.authenticate_with_prt_cookie(cookie, redirurl=redirurl)
 
     def calculate_derived_key_v2(self, sessionkey, context, jwtbody):
         """
@@ -1537,6 +1549,10 @@ class Authentication():
         auth_parser.add_argument('--prt-cookie',
                                  action='store',
                                  help='Primary Refresh Token cookie from ROADtoken (JWT)')
+        auth_parser.add_argument('-ru',
+                                 '--redirect-url',
+                                 action='store',
+                                 help='Custom redirect URL to use when redeeming a PRT/refresh token (default depends on client/app)')
         auth_parser.add_argument('--prt-init',
                                  action='store_true',
                                  help='Initialize Primary Refresh Token authentication flow (get nonce)')
@@ -1925,19 +1941,22 @@ class Authentication():
                 derived_key = self.ensure_binary_derivedkey(args.derived_key)
                 context = self.ensure_binary_context(args.prt_context)
                 sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
-                return self.authenticate_with_prt_cookie(args.prt_cookie, context, derived_key, args.prt_verify, sessionkey)
+                redirurl = args.redirect_url or self.get_redirect_for_client(self.client_id, interactive=False, broker=True)
+                return self.authenticate_with_prt_cookie(args.prt_cookie, context, derived_key, args.prt_verify, sessionkey, redirurl=redirurl)
             if args.prt and args.prt_context and args.derived_key:
                 derived_key = self.ensure_binary_derivedkey(args.derived_key)
                 context = self.ensure_binary_context(args.prt_context)
                 prt = self.ensure_plain_prt(args.prt)
-                return self.authenticate_with_prt(prt, context, derived_key=derived_key)
+                redirurl = args.redirect_url or self.get_redirect_for_client(self.client_id, interactive=False, broker=True)
+                return self.authenticate_with_prt(prt, context, derived_key=derived_key, redirurl=redirurl)
             if args.prt and args.prt_sessionkey:
                 prt = self.ensure_plain_prt(args.prt)
                 sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
+                redirurl = args.redirect_url or self.get_redirect_for_client(self.client_id, interactive=False, broker=True)
                 if args.kdf_v1:
-                    return self.authenticate_with_prt(prt, None, sessionkey=sessionkey)
+                    return self.authenticate_with_prt(prt, None, sessionkey=sessionkey, redirurl=redirurl)
                 else:
-                    return self.authenticate_with_prt_v2(prt, sessionkey)
+                    return self.authenticate_with_prt_v2(prt, sessionkey, redirurl=redirurl)
         except AuthenticationException as ex:
             try:
                 error_data = json.loads(str(ex))

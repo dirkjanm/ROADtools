@@ -1079,19 +1079,22 @@ class AsyncAuthentication(Authentication):
                 derived_key = self.ensure_binary_derivedkey(args.derived_key)
                 context = self.ensure_binary_context(args.prt_context)
                 sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
-                return await self.authenticate_with_prt_cookie(args.prt_cookie, context, derived_key, args.prt_verify, sessionkey)
+                redirurl = args.redirect_url or self.get_redirect_for_client(self.client_id, interactive=False, broker=True)
+                return await self.authenticate_with_prt_cookie(args.prt_cookie, context, derived_key, args.prt_verify, sessionkey, redirurl=redirurl)
             if args.prt and args.prt_context and args.derived_key:
                 derived_key = self.ensure_binary_derivedkey(args.derived_key)
                 context = self.ensure_binary_context(args.prt_context)
                 prt = self.ensure_plain_prt(args.prt)
-                return await self.authenticate_with_prt(prt, context, derived_key=derived_key)
+                redirurl = args.redirect_url or self.get_redirect_for_client(self.client_id, interactive=False, broker=True)
+                return await self.authenticate_with_prt(prt, context, derived_key=derived_key, redirurl=redirurl)
             if args.prt and args.prt_sessionkey:
                 prt = self.ensure_plain_prt(args.prt)
                 sessionkey = self.ensure_binary_sessionkey(args.prt_sessionkey)
+                redirurl = args.redirect_url or self.get_redirect_for_client(self.client_id, interactive=False, broker=True)
                 if args.kdf_v1:
-                    return await self.authenticate_with_prt(prt, None, sessionkey=sessionkey)
+                    return await self.authenticate_with_prt(prt, None, sessionkey=sessionkey, redirurl=redirurl)
                 else:
-                    return await self.authenticate_with_prt_v2(prt, sessionkey)
+                    return await self.authenticate_with_prt_v2(prt, sessionkey, redirurl=redirurl)
         except AuthenticationException as ex:
             try:
                 error_data = json.loads(str(ex))
