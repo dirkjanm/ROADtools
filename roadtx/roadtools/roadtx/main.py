@@ -84,6 +84,9 @@ def main():
                                  '--broker-redirect-url',
                                  action='store',
                                  help='Broker redirect URL (for Nested App Auth)')
+    rttsauth_parser.add_argument('--headers',
+                                 action='store',
+                                 help='Custom headers in JSON format, e.g., \'{"X-AnchorMailbox": "Oid:objectid@tenantid"}\'')
 
     # Construct device module
     device_parser = subparsers.add_parser('device', help='Register or join devices to Azure AD')
@@ -708,6 +711,9 @@ def main():
     intauth_parser.add_argument('--otpseed',
                                 action='store',
                                 help='TOTP seed to calculate MFA code when prompted')
+    intauth_parser.add_argument('--headers',
+                                action='store',
+                                help='Custom headers in JSON format, e.g., \'{"X-AnchorMailbox": "Oid:objectid@tenantid"}\'')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
@@ -1091,6 +1097,13 @@ def main():
         auth.set_user_agent(args.user_agent)
         auth.set_scope(args.scope)
         auth.outfile = args.tokenfile
+        if args.headers:
+            try:
+                headers_dict = json.loads(args.headers)
+                auth.set_custom_headers(headers_dict)
+            except json.JSONDecodeError:
+                print(f'Error: Invalid JSON format for headers: {args.headers}')
+                return
         if args.origin:
             auth.set_origin_value(args.origin)
         elif 'originheader' in tokenobject:
@@ -1553,6 +1566,13 @@ def main():
         auth.set_user_agent(args.user_agent)
         auth.tenant = args.tenant
         auth.use_pkce = args.pkce
+        if args.headers:
+            try:
+                headers_dict = json.loads(args.headers)
+                auth.set_custom_headers(headers_dict)
+            except json.JSONDecodeError:
+                print(f'Error: Invalid JSON format for headers: {args.headers}')
+                return
         if args.origin:
             auth.set_origin_value(args.origin, args.redirect_url)
         if args.cae:
