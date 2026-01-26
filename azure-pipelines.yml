@@ -72,7 +72,7 @@ jobs:
       set -e
       roadtx -h
       roadtx gettokens -u $rtuser -p $rtpass
-      roadtx gettokens -u $rtuser -p $rtpass -c azcli -r azrm
+      roadtx gettokens -u $rtuser -p $rtpass -c 27922004-5251-4030-b22d-91ecd9a37ea4 -r msgraph
       roadtx gettokens --refresh-token file -c msteams
       rm .roadtools_auth
     displayName: 'Run basic roadtx tests'
