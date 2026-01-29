@@ -1897,9 +1897,14 @@ def main():
             else:
                 print('The supplied data looks like an encrypted token or nonce to analyze use --encrypted')
                 return
-        header, body, _ = auth.parse_jwt(tokendata)
-        print(json.dumps(header, sort_keys=True, indent=4))
-        print(json.dumps(body, sort_keys=True, indent=4))
+        try:
+            header, body, _ = auth.parse_jwt(tokendata)
+            print(json.dumps(header, sort_keys=True, indent=4))
+            print(json.dumps(body, sort_keys=True, indent=4))
+        except UnicodeDecodeError:
+            # Potentially encrypted token
+            print('Could not parse token as access token, attempting to decode as encrypted token (JWE) instead')
+            auth.parse_compact_jwe(tokendata, verbose=True)
     elif args.command in ('getscope', 'findscope'):
         # Load scope data
         current_dir = os.path.abspath(os.path.dirname(__file__))
