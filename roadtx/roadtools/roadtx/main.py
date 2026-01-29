@@ -1571,7 +1571,7 @@ def main():
         if args.url:
             url = args.url
         else:
-            url = auth.build_auth_url(redirect_url, 'code', args.scope)
+            url = auth.build_auth_url(redirect_url, 'code', auth.scope)
         service = selauth.get_service(args.driver_path)
         if not service:
             return
