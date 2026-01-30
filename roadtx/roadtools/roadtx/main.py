@@ -139,6 +139,13 @@ def main():
     prt_parser.add_argument('-p', '--password', action='store', metavar='PASSWORD', help='Password')
     prt_parser.add_argument('-r', '--refresh-token', action='store', help='Refresh token')
     prt_parser.add_argument('--saml-token', action='store', help='SAML token for federated auth (use value stdin to read from input)')
+    prt_parser.add_argument('--krbtoken',
+                                action='store',
+                                help='Kerberos auth data from krbsso.py (desktopsso needed)')
+    prt_parser.add_argument('-t',
+                                '--tenant',
+                                action='store',
+                                help='domain to auth to')
 
 
 
@@ -1347,6 +1354,20 @@ def main():
                 else:
                     samltoken = args.saml_token
                 prtdata = deviceauth.get_prt_with_samltoken(samltoken)
+            if args.krbtoken:
+                auth.set_user_agent(args.user_agent)
+                if not args.tenant:
+                    print("-t tenant is needed with krbtoken!")
+                    return
+                auth.tenant = args.tenant
+                if args.krbtoken and args.krbtoken.lower() == 'stdin':
+                    krbtoken = sys.stdin.read().strip()
+                else:
+                    krbtoken = args.krbtoken
+                dsso_token = auth.get_desktopsso_token(args.username, args.password, krbtoken)
+                if dsso_token:
+                    dsso_saml = '<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion"><DesktopSsoToken>{0}</DesktopSsoToken></saml:Assertion>'.format(dsso_token)
+                    prtdata = deviceauth.get_prt_with_samltoken(dsso_saml)
             if args.refresh_token:
                 if args.refresh_token.lower() == 'file':
                     with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
@@ -1374,7 +1395,7 @@ def main():
             if args.username and args.hello_assertion:
                 prtdata = deviceauth.get_prt_with_hello_key(args.username, args.hello_assertion)
             if not prtdata:
-                print('You must specify a username + password or refresh token that can be used to request a PRT')
+                print('You must specify a username + password, kerberos ticket or refresh token that can be used to request a PRT')
                 return
             print(f"Obtained PRT: {prtdata['refresh_token']}")
             if prtdata['session_key']:
