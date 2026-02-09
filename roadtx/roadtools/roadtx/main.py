@@ -715,6 +715,9 @@ def main():
     intauth_parser.add_argument('--otpseed',
                                 action='store',
                                 help='TOTP seed to calculate MFA code when prompted')
+    intauth_parser.add_argument('--headless',
+                                action='store_true',
+                                help='Run Selenium in headless mode')
 
     # Interactive auth using Selenium - creds from keepass
     kdbauth_parser = subparsers.add_parser('keepassauth', help='Selenium based authentication with credentials from a KeePass database')
@@ -1588,7 +1591,7 @@ def main():
             redirect_url = args.redirect_url
         else:
             redirect_url = find_redirurl_for_client(auth.client_id, interactive=False)
-        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type)
+        selauth = SeleniumAuthentication(auth, deviceauth, redirect_url, proxy=args.proxy, proxy_type=args.proxy_type, headless=args.headless)
         if args.url:
             url = args.url
         else:
