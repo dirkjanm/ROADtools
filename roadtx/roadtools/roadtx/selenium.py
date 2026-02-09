@@ -41,7 +41,7 @@ def selenium_wrap(func):
     return wrapped
 
 class SeleniumAuthentication():
-    def __init__(self, auth, deviceauth, redirurl, proxy=None, proxy_type="http"):
+    def __init__(self, auth, deviceauth, redirurl, proxy=None, proxy_type="http", headless=False):
         if proxy:
             # Strip possible prefixes
             proxy = proxy.replace('http://','').replace('https://','').replace('socks://','').replace('socks4://','').replace('socks5://','')
@@ -51,7 +51,7 @@ class SeleniumAuthentication():
         self.deviceauth = deviceauth
         self.driver = None
         self.redirurl = redirurl
-        self.headless = False
+        self.headless = headless
 
     def get_service(self, driverpath):
         # Default expects geckodriver to be in path, but if it exists locally we use that
