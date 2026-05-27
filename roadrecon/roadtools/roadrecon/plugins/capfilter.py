@@ -889,7 +889,6 @@ class CapFilterPlugin():
         signinrisks               = self._parse_signinrisks(conditions)
         sessioncontrols           = self._parse_sessioncontrols(detail)
         devices                   = self._parse_devices(conditions)
-        # ✅ Fix: use controls_str everywhere, not controls
         controls_str, controls_groups = self._parse_controls(detail['Controls']) if 'Controls' in detail else ('', [])
 
         # Policy state styling
@@ -924,7 +923,6 @@ class CapFilterPlugin():
         show_row = True
         if match_only and not match_condition:
             show_row = False
-        # ✅ Fix: was referencing undefined 'controls', now uses 'controls_str'
         if control_only and controls_str == '':
             show_row = False
 
@@ -1096,7 +1094,6 @@ class CapFilterPlugin():
                     applied['session'].append(sc)
 
         # Build summary parts to check if there is anything to display
-        # ✅ Fix: summary_parts was referenced before being built in the previous version
         summary_parts = []
         if applied['deny']:             summary_parts.append('deny')
         if applied['mfa']:              summary_parts.append('mfa')
@@ -1112,7 +1109,6 @@ class CapFilterPlugin():
         if nb_results > 0:
             self.console.print(cap_table)
 
-        # ✅ Fix: label may not be defined if no --ip/--country was provided
         label = user_filter_upn or ''
 
         if nb_results == 0:
