@@ -298,7 +298,9 @@ class SeleniumAuthentication():
         # In case "Are you trying to sign in to MS authentication broker" page is shown immediately, click continue
         try:
             els = WebDriverWait(driver, 1).until(lambda d: d.find_element(By.ID, "idSIButton9"))
-            els.send_keys(Keys.ENTER)
+            # Prevents attempting to click on disabled button, e.g. if account selection page is shown
+            if els.get_attribute("style") != "display: none;":
+                els.click()
         except TimeoutException:
             pass
 
