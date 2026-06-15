@@ -658,7 +658,7 @@ class SeleniumAuthentication():
         except TimeoutException:
             pass
 
-        el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='form[name="hiddenform"] input[name="code"]'))
+        el = WebDriverWait(driver, 30 if self.headless else 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='form[name="hiddenform"] input[name="code"]'))
         code = el.get_property("value")
         driver.close()
         return self.auth.authenticate_with_code_encrypted(code, self.deviceauth.session_key, self.redirurl)
