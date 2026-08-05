@@ -1928,8 +1928,10 @@ def main():
         elif args.passkey:
             client, passkey_data = WebAuthnClient.from_software_passkey(deviceauth, args.passkey)
             fidoauth = EntraIDFIDOAuthenticator(webauthn_client=client, user_handle=passkey_data['user_handle'])
+        elif args.fidoassertion:
+            fidoauth = None
         else:
-            print('Hello key or passkey argument is required')
+            print('Hello key, passkey or fido-assertion argument is required')
             return
 
         result = selauth.selenium_login_fido(url, args.username, fidoauth, capture=args.capture_code, keep=args.keep_open, singleassertion=args.fidoassertion)
