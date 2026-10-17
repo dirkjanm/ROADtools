@@ -606,7 +606,8 @@ async def run(args):
         'Authorization': '%s %s' % (token['tokenType'], token['accessToken'])
     }
     if args.evade:
-        args.user_agent = 'Microsoft ADO.NET Data Services'
+        if args.user_agent is None:
+            args.user_agent = 'Microsoft ADO.NET Data Services'
         aiostrategy = BatchSession
     else:
         aiostrategy = aiohttp.ClientSession
