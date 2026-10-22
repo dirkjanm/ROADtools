@@ -241,6 +241,9 @@ class AccessPoliciesPlugin():
                 # clist should be a dict, for example {"TrafficProfiles":"Internet"}
                 ot += 'Network access: '
                 ot += ', '.join([f"{escape(action)}: {escape(target)}" for action, target in clist.items()])
+            elif ctype == 'ApplicationFilterRule':
+                ot += 'Resource rule: '
+                ot += escape(clist)
             else:
                 if 'All' in clist:
                     ot += 'All resources'
@@ -258,6 +261,7 @@ class AccessPoliciesPlugin():
                         if ctype == 'Applications':
                             ot += 'Resources: '
                             ot += ', '.join([escape(uobj.displayName) for uobj in objects])
+                        
         return ot
 
     def _parse_platform(self, cond):
