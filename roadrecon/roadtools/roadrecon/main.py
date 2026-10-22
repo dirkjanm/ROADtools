@@ -126,6 +126,8 @@ def main():
 
     args = parser.parse_args()
     if args.command == 'auth':
+        if args.authority:
+            auth.set_authority(args.authority)
         auth.parse_args(args)
         res = auth.get_tokens(args)
         # Could probably be shortened but older versions of roadlib may
