@@ -1633,6 +1633,11 @@ class Authentication():
                                  action='store',
                                  help='Tenant ID to auth to (leave blank for default tenant for account)')
         if for_rr:
+            auth_parser.add_argument('-a',
+                                     '--authority',
+                                     action='store',
+                                     help="Custom authority to use for national clouds (format: auth URI without https:// prefix or alias: global / china. default: login.microsoftonline.com)")
+        if for_rr:
             helptext = 'Client ID to use when authenticating. (Must be a public client from Microsoft with user_impersonation permissions!). Default: Azure CLI App ID'
         else:
             helptext = 'Client ID to use when authenticating. (Must have the required OAuth2 permissions or Application Role for what you want to achieve)'

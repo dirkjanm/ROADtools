@@ -60,6 +60,11 @@ AUTHORITIES = {
     "china": "login.partner.microsoftonline.cn"
 }
 
+AADGRAPH_URLS = {
+    "global": "graph.windows.net",
+    "china": "graph.chinacloudapi.cn"
+}
+
 DSSO_BODY_KERBEROS = '''<?xml version='1.0' encoding='UTF-8'?>
 <s:Envelope
     xmlns:s='http://www.w3.org/2003/05/soap-envelope'
