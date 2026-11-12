@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 
 import roadtools.roadlib.metadef.database as database
 from roadtools.roadlib.auth import Authentication
+from roadtools.roadlib.constants import AADGRAPH_URLS
 from roadtools.roadrecon.plugins import policyanalysis
 from roadtools.roadlib.metadef.database import (
     AdministrativeUnit, Application, ApplicationRef, AppRoleAssignment,
@@ -43,7 +44,9 @@ tokenfilltime = time.time()
 
 MAX_GROUPS = 3000
 MAX_REQ_PER_SEC = 600.0
-GATHER_RESOURCE = 'https://graph.windows.net'
+
+graphurl = 'https://graph.windows.net'
+gatherauthority = 'global'
 
 class BatchResponse(aiohttp.ClientResponse):
     def __init__(self, *args, **kwargs):
@@ -113,7 +116,7 @@ GET {url} HTTP/1.1
 --batch_request_boundary--'''
         kwargs['headers'] = reqheaders
         kwargs['data'] = body
-        batchurl = f'https://graph.windows.net/{urlparts[3]}/$batch?api-version=1.61-internal'
+        batchurl = f'{graphurl}/{urlparts[3]}/$batch?api-version=1.61-internal'
         # Send POST request instead to $batch endpoint
         return self.post(batchurl, **kwargs)
 
@@ -211,6 +214,7 @@ def checktoken():
     global token, expiretime
     if time.time() > expiretime - 300:
         auth = Authentication()
+        auth.set_authority(gatherauthority)
         try:
             auth.client_id = token['_clientId']
         except KeyError:
@@ -221,7 +225,7 @@ def checktoken():
             auth.set_user_agent(token['useragent'])
         if 'refreshToken' in token:
             print("Access token expired - fetching new token using refresh token")
-            token = auth.handle_autotoken(token, resource=GATHER_RESOURCE)
+            token = auth.handle_autotoken(token, resource=graphurl)
             headers['Authorization'] = '%s %s' % (token['tokenType'], token['accessToken'])
             expiretime = time.time() + token['expiresIn']
             return True
@@ -335,7 +339,7 @@ class DataDumper(object):
     async def dump_object(self, objecttype, dbtype, method=None):
         if method is None:
             method = self.ahsession.get
-        url = 'https://graph.windows.net/%s/%s?api-version=1.61-internal' % (self.tenantid, objecttype)
+        url = graphurl + '/%s/%s?api-version=1.61-internal' % (self.tenantid, objecttype)
         cache = []
         async for obj in dumphelper(url, method=method):
             cache.append(obj)
@@ -411,7 +415,7 @@ class DataDumper(object):
         jobs = []
         i = 0
         for parent in parents:
-            url = 'https://graph.windows.net/%s/%s/%s/$links/%s?api-version=%s' % (self.tenantid, objecttype, parent.objectId, linktype, self.api_version)
+            url = graphurl + '/%s/%s/%s/$links/%s?api-version=%s' % (self.tenantid, objecttype, parent.objectId, linktype, self.api_version)
             jobs.append(self.dump_l_to_db(url, method, mapping, linkname, childtbl, parent))
             i += 1
             # Chunk it to avoid huge memory usage
@@ -428,7 +432,7 @@ class DataDumper(object):
         parents = self.session.query(parenttbl.objectId).all()
         jobs = []
         for parentid, in parents:
-            url = 'https://graph.windows.net/%s/%s/%s/$links/%s?api-version=%s' % (self.tenantid, objecttype, parentid, linktype, self.api_version)
+            url = graphurl + '/%s/%s/%s/$links/%s?api-version=%s' % (self.tenantid, objecttype, parentid, linktype, self.api_version)
             # Chunk it to avoid huge memory usage
             await queue.put(self.dump_l_to_linktable(url, method, mapping, parentid, objecttype))
         await queue.join()
@@ -448,7 +452,7 @@ class DataDumper(object):
         cache = []
         i = 0
         for parentid, in parents:
-            url = 'https://graph.windows.net/%s/%s/%s?api-version=%s&$select=strongAuthenticationDetail,objectId' % (self.tenantid, objecttype, parentid, self.api_version)
+            url = graphurl + '/%s/%s/%s?api-version=%s&$select=strongAuthenticationDetail,objectId' % (self.tenantid, objecttype, parentid, self.api_version)
             jobs.append(self.dump_mfa_to_db(url, method, parentid, cache))
             i += 1
             # Chunk it to avoid huge memory usage
@@ -494,7 +498,7 @@ class DataDumper(object):
         cache = []
         jobs = []
         for parent in parents:
-            url = 'https://graph.windows.net/%s/%s/%s/%s?api-version=%s' % (self.tenantid, objecttype, parent.objectId, linktype, self.api_version)
+            url = graphurl + '/%s/%s/%s/%s?api-version=%s' % (self.tenantid, objecttype, parent.objectId, linktype, self.api_version)
             jobs.append(self.dump_lo_to_db(url, method, linkobjecttype, cache, ignore_duplicates=ignore_duplicates))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
@@ -505,7 +509,7 @@ class DataDumper(object):
     async def dump_object_expansion(self, objecttype, dbtype, expandprop, linkname, childtbl, mapping=None, method=None):
         if method is None:
             method = self.ahsession.get
-        url = 'https://graph.windows.net/%s/%s?api-version=%s&$expand=%s' % (self.tenantid, objecttype, self.api_version, expandprop)
+        url = graphurl + '/%s/%s?api-version=%s&$expand=%s' % (self.tenantid, objecttype, self.api_version, expandprop)
         i = 0
         async for obj in dumphelper(url, method=method):
             if len(obj[expandprop]) > 0:
@@ -536,7 +540,7 @@ class DataDumper(object):
         if method is None:
             method = self.ahsession.get
         cache = []
-        url = 'https://graph.windows.net/%s/%s?api-version=1.61-internal&$select=keyCredentials,objectId' % (self.tenantid, objecttype)
+        url = graphurl + '/%s/%s?api-version=1.61-internal&$select=keyCredentials,objectId' % (self.tenantid, objecttype)
         async for obj in dumphelper(url, method=method):
             cache.append({'userid':obj['objectId'], 'keyCredentials':obj['keyCredentials']})
             if len(cache) > 1000:
@@ -550,7 +554,7 @@ class DataDumper(object):
         cache = []
         jobs = []
         for parentid in parents:
-            url = 'https://graph.windows.net/%s/%s/%s?api-version=%s' % (self.tenantid, endpoint, parentid, self.api_version)
+            url = graphurl + '/%s/%s/%s?api-version=%s' % (self.tenantid, endpoint, parentid, self.api_version)
             jobs.append(self.dump_so_to_db(url, self.ahsession.get, dbtype, cache, ignore_duplicates=ignore_duplicates))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
@@ -562,7 +566,7 @@ class DataDumper(object):
         cache = []
         jobs = []
         for parent in parents:
-            url = 'https://graph.windows.net/%s/%s/%s?api-version=%s' % (self.tenantid, endpoint, parent.appId, self.api_version)
+            url = graphurl + '/%s/%s/%s?api-version=%s' % (self.tenantid, endpoint, parent.appId, self.api_version)
             jobs.append(self.dump_so_to_db(url, self.ahsession.get, dbtype, cache, ignore_duplicates=ignore_duplicates))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
@@ -574,7 +578,7 @@ class DataDumper(object):
         cache = []
         jobs = []
         for parent in parents:
-            url = 'https://graph.windows.net/%s/roleAssignments?api-version=%s&$filter=roleDefinitionId eq \'%s\'' % (self.tenantid, self.api_version, parent.objectId)
+            url = graphurl + '/%s/roleAssignments?api-version=%s&$filter=roleDefinitionId eq \'%s\'' % (self.tenantid, self.api_version, parent.objectId)
             jobs.append(self.dump_lo_to_db(url, self.ahsession.get, dbtype, cache))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
@@ -586,7 +590,7 @@ class DataDumper(object):
         cache = []
         jobs = []
         for parent in parents:
-            url = 'https://graph.windows.net/%s/eligibleRoleAssignments?api-version=%s&$filter=roleDefinitionId eq \'%s\'' % (self.tenantid, self.api_version, parent.objectId)
+            url = graphurl + '/%s/eligibleRoleAssignments?api-version=%s&$filter=roleDefinitionId eq \'%s\'' % (self.tenantid, self.api_version, parent.objectId)
             jobs.append(self.dump_lo_to_db(url, self.ahsession.get, dbtype, cache))
         await asyncio.gather(*jobs)
         if len(cache) > 0:
@@ -827,6 +831,11 @@ def getargs(gather_parser):
     gather_parser.add_argument('--evade',
                                action='store_true',
                                help='Evade common AAD Graph enumeration detections')
+    gather_parser.add_argument('--cloud',
+                               action='store',
+                               choices=['global', 'china'],
+                               default='global',
+                               help='Cloud environment to gather from, selecting the AAD Graph host (default: global)')
     # gather_parser.add_argument('-p', '--proxy', action='store', help="Proxy requests through a proxy (format: proxyip:port). Ignores TLS validation if specified, unless --secure is used.")
     # gather_parser.add_argument('-pt', '--proxy-type', action='store', default="http", help="Proxy type to use. Supported: http / https. Default: http")
     # gather_parser.add_argument('-s', '--secure', action='store_true', help="Enforce certificate validation even if using a proxy")
@@ -834,7 +843,7 @@ def getargs(gather_parser):
 
 
 def main(args=None):
-    global token, headers, dburl, urlcounter
+    global token, headers, dburl, urlcounter, graphurl, gatherauthority
     if args is None:
         parser = argparse.ArgumentParser(add_help=True, description='ROADrecon - Gather Azure AD information', formatter_class=argparse.RawDescriptionHelpFormatter)
         getargs(parser)
@@ -842,6 +851,8 @@ def main(args=None):
         if len(sys.argv) < 2:
             parser.print_help()
             sys.exit(1)
+    graphurl = 'https://' + AADGRAPH_URLS[getattr(args, 'cloud', 'global')]
+    gatherauthority = getattr(args, 'cloud', 'global')
     if args.tokens_stdin:
         token = json.loads(sys.stdin.read())
     else:
@@ -859,13 +870,14 @@ def main(args=None):
     except KeyError:
         print('No access token found in tokenfile')
         return
-    if tokendata['aud'] not in ('https://graph.windows.net', 'https://graph.windows.net/', '00000002-0000-0000-c000-000000000000'):
+    if tokendata['aud'] not in (graphurl, graphurl + '/', '00000002-0000-0000-c000-000000000000'):
         if args.autotoken:
             auth = Authentication()
-            token = auth.handle_autotoken(token, args=args, resource=GATHER_RESOURCE)
+            auth.set_authority(gatherauthority)
+            token = auth.handle_autotoken(token, args=args, resource=graphurl)
         else:
-            print(f"Wrong token audience, got {tokendata['aud']} but expected https://graph.windows.net")
-            print("Make sure to request a token with -r https://graph.windows.net")
+            print(f"Wrong token audience, got {tokendata['aud']} but expected {graphurl}")
+            print(f"Make sure to request a token with -r {graphurl}")
             return
 
     headers['Authorization'] = f"Bearer {token['accessToken']}"
