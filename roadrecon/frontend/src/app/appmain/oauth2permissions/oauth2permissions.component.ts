@@ -6,16 +6,17 @@ import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { DatabaseService, OAuth2PermissionsItem } from '../aadobjects.service'
 // import
 @Component({
+  standalone: false,
   selector: 'app-roles',
   templateUrl: './oauth2permissions.component.html',
   styleUrls: ['./oauth2permissions.component.less'],
   providers: [DatabaseService]
 })
 export class Oauth2permissionsComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<OAuth2PermissionsItem>;
-  dataSource: MatTableDataSource<OAuth2PermissionsItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<OAuth2PermissionsItem>;
+  dataSource!: MatTableDataSource<OAuth2PermissionsItem>;
 
   constructor(private service: DatabaseService) {  }
 

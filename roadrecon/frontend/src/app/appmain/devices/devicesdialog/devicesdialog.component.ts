@@ -6,10 +6,11 @@ import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
 import { LocalStorageService } from 'ngx-webstorage';
 @Component({
+  standalone: false,
   template: ''
 })
 export class DevicesdialogInitComponent implements OnInit {
-  device: DevicesItem;
+  device!: DevicesItem;
   myurl: string;
   constructor(
     private route: ActivatedRoute,
@@ -22,7 +23,7 @@ export class DevicesdialogInitComponent implements OnInit {
 
   ngOnInit() {
     this.route.data
-      .subscribe((data: { device: DevicesItem }) => {
+      .subscribe((data: any) => {
         const dialogRef = this.dialog.open(DevicesdialogComponent, {
           data: data.device
         });
@@ -38,6 +39,7 @@ export class DevicesdialogInitComponent implements OnInit {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-devicesdialog',
   templateUrl: './devicesdialog.component.html',
   styleUrls: ['./devicesdialog.component.less']
@@ -49,7 +51,7 @@ export class DevicesdialogComponent {
   public displayedColumnsDevices: string[] = ['displayName', 'deviceManufacturer', 'accountEnabled', 'deviceModel', 'deviceOSType', 'deviceOSVersion', 'deviceTrustType', 'isCompliant', 'isManaged', 'isRooted'];
   public blkeys: object[] = [];
   public showPortalLink: boolean;
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     public dialogRef: MatDialogRef<DevicesdialogComponent>,
     @Inject(MAT_DIALOG_DATA) public device: DevicesItem,
@@ -57,8 +59,8 @@ export class DevicesdialogComponent {
   ) {
     this.showPortalLink = this.localSt.retrieve('portallinks');
     if (device.bitLockerKey && device.bitLockerKey.length > 0){
-      for( let blkey of device.bitLockerKey){
-        let out = blkey;
+      for( let blkey of (device.bitLockerKey as any[])){
+        let out: any = blkey;
         out['keyMaterial'] = atob(blkey['keyMaterial'])
 
         this.blkeys.push(out);

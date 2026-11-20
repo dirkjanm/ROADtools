@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { NgxWebstorageModule } from 'ngx-webstorage';
+import { provideNgxWebstorage, withLocalStorage, withNgxWebstorageConfig } from 'ngx-webstorage';
 
 @NgModule({
   declarations: [
@@ -29,9 +29,10 @@ import { NgxWebstorageModule } from 'ngx-webstorage';
     MatIconModule,
     MatListModule,
     AppmainModule,
-    NgxWebstorageModule.forRoot({'prefix':'RT'}),
   ],
-  providers: [],
+  providers: [
+    provideNgxWebstorage(withNgxWebstorageConfig({ prefix: 'RT' }), withLocalStorage())
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

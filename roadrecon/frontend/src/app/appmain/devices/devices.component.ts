@@ -6,16 +6,17 @@ import { DatabaseService, DevicesItem, DevicesList } from '../aadobjects.service
 import { LocalStorageService } from 'ngx-webstorage';
 
 @Component({
+  standalone: false,
   selector: 'app-devices',
   templateUrl: './devices.component.html',
   styleUrls: ['./devices.component.less'],
   providers: [DatabaseService]
 })
 export class DevicesComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<DevicesItem>;
-  dataSource: MatTableDataSource<DevicesItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<DevicesItem>;
+  dataSource!: MatTableDataSource<DevicesItem>;
   totalRecords: number = 0;
   pageIndex: number = 0;
   ssp: boolean = false;
@@ -39,7 +40,7 @@ export class DevicesComponent implements AfterViewInit, OnInit {
     }
   }
 
-  loadData(page?: number) {
+  loadData(page: number = 1) {
     this.service.getDevicesPaged({
         page: page,
         pageSize: this.paginator?.pageSize,

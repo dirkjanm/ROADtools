@@ -115,7 +115,7 @@ export interface UsersItem {
 }
 
 export interface appMetadata {
-  data: object[];
+  data: any[];
   version: number;
 }
 
@@ -530,23 +530,23 @@ export class DatabaseService {
       );
   }
 
-  public getUser(id):  Observable<UsersItem> {
+  public getUser(id: string | null):  Observable<UsersItem> {
       return this.http.get<UsersItem>(environment.apibase + 'users/'+ id);
   }
 
-  public getUserPolicies(id):  Observable<PolicyItem[]> {
+  public getUserPolicies(id: string | null):  Observable<PolicyItem[]> {
       return this.http.get<PolicyItem[]>(environment.apibase + 'users/'+ id+'/policies');
   }
 
-  public getUserPIMassignments(id):  Observable<PIMRoleAssignment[]> {
+  public getUserPIMassignments(id: string | null):  Observable<PIMRoleAssignment[]> {
       return this.http.get<PIMRoleAssignment[]>(environment.apibase + 'users/'+ id +'/pimassignments');
   }
 
-  public getUserAccessPackages(id):  Observable<AccessPackagePolicy[]> {
+  public getUserAccessPackages(id: string | null):  Observable<AccessPackagePolicy[]> {
       return this.http.get<AccessPackagePolicy[]>(environment.apibase + 'users/'+ id +'/accesspackages');
   }
 
-  public getUserAzureRoleAssignments(id):  Observable<AzureRoleAssignment[]> {
+  public getUserAzureRoleAssignments(id: string | null):  Observable<AzureRoleAssignment[]> {
       return this.http.get<AzureRoleAssignment[]>(environment.apibase + 'users/'+ id +'/azroleassignments');
   }
 
@@ -564,7 +564,7 @@ export class DatabaseService {
       );
   }
 
-  public getDevice(id):  Observable<DevicesItem> {
+  public getDevice(id: string | null):  Observable<DevicesItem> {
       return this.http.get<DevicesItem>(environment.apibase + 'devices/'+ id);
   }
 
@@ -578,19 +578,19 @@ export class DatabaseService {
       );
   }
 
-  public getGroup(id):  Observable<GroupsItem> {
+  public getGroup(id: string | null):  Observable<GroupsItem> {
       return this.http.get<GroupsItem>(environment.apibase + 'groups/'+ id);
   }
 
-  public getGroupPIMResource(id):  Observable<PIMResource> {
+  public getGroupPIMResource(id: string | null):  Observable<PIMResource> {
       return this.http.get<PIMResource>(environment.apibase + 'groups/'+ id+'/pimresource');
   }
 
-  public getGroupAzureRoleAssignments(id):  Observable<AzureRoleAssignment[]> {
+  public getGroupAzureRoleAssignments(id: string | null):  Observable<AzureRoleAssignment[]> {
       return this.http.get<AzureRoleAssignment[]>(environment.apibase + 'groups/'+ id +'/azroleassignments');
   }
 
-  public getGroupResolve(id):  Observable<GroupsItem> {
+  public getGroupResolve(id: string | null):  Observable<GroupsItem> {
       return this.http.get<GroupsItem>(environment.apibase + 'groupresolve/'+ id);
   }
 
@@ -598,7 +598,7 @@ export class DatabaseService {
       return this.http.get<AdministrativeUnitsItem[]>(environment.apibase + 'administrativeunits');
   }
 
-  public getAdministrativeUnit(id):  Observable<AdministrativeUnitsItem> {
+  public getAdministrativeUnit(id: string | null):  Observable<AdministrativeUnitsItem> {
       return this.http.get<AdministrativeUnitsItem>(environment.apibase + 'administrativeunits/'+ id);
   }
 
@@ -606,19 +606,19 @@ export class DatabaseService {
       return this.http.get<ServicePrincipalsItem[]>(environment.apibase + 'serviceprincipals');
   }
 
-  public getServicePrincipal(id):  Observable<ServicePrincipalsItem> {
+  public getServicePrincipal(id: string | null):  Observable<ServicePrincipalsItem> {
       return this.http.get<ServicePrincipalsItem>(environment.apibase + 'serviceprincipals/'+ id);
   }
 
-  public getServicePrincipalAzureRoleAssignments(id):  Observable<AzureRoleAssignment[]> {
+  public getServicePrincipalAzureRoleAssignments(id: string | null):  Observable<AzureRoleAssignment[]> {
       return this.http.get<AzureRoleAssignment[]>(environment.apibase + 'serviceprincipals/'+ id +'/azroleassignments');
   }
 
-  public getServicePrincipalByAppId(id):  Observable<ServicePrincipalsItem> {
+  public getServicePrincipalByAppId(id: string | null):  Observable<ServicePrincipalsItem> {
       return this.http.get<ServicePrincipalsItem>(environment.apibase + 'serviceprincipals-by-appid/'+ id);
   }
 
-  public getApplicationByAppId(id):  Observable<ApplicationsItem> {
+  public getApplicationByAppId(id: string | null):  Observable<ApplicationsItem> {
       return this.http.get<ApplicationsItem>(environment.apibase + 'applications-by-appid/'+ id);
   }
 
@@ -626,7 +626,7 @@ export class DatabaseService {
       return this.http.get<ApplicationsItem[]>(environment.apibase + 'applications');
   }
 
-  public getApplication(id):  Observable<ApplicationsItem> {
+  public getApplication(id: string | null):  Observable<ApplicationsItem> {
       return this.http.get<ApplicationsItem>(environment.apibase + 'applications/'+ id);
   }
 
@@ -658,11 +658,11 @@ export class DatabaseService {
       return this.http.get<AppRolesItem[]>(environment.apibase + 'approles');
   }
 
-  public getAppRolesByResource(spid):  Observable<AppRolesItem[]> {
+  public getAppRolesByResource(spid: string | null):  Observable<AppRolesItem[]> {
       return this.http.get<AppRolesItem[]>(environment.apibase + 'approles_by_resource/' + spid);
   }
 
-  public getAppRolesByPrincipal(pid):  Observable<AppRolesItem[]> {
+  public getAppRolesByPrincipal(pid: string | null):  Observable<AppRolesItem[]> {
       return this.http.get<AppRolesItem[]>(environment.apibase + 'approles_by_principal/' + pid);
   }
 

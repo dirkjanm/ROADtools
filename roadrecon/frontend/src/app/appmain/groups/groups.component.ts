@@ -6,16 +6,17 @@ import { DatabaseService, GroupsItem, GroupsList } from '../aadobjects.service'
 import { LocalStorageService } from 'ngx-webstorage';
 
 @Component({
+  standalone: false,
   selector: 'app-groups',
   templateUrl: './groups.component.html',
   styleUrls: ['./groups.component.less'],
   providers: [DatabaseService]
 })
 export class GroupsComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<GroupsItem>;
-  dataSource: MatTableDataSource<GroupsItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<GroupsItem>;
+  dataSource!: MatTableDataSource<GroupsItem>;
   totalRecords: number = 0;
   pageIndex: number = 0;
   ssp: boolean = false;
@@ -39,7 +40,7 @@ export class GroupsComponent implements AfterViewInit, OnInit {
     }
   }
 
-  loadData(page?: number) {
+  loadData(page: number = 1) {
     this.service.getGroupsPaged({
         page: page,
         pageSize: this.paginator?.pageSize,

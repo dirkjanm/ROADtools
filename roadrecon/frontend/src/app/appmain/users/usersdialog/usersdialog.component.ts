@@ -13,10 +13,11 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 @Component({
+  standalone: false,
   template: ''
 })
 export class UsersdialogInitComponent implements OnInit {
-  user: UsersItem;
+  user!: UsersItem;
   myurl: string;
   showPortalLink: boolean;
   constructor(
@@ -32,7 +33,7 @@ export class UsersdialogInitComponent implements OnInit {
 
   ngOnInit() {
     this.route.data
-      .subscribe((data: { user: UsersItem }) => {
+      .subscribe((data: any) => {
         const dialogRef = this.dialog.open(UsersdialogComponent,{
           data: {
             user: data.user,
@@ -51,6 +52,7 @@ export class UsersdialogInitComponent implements OnInit {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-usersdialog',
   templateUrl: './usersdialog.component.html',
   styleUrls: ['./usersdialog.component.less'],
@@ -69,15 +71,15 @@ export class UsersdialogComponent {
 
   public showPortalLink: boolean;
   public user: UsersItem;
-  public policies: PolicyItem[];
-  public policyLocations: NetworkLocationList;
+  public policies!: PolicyItem[];
+  public policyLocations!: NetworkLocationList;
   public PIMgroupAssignments: PIMRoleAssignment[] = [];
   public accessPackages: AccessPackagePolicy[] = [];
   public azureRoleAssignments: AzureRoleAssignment[] = [];
   public resolvedResources: Map<string, string> = new Map(); // Cache for resolved resource names
   public isLoadingResources: boolean = false;
   public blueteam: boolean = false;
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     private service: DatabaseService,
     public dialogRef: MatDialogRef<UsersdialogComponent>,
@@ -211,5 +213,9 @@ export class UsersdialogComponent {
           return `${scope.originSystem}: ${role.displayName}`;
       }
     });
+  }
+
+  public requiresRoleApproval(roleDefinition: PIMRoleDefinition | null | undefined): boolean | null {
+    return roleDefinition ? this.utils.requiresApproval(roleDefinition) : null;
   }
 }

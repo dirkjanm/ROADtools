@@ -6,16 +6,17 @@ import { DatabaseService, UsersItem, UsersList } from '../aadobjects.service'
 import { LocalStorageService } from 'ngx-webstorage';
 
 @Component({
+  standalone: false,
   selector: 'app-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.less'],
   providers: [DatabaseService]
 })
 export class UsersComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<UsersItem>;
-  dataSource: MatTableDataSource<UsersItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<UsersItem>;
+  dataSource!: MatTableDataSource<UsersItem>;
   totalRecords: number = 0;
   pageIndex: number = 0;
   ssp: boolean = false;
@@ -44,7 +45,7 @@ export class UsersComponent implements AfterViewInit, OnInit {
     this.updateMfaColumn(this.localSt.retrieve('mfa'));
   }
 
-  loadData(page?: number) {
+  loadData(page: number = 1) {
     this.service.getUsersPaged({
         page: page,
         pageSize: this.paginator?.pageSize,
@@ -62,7 +63,7 @@ export class UsersComponent implements AfterViewInit, OnInit {
     if(this.ssp) this.loadData(event.pageIndex + 1);
   }
 
-  updateMfaColumn(value) {
+  updateMfaColumn(value: any) {
     if(value){
       if(!this.displayedColumns.includes('strongAuthenticationDetail')){
         this.displayedColumns.push('strongAuthenticationDetail')

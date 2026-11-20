@@ -3,16 +3,17 @@ import { DatabaseService, TenantDetail, DirectorySetting, TenantStats, Authoriza
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 
 @Component({
+  standalone: false,
   selector: 'app-index',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.less'],
   providers: [DatabaseService]
 })
 export class IndexComponent implements OnInit {
-  public tenantdetails: TenantDetail;
-  public directorysettings: DirectorySetting;
-  public tenantstats: TenantStats;
-  public authorizationPolicy: AuthorizationPolicy;
+  public tenantdetails!: TenantDetail;
+  public directorysettings!: DirectorySetting;
+  public tenantstats!: TenantStats;
+  public authorizationPolicy!: AuthorizationPolicy;
   public hasSelfConsentPolicy: boolean = false;
   public displayedColumns: string[] = ['name', 'type', 'capabilities', 'properties']
   constructor(private service: DatabaseService, public dialog: MatDialog) {  }
@@ -43,6 +44,7 @@ export class IndexComponent implements OnInit {
 }
 
 @Component({
+  standalone: false,
   template: `<h1 mat-dialog-title>Tenant details</h1>
              <mat-dialog-content><p appJsonFormat [json]="details"></p>
              </mat-dialog-content>`,

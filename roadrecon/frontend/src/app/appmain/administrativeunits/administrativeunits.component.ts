@@ -6,16 +6,17 @@ import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { DatabaseService, AdministrativeUnitsItem } from '../aadobjects.service'
 // import
 @Component({
+  standalone: false,
   selector: 'app-administrativeunits',
   templateUrl: './administrativeunits.component.html',
   styleUrls: ['./administrativeunits.component.less'],
   providers: [DatabaseService]
 })
 export class AdministrativeUnitsComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<AdministrativeUnitsItem>;
-  dataSource: MatTableDataSource<AdministrativeUnitsItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<AdministrativeUnitsItem>;
+  dataSource!: MatTableDataSource<AdministrativeUnitsItem>;
 
   constructor(private service: DatabaseService) {  }
 

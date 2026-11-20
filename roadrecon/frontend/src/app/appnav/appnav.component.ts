@@ -5,13 +5,14 @@ import { map, shareReplay } from 'rxjs/operators';
 import { LocalStorage } from 'ngx-webstorage';
 
 @Component({
+  standalone: false,
   selector: 'app-appnav',
   templateUrl: './appnav.component.html',
   styleUrls: ['./appnav.component.less']
 })
 export class AppnavComponent {
   @LocalStorage()
-  public mfa;
+  public mfa: any;
 
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(

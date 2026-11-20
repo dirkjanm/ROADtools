@@ -401,15 +401,15 @@
       <th mat-header-cell *matHeaderCellDef>Resource / Role</th>
       <td mat-cell *matCellDef="let row">
         <div *ngIf="row.resource.type === 'Directory'">
-          <strong>{{row.roleDefinition.displayName}}</strong>
+          <strong>{{row.roleDefinition?.displayName}}</strong>
         </div>
         <div *ngIf="row.resource.type === 'Security'">
           <strong><a [routerLink]="['/groups/', row.resource.id]">{{row.resource.displayName}}</a></strong>
-          <div class="role-detail">{{row.roleDefinition.displayName}}</div>
+          <div class="role-detail">{{row.roleDefinition?.displayName}}</div>
         </div>
         <div *ngIf="row.resource.type !== 'Directory' && row.resource.type !== 'Security'">
           <strong>{{row.resource.displayName}}</strong>
-          <div class="role-detail">{{row.roleDefinition.displayName}}</div>
+          <div class="role-detail">{{row.roleDefinition?.displayName}}</div>
         </div>
       </td>
     </ng-container>
@@ -427,9 +427,9 @@
     <ng-container matColumnDef="approval">
       <th mat-header-cell *matHeaderCellDef>Approval</th>
       <td mat-cell *matCellDef="let row">
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === true" [ngClass]="blueteam ? 'approval-required blueteam' : 'approval-required'">Required</span>
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === false" [ngClass]="blueteam ? 'approval-not-required blueteam' : 'approval-not-required'">Not required</span>
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === null">-</span>
+        <span *ngIf="requiresGroupRoleApproval(row.roleDefinition) === true" [ngClass]="blueteam ? 'approval-required blueteam' : 'approval-required'">Required</span>
+        <span *ngIf="requiresGroupRoleApproval(row.roleDefinition) === false" [ngClass]="blueteam ? 'approval-not-required blueteam' : 'approval-not-required'">Not required</span>
+        <span *ngIf="requiresGroupRoleApproval(row.roleDefinition) === null">-</span>
       </td>
     </ng-container>
 

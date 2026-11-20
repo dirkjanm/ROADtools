@@ -6,10 +6,11 @@ import { UtilitiesService } from '../../utils.service';
 import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
 @Component({
+  standalone: false,
   template: ''
 })
 export class ServicePrincipalsdialogInitComponent implements OnInit {
-  sp: ServicePrincipalsItem;
+  sp!: ServicePrincipalsItem;
   myurl: string;
   constructor(
     private route: ActivatedRoute,
@@ -22,7 +23,7 @@ export class ServicePrincipalsdialogInitComponent implements OnInit {
 
   ngOnInit() {
     this.route.data
-      .subscribe((data: { sp: ServicePrincipalsItem }) => {
+      .subscribe((data: any) => {
         const dialogRef = this.dialog.open(ServicePrincipalsdialogComponent, {
           data: data.sp
         });
@@ -37,6 +38,7 @@ export class ServicePrincipalsdialogInitComponent implements OnInit {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-serviceprincipalsdialog',
   templateUrl: './serviceprincipalsdialog.component.html',
   styleUrls: ['./serviceprincipalsdialog.component.less'],
@@ -51,12 +53,12 @@ export class ServicePrincipalsdialogComponent {
   public displayedColumnsAppRolesAssignedTo: string[] =  ['pname', 'ptype', 'value', 'app', 'desc'];
   public displayedColumnsAccessPackage: string[] = ['packageName', 'resources', 'approval', 'duration'];
   public displayedColumnsAzureRole: string[] = ['role', 'scopeType', 'scopeDetails'];
-  public metadata: object[] = [];
+  public metadata: any[] = [];
   public approlesgiven: AppRolesItem[] = [];
   public approlesgivento: AppRolesItem[] = [];
-  public tenantdetails: TenantDetail;
+  public tenantdetails!: TenantDetail;
   public azureRoleAssignments: AzureRoleAssignment[] = [];
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     public dialogRef: MatDialogRef<ServicePrincipalsdialogComponent>,
     private service: DatabaseService,
@@ -64,8 +66,8 @@ export class ServicePrincipalsdialogComponent {
     @Inject(MAT_DIALOG_DATA) public sp: ServicePrincipalsItem
   ) {
     if (sp.appMetadata && sp.appMetadata.data.length > 0){
-      for( let metadata of sp.appMetadata.data){
-        let out = {}
+      for( let metadata of (sp.appMetadata.data as any[])){
+        let out: any = {}
         let innerdata: string;
         let jsondata: object;
         try {

@@ -6,16 +6,17 @@ import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { DatabaseService, AppRolesItem } from '../aadobjects.service'
 // import
 @Component({
+  standalone: false,
   selector: 'app-roles',
   templateUrl: './approles.component.html',
   styleUrls: ['./approles.component.less'],
   providers: [DatabaseService]
 })
 export class AppRolesComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<AppRolesItem>;
-  dataSource: MatTableDataSource<AppRolesItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<AppRolesItem>;
+  dataSource!: MatTableDataSource<AppRolesItem>;
 
   constructor(private service: DatabaseService) {  }
 

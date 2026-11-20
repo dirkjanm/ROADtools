@@ -6,16 +6,17 @@ import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { DatabaseService, ServicePrincipalsItem } from '../aadobjects.service'
 // import
 @Component({
+  standalone: false,
   selector: 'app-serviceprincipals',
   templateUrl: './serviceprincipals.component.html',
   styleUrls: ['./serviceprincipals.component.less'],
   providers: [DatabaseService]
 })
 export class ServicePrincipalsComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<ServicePrincipalsItem>;
-  dataSource: MatTableDataSource<ServicePrincipalsItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<ServicePrincipalsItem>;
+  dataSource!: MatTableDataSource<ServicePrincipalsItem>;
 
   constructor(private service: DatabaseService) {  }
 

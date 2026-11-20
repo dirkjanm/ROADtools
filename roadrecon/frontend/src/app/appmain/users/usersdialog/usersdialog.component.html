@@ -264,15 +264,15 @@
       <th mat-header-cell *matHeaderCellDef>Resource / Role</th>
       <td mat-cell *matCellDef="let row">
         <div *ngIf="row.resource.type === 'Directory'">
-          <strong>{{row.roleDefinition.displayName}}</strong>
+          <strong>{{row.roleDefinition?.displayName}}</strong>
         </div>
         <div *ngIf="row.resource.type === 'Security'">
           <strong><a [routerLink]="['/groups/', row.resource.id]">{{row.resource.displayName}}</a></strong>
-          <div class="role-detail">{{row.roleDefinition.displayName}}</div>
+          <div class="role-detail">{{row.roleDefinition?.displayName}}</div>
         </div>
         <div *ngIf="row.resource.type !== 'Directory' && row.resource.type !== 'Security'">
           <strong>{{row.resource.displayName}}</strong>
-          <div class="role-detail">{{row.roleDefinition.displayName}}</div>
+          <div class="role-detail">{{row.roleDefinition?.displayName}}</div>
         </div>
       </td>
     </ng-container>
@@ -290,9 +290,9 @@
     <ng-container matColumnDef="approval">
       <th mat-header-cell *matHeaderCellDef>Approval</th>
       <td mat-cell *matCellDef="let row">
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === true" [ngClass]="blueteam ? 'approval-required blueteam' : 'approval-required'">Required</span>
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === false" [ngClass]="blueteam ? 'approval-not-required blueteam' : 'approval-not-required'">Not required</span>
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === null">Unknown</span>
+        <span *ngIf="requiresRoleApproval(row.roleDefinition) === true" [ngClass]="blueteam ? 'approval-required blueteam' : 'approval-required'">Required</span>
+        <span *ngIf="requiresRoleApproval(row.roleDefinition) === false" [ngClass]="blueteam ? 'approval-not-required blueteam' : 'approval-not-required'">Not required</span>
+        <span *ngIf="requiresRoleApproval(row.roleDefinition) === null">Unknown</span>
       </td>
     </ng-container>
 
@@ -339,11 +339,11 @@
       <th mat-header-cell *matHeaderCellDef>Resource / Role</th>
       <td mat-cell *matCellDef="let row">
         <div *ngIf="row.resource.type === 'Directory'">
-          <strong>{{row.roleDefinition.displayName}}</strong>
+          <strong>{{row.roleDefinition?.displayName}}</strong>
         </div>
         <div *ngIf="row.resource.type !== 'Directory'">
           <strong>{{row.resource.displayName}}</strong>
-          <div class="role-detail">{{row.roleDefinition.displayName}}</div>
+          <div class="role-detail">{{row.roleDefinition?.displayName}}</div>
         </div>
       </td>
     </ng-container>
@@ -361,9 +361,9 @@
     <ng-container matColumnDef="approval">
       <th mat-header-cell *matHeaderCellDef>Approval</th>
       <td mat-cell *matCellDef="let row">
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === true" [ngClass]="blueteam ? 'approval-required blueteam' : 'approval-required'">Required</span>
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === false" [ngClass]="blueteam ? 'approval-not-required blueteam' : 'approval-not-required'">Not required</span>
-        <span *ngIf="utils.requiresApproval(row.roleDefinition) === null">Unknown</span>
+        <span *ngIf="requiresRoleApproval(row.roleDefinition) === true" [ngClass]="blueteam ? 'approval-required blueteam' : 'approval-required'">Required</span>
+        <span *ngIf="requiresRoleApproval(row.roleDefinition) === false" [ngClass]="blueteam ? 'approval-not-required blueteam' : 'approval-not-required'">Not required</span>
+        <span *ngIf="requiresRoleApproval(row.roleDefinition) === null">Unknown</span>
       </td>
     </ng-container>
 
@@ -568,21 +568,21 @@
         <td mat-cell *matCellDef="let row">
           <div *ngIf="row.policyScope.include.length > 0" class="policy-chip-section">
             <span class="policy-section-label">Includes</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let scope of row.policyScope.include" disableRipple>
                 <a *ngIf="scope.objectType != 'SPECIAL'" [routerLink]="['/', scope.objectType.toLowerCase() + 's', scope.objectId]">{{scope.displayName}}</a>
                 <span *ngIf="scope.objectType == 'SPECIAL'">{{scope.displayName}}</span>
               </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
           <div *ngIf="row.policyScope.exclude.length > 0" class="policy-chip-section">
             <span class="policy-section-label">Excludes</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let scope of row.policyScope.exclude" disableRipple>
                 <a *ngIf="scope.objectType != 'SPECIAL'" [routerLink]="['/', scope.objectType.toLowerCase() + 's', scope.objectId]">{{scope.displayName}}</a>
                 <span *ngIf="scope.objectType == 'SPECIAL'">{{scope.displayName}}</span>
               </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
         </td>
       </ng-container>
@@ -594,21 +594,21 @@
 
           <div *ngIf="row.policyDetail.Conditions.ClientTypes?.Include" class="policy-chip-section">
             <span class="policy-section-label">Clients</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let client of row.policyDetail.Conditions.ClientTypes.Include[0].ClientTypes" disableRipple>{{client}}</mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.AuthFlows?.Include" class="policy-chip-section">
             <span class="policy-section-label">Auth flows</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let authflow of row.policyDetail.Conditions.AuthFlows.Include[0].AuthFlows" disableRipple>{{authflow}}</mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.Locations?.Include" class="policy-chip-section">
             <span class="policy-section-label">Locations (inc.)</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let location of row.policyDetail.Conditions.Locations.Include[0].Locations" disableRipple>
                 <span *ngIf="location == 'All' || location == 'AllTrusted'">{{location}}</span>
                 <span *ngIf="location != 'All' && policyLocations && policyLocations[location]"
@@ -617,12 +617,12 @@
                 </span>
                 <span *ngIf="location != 'All' && location != 'AllTrusted' && (!policyLocations || !policyLocations[location])">Unknown: {{location}}</span>
               </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.Locations?.Exclude" class="policy-chip-section">
             <span class="policy-section-label">Locations (exc.)</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let location of row.policyDetail.Conditions.Locations.Exclude[0].Locations" disableRipple>
                 <span *ngIf="location == 'All' || location == 'AllTrusted'">{{location}}</span>
                 <span *ngIf="policyLocations && policyLocations[location]"
@@ -631,54 +631,54 @@
                 </span>
                 <span *ngIf="location != 'All' && location != 'AllTrusted' &&  (!policyLocations || !policyLocations[location])">Unknown: {{location}}</span>
               </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.DevicePlatforms?.Include" class="policy-chip-section">
             <span class="policy-section-label">Platforms (inc.)</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let platform of row.policyDetail.Conditions.DevicePlatforms.Include[0].DevicePlatforms" disableRipple>{{platform}}</mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.DevicePlatforms?.Exclude" class="policy-chip-section">
             <span class="policy-section-label">Platforms (exc.)</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let platform of row.policyDetail.Conditions.DevicePlatforms.Exclude[0].DevicePlatforms" disableRipple>{{platform}}</mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.Devices?.Include" class="policy-chip-section">
             <span class="policy-section-label">Devices (inc.)</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip disableRipple>{{row.policyDetail.Conditions.Devices.Include[0].DeviceRule}}</mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.Devices?.Exclude" class="policy-chip-section">
             <span class="policy-section-label">Devices (exc.)</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip disableRipple>{{row.policyDetail.Conditions.Devices.Exclude[0].DeviceRule}}</mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.SignInRisks?.Include" class="policy-chip-section">
             <span class="policy-section-label">Sign in risk</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let risk of row.policyDetail.Conditions.SignInRisks.Include[0].SignInRisks" disableRipple>{{risk}}</mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Conditions.UserRisks?.Include" class="policy-chip-section">
             <span class="policy-section-label">User risk</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let risk of row.policyDetail.Conditions.UserRisks.Include[0].UserRisks" disableRipple>{{risk}}</mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.Controls?.length > 0" class="policy-chip-section">
             <span class="policy-section-label">Sign-in controls</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <ng-container *ngFor="let control of row.policyDetail.Controls">
                 <mat-chip disableRipple *ngIf="control.Control">
                   {{control.Control.join(' or ')}}
@@ -690,12 +690,12 @@
                   </mat-chip>
                 </ng-container>
               </ng-container>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.ExtensibleControls?.length > 0" class="policy-chip-section">
             <span class="policy-section-label">Sign-in Extensible Controls</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <ng-container *ngFor="let control of row.policyDetail.ExtensibleControls">
                 <mat-chip disableRipple *ngIf="control == 'MicrosoftManagedRemediation'">
                   Microsoft Managed risk remediation
@@ -704,12 +704,12 @@
                   {{control}}
                 </mat-chip>
               </ng-container>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
           <div *ngIf="row.policyDetail.SessionControls" class="policy-chip-section">
             <span class="policy-section-label">Session controls</span>
-            <mat-chip-list>
+            <mat-chip-set>
               <ng-container *ngFor="let control of row.policyDetail.SessionControls">
 
                 <!-- SignInFrequency with sub-type branching -->
@@ -739,7 +739,7 @@
                 </mat-chip>
 
               </ng-container>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
 
         </td>

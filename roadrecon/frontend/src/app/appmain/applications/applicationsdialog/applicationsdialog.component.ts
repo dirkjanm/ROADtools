@@ -6,10 +6,11 @@ import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
 import { LocalStorageService } from 'ngx-webstorage';
 @Component({
+  standalone: false,
   template: ''
 })
 export class ApplicationsdialogInitComponent implements OnInit {
-  application: ApplicationsItem;
+  application!: ApplicationsItem;
   myurl: string;
   constructor(
     private route: ActivatedRoute,
@@ -22,7 +23,7 @@ export class ApplicationsdialogInitComponent implements OnInit {
 
   ngOnInit() {
     this.route.data
-      .subscribe((data: { application: ApplicationsItem }) => {
+      .subscribe((data: any) => {
         const dialogRef = this.dialog.open(ApplicationsdialogComponent, {
           data: data.application
         });
@@ -38,6 +39,7 @@ export class ApplicationsdialogInitComponent implements OnInit {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-applicationsdialog',
   templateUrl: './applicationsdialog.component.html',
   styleUrls: ['./applicationsdialog.component.less']
@@ -47,9 +49,9 @@ export class ApplicationsdialogComponent {
   public displayedColumnsOwners: string[] = ['displayName', 'userPrincipalName']
   public displayedColumnsAppRoles: string[] = ['value','displayName', 'description', 'id', 'allowedMemberTypes']
   public displayedColumnsOAuth2: string[] = ['value', 'userConsentDisplayName','userConsentDescription', 'adminConsentDisplayName', 'adminConsentDescription', 'id', 'type']
-  public metadata: object[] = [];
+  public metadata: any[] = [];
   public showPortalLink: boolean;
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     public dialogRef: MatDialogRef<ApplicationsdialogComponent>,
     @Inject(MAT_DIALOG_DATA) public application: ApplicationsItem,
@@ -57,8 +59,8 @@ export class ApplicationsdialogComponent {
   ) {
     this.showPortalLink = this.localSt.retrieve('portallinks');
     if (application.appMetadata && application.appMetadata.data.length > 0){
-      for( let metadata of application.appMetadata.data){
-        let out = {}
+      for( let metadata of (application.appMetadata.data as any[])){
+        let out: any = {}
         let innerdata: string;
         let jsondata: object;
         try {

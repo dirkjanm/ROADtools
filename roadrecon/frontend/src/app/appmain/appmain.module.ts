@@ -39,7 +39,6 @@ import { AdministrativeUnitsComponent } from './administrativeunits/administrati
 import { DevicesdialogComponent } from './devices/devicesdialog/devicesdialog.component'
 import { JsonFormatDirective } from './json-format.directive';
 import { ConfigComponent } from './config/config.component';
-import { NgxWebstorageModule } from 'ngx-webstorage';
 import { FormsModule }   from '@angular/forms';
 import { MfaComponent } from './mfa/mfa.component';
 import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permissions.component';
@@ -90,7 +89,6 @@ import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permission
     MatSlideToggleModule,
     MatProgressSpinnerModule,
     MatChipsModule,
-    NgxWebstorageModule.forRoot({'prefix':'RT'}),
   ],
   exports: [
     UsersComponent,

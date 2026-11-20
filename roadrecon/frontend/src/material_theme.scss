@@ -75,14 +75,20 @@ $rt-secondary: (
   )
 );
 
-$roadtools-primary: mat.define-palette($rt-primary, 800, 900, 400);
-$roadtools-accent:  mat.define-palette($rt-secondary, 600, 800, 200);
+$roadtools-primary: mat.m2-define-palette($rt-primary, 800, 900, 400);
+$roadtools-accent:  mat.m2-define-palette($rt-secondary, 600, 800, 200);
 
 // The warn palette is optional (defaults to red).
-$roadtools-warn:    mat.define-palette(mat.$red-palette);
+$roadtools-warn:    mat.m2-define-palette(mat.$m2-red-palette);
 
 // Create the theme object (a Sass map containing all of the palettes).
-$roadtools-theme: mat.define-light-theme($roadtools-primary, $roadtools-accent, $roadtools-warn);
+$roadtools-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $roadtools-primary,
+    accent: $roadtools-accent,
+    warn: $roadtools-warn,
+  ),
+));
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
@@ -90,10 +96,10 @@ $roadtools-theme: mat.define-light-theme($roadtools-primary, $roadtools-accent, 
 @include mat.all-component-themes($roadtools-theme);
 mat-table, .mat-table {
   a:not(.mat-button) {
-      color: mat.get-color-from-palette($roadtools-primary, 900);
+      color: mat.m2-get-color-from-palette($roadtools-primary, 900);
       text-decoration: none;
       &:hover {
-        color: mat.get-color-from-palette($roadtools-primary, 400);
+        color: mat.m2-get-color-from-palette($roadtools-primary, 400);
       }
 
   }

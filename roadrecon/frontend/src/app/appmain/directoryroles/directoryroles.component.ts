@@ -7,13 +7,14 @@ import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { DatabaseService, RoleDefinitionsItem, UsersItem } from '../aadobjects.service'
 // import
 @Component({
+  standalone: false,
   selector: 'app-directoryroles',
   templateUrl: './directoryroles.component.html',
   styleUrls: ['./directoryroles.component.less'],
   providers: [DatabaseService]
 })
 export class DirectoryRolesComponent implements OnInit {
-  roles: RoleDefinitionsItem[];
+  roles!: RoleDefinitionsItem[];
 
   constructor(private service: DatabaseService) {  }
 

@@ -6,16 +6,17 @@ import { MatTable, MatTableDataSource } from '@angular/material/table';
 import { DatabaseService, MfaItem } from '../aadobjects.service'
 // import
 @Component({
+  standalone: false,
   selector: 'app-mfa',
   templateUrl: './mfa.component.html',
   styleUrls: ['./mfa.component.less'],
   providers: [DatabaseService]
 })
 export class MfaComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<MfaItem>;
-  dataSource: MatTableDataSource<MfaItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<MfaItem>;
+  dataSource!: MatTableDataSource<MfaItem>;
 
   constructor(private service: DatabaseService) {  }
 
@@ -32,7 +33,7 @@ export class MfaComponent implements AfterViewInit, OnInit {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
     this.table.dataSource = this.dataSource;
-    this.dataSource.sortingDataAccessor = (item, property) => {
+    this.dataSource.sortingDataAccessor = (item: any, property: string) => {
       switch (property) {
         case 'mfamethods': {
           return item['strongAuthenticationDetail']['methods'].length;

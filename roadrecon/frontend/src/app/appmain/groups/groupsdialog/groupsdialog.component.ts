@@ -7,10 +7,11 @@ import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
 import { LocalStorageService } from 'ngx-webstorage';
 @Component({
+  standalone: false,
   template: ''
 })
 export class GroupsdialogInitComponent implements OnInit {
-  group: GroupsItem;
+  group!: GroupsItem;
   myurl: string;
   constructor(
     private route: ActivatedRoute,
@@ -23,7 +24,7 @@ export class GroupsdialogInitComponent implements OnInit {
 
   ngOnInit() {
     this.route.data
-      .subscribe((data: { group: GroupsItem }) => {
+      .subscribe((data: any) => {
         const dialogRef = this.dialog.open(GroupsdialogComponent, {
           data: data.group
         });
@@ -39,6 +40,7 @@ export class GroupsdialogInitComponent implements OnInit {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-groupsdialog',
   templateUrl: './groupsdialog.component.html',
   styleUrls: ['./groupsdialog.component.less'],
@@ -61,7 +63,7 @@ export class GroupsdialogComponent {
   public azureRoleAssignments: AzureRoleAssignment[] = [];
   public blueteam: boolean = false;
 
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     private service: DatabaseService,
     public dialogRef: MatDialogRef<GroupsdialogComponent>,
@@ -87,20 +89,20 @@ export class GroupsdialogComponent {
     return null;
   }
 
-  getEligibleAssignments(roleDefinition: PIMRoleDefinition): PIMRoleAssignment[] {
-    return roleDefinition.roleAssignments.filter(a => a.assignmentState === 'Eligible');
+  getEligibleAssignments(roleDefinition: PIMRoleDefinition | null | undefined): PIMRoleAssignment[] {
+    return (roleDefinition?.roleAssignments || []).filter(a => a.assignmentState === 'Eligible');
   }
 
-  getActiveAssignments(roleDefinition: PIMRoleDefinition): PIMRoleAssignment[] {
-    return roleDefinition.roleAssignments.filter(a => a.assignmentState === 'Active');
+  getActiveAssignments(roleDefinition: PIMRoleDefinition | null | undefined): PIMRoleAssignment[] {
+    return (roleDefinition?.roleAssignments || []).filter(a => a.assignmentState === 'Active');
   }
 
   // Reuse existing utility function directly
-  requiresGroupRoleApproval(roleDefinition: PIMRoleDefinition): boolean | null {
-    return this.utils.requiresApproval(roleDefinition);
+  requiresGroupRoleApproval(roleDefinition: PIMRoleDefinition | null | undefined): boolean | null {
+    return roleDefinition ? this.utils.requiresApproval(roleDefinition) : null;
   }
 
-  formatSubjectDisplay(subject: any, type: 'User' | 'Group' | 'ServicePrincipal'): string {
+  formatSubjectDisplay(subject: any, type?: 'User' | 'Group' | 'ServicePrincipal'): string {
     if (!subject) {
       return 'Unknown';
     }

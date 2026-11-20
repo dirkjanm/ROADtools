@@ -5,10 +5,11 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
 @Component({
+  standalone: false,
   template: ''
 })
 export class AdministrativeUnitsdialogInitComponent implements OnInit {
-  user: AdministrativeUnitsItem;
+  user!: AdministrativeUnitsItem;
   myurl: string;
   constructor(
     private route: ActivatedRoute,
@@ -21,7 +22,7 @@ export class AdministrativeUnitsdialogInitComponent implements OnInit {
 
   ngOnInit() {
     this.route.data
-      .subscribe((data: { user: AdministrativeUnitsItem }) => {
+      .subscribe((data: any) => {
         const dialogRef = this.dialog.open(AdministrativeUnitsdialogComponent, {
           data: data.user
         });
@@ -39,6 +40,7 @@ export class AdministrativeUnitsdialogInitComponent implements OnInit {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-administrativeunitsdialog',
   templateUrl: './administrativeunitsdialog.component.html',
   styleUrls: ['./administrativeunitsdialog.component.less']
@@ -50,7 +52,7 @@ export class AdministrativeUnitsdialogComponent {
   public displayedColumnsOwners: string[] = ['displayName', 'userPrincipalName']
   public displayedColumnsDevices: string[] = ['displayName', 'deviceModel', 'deviceOSType', 'deviceTrustType'];
 
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     public dialogRef: MatDialogRef<AdministrativeUnitsdialogComponent>,
     @Inject(MAT_DIALOG_DATA) public administrativeUnit: AdministrativeUnitsItem

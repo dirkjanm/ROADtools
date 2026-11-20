@@ -3,6 +3,7 @@ import JSONFormatter from 'json-formatter-js';
 
 
 @Directive({
+  standalone: false,
   selector: '[appJsonFormat]'
 })
 export class JsonFormatDirective implements OnChanges {

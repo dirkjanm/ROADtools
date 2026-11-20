@@ -7,16 +7,17 @@ import { LocalStorageService } from 'ngx-webstorage';
 
 // import
 @Component({
+  standalone: false,
   selector: 'role-table',
   templateUrl: './roletable.component.html',
   styleUrls: ['./roletable.component.less'],
 })
 export class RoletableComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatTable) table: MatTable<RoleAssignmentsItem>;
-  @Input() role: RoleDefinitionsItem;
-  dataSource: MatTableDataSource<RoleAssignmentsItem>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatTable) table!: MatTable<RoleAssignmentsItem>;
+  @Input() role!: RoleDefinitionsItem;
+  dataSource!: MatTableDataSource<RoleAssignmentsItem>;
 
   constructor(private localSt:LocalStorageService) {  }
 
@@ -33,7 +34,7 @@ export class RoletableComponent implements AfterViewInit, OnInit {
     this.updateMfaColumn(this.localSt.retrieve('mfa'));
   }
 
-  updateMfaColumn(value) {
+  updateMfaColumn(value: any) {
     if(value){
       if(!this.displayedColumns.includes('strongAuthenticationDetail')){
         this.displayedColumns.push('strongAuthenticationDetail')
