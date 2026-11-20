@@ -230,7 +230,7 @@ def test_store_federated_credentials_and_agent_metadata_and_dumper(tmp_path):
 def test_evaluate_fic_risk_checks_wildcards_github_k8s_and_pinned():
     from roadtools.roadrecon.nhi_analyzer import evaluate_fic_risk
 
-    # 1. Critical wildcard subject
+    # 1. Literal asterisk in subject: Entra matches subjects exactly, so this is a misconfiguration (Medium)
     crit_fic = {
         "id": "fic-crit",
         "applicationObjectId": "app-1",
@@ -241,8 +241,15 @@ def test_evaluate_fic_risk_checks_wildcards_github_k8s_and_pinned():
         "audiences": ["api://AzureADTokenExchange"],
     }
     res_crit = evaluate_fic_risk(crit_fic, "AppOne")
-    assert res_crit["riskLevel"] == "Critical"
-    assert res_crit["severityWeight"] == 4
+    assert res_crit["riskLevel"] == "Medium"
+    assert res_crit["severityWeight"] == 2
+
+    # 1b. Flexible FIC with a fully open claimsMatchingExpression is Critical
+    open_fic = dict(crit_fic, id="fic-open", subject=None,
+                    claimsMatchingExpression={"languageVersion": 1, "value": "claims['sub'] matches '*'"})
+    res_open = evaluate_fic_risk(open_fic, "AppOne")
+    assert res_open["riskLevel"] == "Critical"
+    assert res_open["severityWeight"] == 4
 
     # 2. Critical HTTP issuer
     http_fic = {
@@ -297,9 +304,9 @@ def test_evaluate_fic_risk_checks_wildcards_github_k8s_and_pinned():
     assert res_low["severityWeight"] == 1
 
 
-def test_analyze_nhi_posture_and_flask_endpoints_and_legacy_db(tmp_path):
+def test_analyze_nhi_posture_and_flask_endpoints_and_legacy_db(tmp_path, monkeypatch):
     from sqlalchemy import text
-    from flask_sqlalchemy import SQLAlchemy
+    import types
     import roadtools.roadrecon.server as server_mod
     from roadtools.roadrecon.nhi_analyzer import analyze_nhi_posture
     from roadtools.roadlib.metadef.database import (
@@ -419,9 +426,11 @@ def test_analyze_nhi_posture_and_flask_endpoints_and_legacy_db(tmp_path):
     assert weights[0] == 4
 
     # Test Flask endpoints
-    server_mod.app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    # Do not rebuild SQLAlchemy on the shared module-level Flask app: it may already have
+    # served requests (test order), and Flask forbids setup after the first request.
+    monkeypatch.setattr(server_mod, "db", types.SimpleNamespace(session=session))
+    server_mod._nhi_report_cache.clear()
     server_mod.app.config["TESTING"] = True
-    server_mod.db = SQLAlchemy(server_mod.app)
 
     with server_mod.app.test_client() as client:
         r_sum = client.get("/api/nhi/summary")
@@ -448,7 +457,7 @@ def test_analyze_nhi_posture_and_flask_endpoints_and_legacy_db(tmp_path):
         assert r_app_fics.status_code == 200
         app_fics_data = r_app_fics.get_json()
         assert len(app_fics_data) == 1
-        assert app_fics_data[0]["riskLevel"] == "Critical"
+        assert app_fics_data[0]["riskLevel"] == "Medium"
 
         r_sp_nhi = client.get("/api/serviceprincipals/sp-agent365-1/nhi")
         assert r_sp_nhi.status_code == 200

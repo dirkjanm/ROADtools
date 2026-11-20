@@ -13,7 +13,8 @@ PIMgovernanceRoleSettingV2, IGaccessPackageAssignmentPolicy, IGaccessPackage, \
 IGaccessPackageResourceRoleScope, IGaccessPackageResourceRole, IGaccessPackageResourceScope, \
 AZroleDefinition, AZroleAssignment, AZsubscription, AZroleEligibilityScheduleInstance, \
 FederatedIdentityCredential, AgentIdentityMetadata
-from roadtools.roadrecon.nhi_analyzer import analyze_nhi_posture, evaluate_fic_risk
+from roadtools.roadrecon.nhi_analyzer import analyze_nhi_posture, evaluate_fic_risk, federated_credentials_collected
+from sqlalchemy.exc import SQLAlchemyError
 import os
 import base64
 import zlib
@@ -21,6 +22,7 @@ import argparse
 import json
 from sqlalchemy import func, and_, or_, select, desc, asc, cast, collate, inspect as sa_inspect
 import mimetypes
+import threading
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -269,7 +271,9 @@ class ServicePrincipalSchema(RTModelSchema):
                 return None
             meta = obj.agentMetadata
             return AgentIdentityMetadataSchema().dump(meta) if meta else None
-        except Exception:
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            app.logger.warning("agentMetadata unavailable for %s: %s", getattr(obj, "objectId", "?"), exc)
             return None
 
 class ApplicationSchema(RTModelSchema):
@@ -284,8 +288,13 @@ class ApplicationSchema(RTModelSchema):
             inspector = sa_inspect(db.session.get_bind())
             if "FederatedIdentityCredentials" not in inspector.get_table_names():
                 return []
-            return FederatedIdentityCredentialsSchema(many=True).dump(obj.federatedIdentityCredentials or [])
-        except Exception:
+            rows = obj.federatedIdentityCredentials or []
+            if rows and not federated_credentials_collected(db.session):
+                return []  # rows from a failed/skipped/uncollected source are never reported
+            return FederatedIdentityCredentialsSchema(many=True).dump(rows)
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            app.logger.warning("federatedIdentityCredentials unavailable for %s: %s", getattr(obj, "objectId", "?"), exc)
             return []
 
 class TenantDetailSchema(RTModelSchema):
@@ -1013,34 +1022,73 @@ def get_stats():
     return jsonify(stats)
 
 
+# NHI analysis is expensive (loads every SP/app/role), so it is computed once per DB state and shared
+# by all /api/nhi/* routes. Keyed by DB file path; invalidated by a cheap file fingerprint.
+_nhi_report_cache = {}
+_nhi_cache_lock = threading.Lock()
+
+
+def _nhi_db_fingerprint():
+    """(path, fingerprint) for the SQLite file behind db.session, or (None, None) if not derivable."""
+    try:
+        path = db.session.get_bind().url.database
+    except Exception:
+        return None, None
+    if not path or path == ":memory:" or not os.path.isfile(path):
+        return None, None
+    parts = []
+    for candidate in (path, path + "-wal"):
+        try:
+            st = os.stat(candidate)
+        except OSError:
+            parts.append(None)
+            continue
+        parts.append((st.st_mtime_ns, st.st_size))
+    try:
+        with open(path, "rb") as fh:
+            header = fh.read(100)  # bytes 24-27: SQLite file change counter
+        parts.append(header[24:28])
+    except OSError:
+        parts.append(None)
+    return path, tuple(parts)
+
+
+def get_nhi_report():
+    path, fingerprint = _nhi_db_fingerprint()
+    if path is None:
+        return analyze_nhi_posture(db.session)
+    with _nhi_cache_lock:
+        cached = _nhi_report_cache.get(path)
+        if cached and cached[0] == fingerprint:
+            return cached[1]
+        report = analyze_nhi_posture(db.session)
+        _nhi_report_cache[path] = (fingerprint, report)
+        return report
+
+
 @app.route("/api/nhi/summary", methods=["GET"])
 def get_nhi_summary():
-    report = analyze_nhi_posture(db.session)
-    return jsonify(report["summary"])
+    return jsonify(get_nhi_report()["summary"])
 
 
 @app.route("/api/nhi/agents", methods=["GET"])
 def get_nhi_agents():
-    report = analyze_nhi_posture(db.session)
-    return jsonify(report["agents"])
+    return jsonify(get_nhi_report()["agents"])
 
 
 @app.route("/api/nhi/workloads", methods=["GET"])
 def get_nhi_workloads():
-    report = analyze_nhi_posture(db.session)
-    return jsonify(report["workloads"])
+    return jsonify(get_nhi_report()["workloads"])
 
 
 @app.route("/api/nhi/federatedcredentials", methods=["GET"])
 def get_nhi_federated_credentials():
-    report = analyze_nhi_posture(db.session)
-    return jsonify(report["federatedCredentials"])
+    return jsonify(get_nhi_report()["federatedCredentials"])
 
 
 @app.route("/api/nhi/findings", methods=["GET"])
 def get_nhi_findings():
-    report = analyze_nhi_posture(db.session)
-    return jsonify(report["findings"])
+    return jsonify(get_nhi_report()["findings"])
 
 
 @app.route("/api/applications/<string:id>/federatedcredentials", methods=["GET"])
@@ -1050,6 +1098,11 @@ def get_application_federated_credentials(id):
         abort(404)
     inspector = sa_inspect(db.session.get_bind())
     if "FederatedIdentityCredentials" not in inspector.get_table_names():
+        return jsonify([])
+    # Same hiding as the analyzer: rows from a source that was not fully collected (e.g. partial rows
+    # after a failed gather) are never reported. Response stays an array; the collection state itself
+    # is exposed via /api/nhi/summary (federatedCredentialsCollected / ...CollectionStatus).
+    if not federated_credentials_collected(db.session):
         return jsonify([])
     fics = db.session.query(FederatedIdentityCredential).filter(
         or_(
@@ -1070,7 +1123,7 @@ def get_serviceprincipal_nhi(id):
     sp = db.session.get(ServicePrincipal, id)
     if not sp:
         abort(404)
-    report = analyze_nhi_posture(db.session)
+    report = get_nhi_report()
     agent_item = next((a for a in report["agents"] if a["objectId"] == id), None)
     workload_item = next((w for w in report["workloads"] if w["objectId"] == id), None)
     sp_findings = [
@@ -1091,6 +1144,8 @@ def get_serviceprincipal_nhi(id):
         "federatedCredentials": sp_fics,
         "findings": sp_findings,
         "collectionStatus": report["summary"]["collectionStatus"],
+        "agentMetadataCollected": report["summary"]["agentMetadataCollected"],
+        "agentMetadataCollectionDetail": report["summary"]["agentMetadataCollectionDetail"],
     })
 
 # Wrapper that supports paging based on the work of Kevin Tellier (@flashlam)

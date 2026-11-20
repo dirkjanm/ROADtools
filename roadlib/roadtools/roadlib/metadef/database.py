@@ -1817,6 +1817,21 @@ class AgentIdentityMetadata(Base, SerializeMixin):
         uselist=False)
 
 
+class NhiCollectionState(Base, SerializeMixin):
+    """Per-source outcome of the MS Graph NHI collection phase.
+
+    source: 'federatedCredentials' | 'agentMetadata'
+    status: 'collected' (full pagination succeeded, 2xx) | 'skipped' (--skip-nhi or no
+            MS Graph token) | 'failed' (HTTP error/exception/partial) | 'uncollected'
+    """
+    __tablename__ = "NhiCollectionStates"
+    source = Column(Text, primary_key=True)
+    status = Column(Text)
+    detail = Column(Text)
+    itemCount = Column(Integer)
+    collectedAt = Column(Text)
+
+
 def parse_db_argument(dbarg):
     '''
     Parse DB string given as argument into full path required

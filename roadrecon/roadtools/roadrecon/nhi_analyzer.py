@@ -1,12 +1,21 @@
 import datetime
-from sqlalchemy import inspect as sa_inspect
+import re
+from urllib.parse import urlparse
+from sqlalchemy import func, inspect as sa_inspect, or_
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import selectinload
 from roadtools.roadlib.metadef.database import (
     AgentIdentityMetadata,
     Application,
+    AZroleAssignment,
+    AZroleEligibilityScheduleInstance,
     AppRoleAssignment,
     FederatedIdentityCredential,
+    NhiCollectionState,
     OAuth2PermissionGrant,
+    PIMgovernanceRoleAssignment,
     ServicePrincipal,
+    User,
 )
 from roadtools.roadrecon.gather import extract_agent_metadata_from_sp
 
@@ -41,7 +50,6 @@ TIER0_APP_ROLES = {
     "UserAuthenticationMethod.ReadWrite.All",
     "Organization.ReadWrite.All",
     "EntitlementManagement.ReadWrite.All",
-    " TrustFrameworkKeySet.ReadWrite.All",
     "TrustFrameworkKeySet.ReadWrite.All",
     "DelegatedPermissionGrant.ReadWrite.All",
 }
@@ -202,7 +210,7 @@ def _analyze_credentials(pw_creds, key_creds, now_utc=None):
     certs_count = len(key_list)
     expired_count = 0
     long_lived_count = 0
-    max_expiry_days = 0
+    max_expiry_days = None
 
     for cred in list(pw_list) + list(key_list):
         if not isinstance(cred, dict):
@@ -214,7 +222,7 @@ def _analyze_credentials(pw_creds, key_creds, now_utc=None):
             if delta_days < 0:
                 expired_count += 1
             else:
-                if delta_days > max_expiry_days:
+                if max_expiry_days is None or delta_days > max_expiry_days:
                     max_expiry_days = delta_days
                 if delta_days > 365:
                     long_lived_count += 1
@@ -239,6 +247,112 @@ def _analyze_credentials(pw_creds, key_creds, now_utc=None):
         "maxExpiryDays": max_expiry_days,
         "credentialSummary": ", ".join(parts) if parts else "No secrets or certificates",
     }
+
+
+_EXPR_REFERENCES_SUB = re.compile(r"""claims\[\s*['"]sub['"]\s*\]""", re.I)
+_EXPR_CLAUSE = re.compile(r"^claims\[\s*'([^']+)'\s*\]\s*(eq|matches)\s*'([^']*)'$", re.I)
+_EXPR_SUB_EQ = re.compile(r"""claims\[\s*['"]sub['"]\s*\]\s*eq\s*['"]([^'"]*)['"]""", re.I)
+_EXPR_LITERAL =re.compile(r"'[^']*'")
+_EXPR_CONNECTOR = re.compile(r"\s*\b(and|or)\b\s*", re.I)
+_UNPARSEABLE = "unparseable expression, cannot confirm subject restriction"
+
+
+_GITHUB_ORG_PINNED = re.compile(r"^repo:[^*?/:]+/")
+
+
+def _strip_outer_parens(text: str) -> str:
+    """Strip balanced outer parentheses; `text` has quoted literals already masked."""
+    while text.startswith("(") and text.endswith(")"):
+        depth = 0
+        for i, ch in enumerate(text):
+            depth += (ch == "(") - (ch == ")")
+            if depth == 0 and i < len(text) - 1:
+                return text  # first '(' closes before the end: not an outer pair
+        text = text[1:-1].strip()
+    return text
+
+
+def _grade_claims_expression(expr_val: str, issuer: str = ""):
+    """Fail-closed grading of a flexible-FIC claimsMatchingExpression.
+
+    Microsoft Learn (flexible FIC, languageVersion 1) documents ONLY `eq`, `matches` (`*`/`?`
+    wildcards) and `and`; comparands are single-quoted. Anything else (`or`, `!=`, `not`,
+    startswith/contains, bare literals) is not in the documented grammar, so it is graded
+    conservatively rather than assumed safe. Returns a list of (severity, reason).
+    """
+    out = []
+    norm = re.sub(r"\s+", " ", expr_val.replace('"', "'")).strip()
+    if norm.strip("' ") == "*":
+        return [("Critical", f"claimsMatchingExpression matches every subject ({expr_val})")]
+    literals = []
+    masked = _EXPR_LITERAL.sub(lambda m: literals.append(m.group(0)) or f"@@{len(literals) - 1}@@", norm)
+    masked = _strip_outer_parens(masked)
+    github = (urlparse(issuer).hostname or "").lower() == "token.actions.githubusercontent.com"
+    parts = _EXPR_CONNECTOR.split(masked)
+    clauses = [parts[i] for i in range(0, len(parts), 2)]
+    connectors = [parts[i].lower() for i in range(1, len(parts), 2)]
+
+    def restore(text):
+        return re.sub(r"@@(\d+)@@", lambda m: literals[int(m.group(1))], text).strip()
+
+    any_sub = bool(_EXPR_REFERENCES_SUB.search(norm))
+    unparseable = False
+    for raw in clauses:
+        c = restore(raw)
+        m = _EXPR_CLAUSE.match(c)
+        if m:
+            claim, op, val = m.group(1).lower(), m.group(2).lower(), m.group(3)
+            if claim == "sub" and op == "matches" and val and set(val) <= set("*?"):
+                out.append(("Critical", f"claimsMatchingExpression matches every subject ({expr_val})"))
+            elif github and claim == "sub" and op == "matches" and set("*?") & set(val) \
+                    and not _GITHUB_ORG_PINNED.match(val):
+                # shared public issuer: an unpinned org/repo lets any repository in any org get a token
+                out.append(("Critical", f"claimsMatchingExpression wildcard does not pin the GitHub org/repo on a shared public issuer ({expr_val})"))
+            elif op == "matches" and "*" in val and claim == "sub":
+                out.append(("High", f"Flexible claimsMatchingExpression uses wildcard matching ({expr_val})"))
+            continue
+        cl = c.lower()
+        if re.fullmatch(r"true|1|'([^']*)' eq '\1'", cl):
+            out.append(("Critical", f"claimsMatchingExpression contains an always-true clause ({expr_val})"))
+        elif "!=" in c or re.search(r"\bnot\b|\bne\b", cl):
+            out.append(("Critical", f"claimsMatchingExpression uses negation, which can match any other subject ({expr_val})"))
+        elif re.search(r"startswith|endswith|contains", cl) and "''" in c:
+            out.append(("Critical", f"claimsMatchingExpression uses an empty-string prefix/contains match ({expr_val})"))
+        else:
+            unparseable = True
+    if "or" in connectors:
+        out.append(("High", f"claimsMatchingExpression uses 'or', so the subject constraint can be bypassed by another clause ({expr_val})"))
+    if not any_sub:
+        out.append(("Critical", f"claimsMatchingExpression does not constrain the subject claim ({expr_val})"))
+    if unparseable:
+        out.append(("Medium", f"claimsMatchingExpression: {_UNPARSEABLE} ({expr_val})"))
+    return out
+
+
+KNOWN_ISSUER_HOST_PATTERNS = tuple(re.compile(p) for p in (
+    r"token\.actions\.githubusercontent\.com",
+    r"vstoken\.actions\.githubusercontent\.com",
+    r"vstoken\.dev\.azure\.com",
+    r"app\.vstoken\.visualstudio\.com",
+    r"accounts\.google\.com",
+    r"container\.googleapis\.com",
+    r"oidc\.eks\.[a-z0-9-]+\.amazonaws\.com",
+    r"[a-z0-9-]+\.oic\.prod-aks\.azure\.com",
+    r"login\.microsoftonline\.com",
+    r"sts\.windows\.net",
+    r"gitlab\.com",
+    r"app\.terraform\.io",
+    r"oidc\.circleci\.com",
+    r"api\.bitbucket\.org",
+))
+
+
+def _is_known_issuer(issuer: str) -> bool:
+    parsed = urlparse(issuer)
+    if "@" in parsed.netloc:  # userinfo trick: https://evil@known-host/ must not pass the allowlist
+        return False
+    host = (parsed.hostname or "").lower()
+    return any(p.fullmatch(host) for p in KNOWN_ISSUER_HOST_PATTERNS)
 
 
 def evaluate_fic_risk(fic, app_display_name: str = "") -> dict:
@@ -269,42 +383,62 @@ def evaluate_fic_risk(fic, app_display_name: str = "") -> dict:
     issuer_lower = issuer.lower()
     subject_lower = subject.lower()
 
-    has_claims_expr = bool(claims_expr and (isinstance(claims_expr, dict) and claims_expr.get("value") or isinstance(claims_expr, str)))
+    if isinstance(claims_expr, dict):
+        expr_val = str(claims_expr.get("value") or "").strip()
+    elif isinstance(claims_expr, str):
+        expr_val = claims_expr.strip()
+    else:
+        expr_val = ""
+    has_claims_expr = bool(expr_val)
+    expr_lower = expr_val.lower()
 
-    # Critical (4) checks
-    if not issuer or issuer_lower.startswith("http://"):
-        severity = "Critical"
+    def bump(level):
+        nonlocal severity
+        if SEVERITY_WEIGHTS[level] > SEVERITY_WEIGHTS[severity]:
+            severity = level
+
+    # Issuer checks
+    if not issuer or issuer_lower.startswith("http://") or not issuer_lower.startswith("https://"):
+        bump("Critical")
         reasons.append("Insecure or missing OIDC issuer URL (non-HTTPS)")
+    elif not _is_known_issuer(issuer):
+        bump("Medium")
+        reasons.append(f"Federated credential trusts an unrecognised issuer '{issuer}' (not a known CI/CD, cloud or Kubernetes OIDC provider)")
 
-    if not subject and not has_claims_expr:
-        severity = "Critical"
+    # Subject / expression checks
+    literal_asterisk = False
+    if has_claims_expr:
+        for level, reason in _grade_claims_expression(expr_val, issuer):
+            bump(level)
+            reasons.append(reason)
+    elif not subject:
+        bump("Critical")
         reasons.append("Empty OIDC subject without a claimsMatchingExpression constraint")
-    elif subject == "*" or subject.endswith(":*") or subject.endswith("/*") or "*" in subject:
-        severity = "Critical"
-        reasons.append(f"Wildcard OIDC subject '{subject}' allows broad token exchange spoofing")
+    elif "*" in subject:
+        # Plain subjects are compared literally (Microsoft Learn: explicit matching); only
+        # claimsMatchingExpression 'matches' supports wildcards.
+        literal_asterisk = True
+        bump("Medium")
+        reasons.append(
+            f"Subject '{subject}' contains a literal asterisk, not a wildcard; likely misconfiguration "
+            "(use a flexible federated credential for wildcard matching)")
 
-    # High (3) checks
-    if "token.actions.githubusercontent.com" in issuer_lower:
-        if "pull_request" in subject_lower:
-            if SEVERITY_WEIGHTS[severity] < SEVERITY_WEIGHTS["High"]:
-                severity = "High"
+    target_lower = subject_lower or expr_lower
+    is_github_issuer = (_is_known_issuer(issuer)
+                        and (urlparse(issuer).hostname or "").lower() == "token.actions.githubusercontent.com")
+    if not literal_asterisk and is_github_issuer and target_lower:
+        if "pull_request" in target_lower:
+            bump("High")
             reasons.append("GitHub Actions OIDC subject trusts pull_request workflow triggers (fork PR risk)")
-        elif ":ref:refs/heads/" not in subject_lower and ":ref:refs/tags/" not in subject_lower and ":environment:" not in subject_lower:
-            if SEVERITY_WEIGHTS[severity] < SEVERITY_WEIGHTS["High"]:
-                severity = "High"
+        elif ":ref:refs/heads/" not in target_lower and ":ref:refs/tags/" not in target_lower and ":environment:" not in target_lower:
+            bump("High")
             reasons.append("GitHub Actions OIDC subject lacks explicit branch (:ref:refs/heads/), tag, or environment (:environment:) constraint")
 
-    if subject_lower.startswith("system:serviceaccount:default:") or subject_lower == "system:serviceaccount:default":
-        if SEVERITY_WEIGHTS[severity] < SEVERITY_WEIGHTS["High"]:
-            severity = "High"
-        reasons.append(f"Kubernetes OIDC subject trusts the 'default' namespace ({subject})")
-
-    if has_claims_expr and isinstance(claims_expr, dict):
-        expr_val = str(claims_expr.get("value", ""))
-        if "*" in expr_val:
-            if SEVERITY_WEIGHTS[severity] < SEVERITY_WEIGHTS["High"]:
-                severity = "High"
-            reasons.append(f"Flexible claimsMatchingExpression uses wildcard matching ({expr_val})")
+    for cand in [subject] + _EXPR_SUB_EQ.findall(expr_val):
+        cl = cand.strip().lower()
+        if cl.startswith("system:serviceaccount:default:") or cl == "system:serviceaccount:default":
+            bump("High")
+            reasons.append(f"Kubernetes OIDC subject trusts the 'default' namespace ({cand})")
 
     if not reasons:
         reasons.append("Pinned OIDC subject and HTTPS issuer")
@@ -324,6 +458,92 @@ def evaluate_fic_risk(fic, app_display_name: str = "") -> dict:
         "severityWeight": SEVERITY_WEIGHTS[severity],
         "riskReasons": reasons,
     }
+
+
+COLLECTION_STATUSES = ("collected", "skipped", "failed", "uncollected")
+
+
+def _rel_available(model, attr, existing_tables):
+    secondary = getattr(model, attr).property.secondary
+    return secondary is None or secondary.name in existing_tables
+
+
+def _sp_load_options(tables, pim_ok, az_ok, az_eligible_ok):
+    opts = [selectinload(getattr(ServicePrincipal, a))
+            for a in ("ownerUsers", "ownerServicePrincipals", "memberOfRole")
+            if _rel_available(ServicePrincipal, a, tables)]
+    if pim_ok:
+        opts.append(selectinload(ServicePrincipal.pimRoleAssignments)
+                    .selectinload(PIMgovernanceRoleAssignment.roleDefinition))
+    if az_ok:
+        opts.append(selectinload(ServicePrincipal.azRoleAssignments).selectinload(AZroleAssignment.role))
+    if az_eligible_ok:
+        opts.append(selectinload(ServicePrincipal.azEligibleRoleAssignments)
+                    .selectinload(AZroleEligibilityScheduleInstance.role))
+    return opts
+
+
+def _resolve_sponsors(dbsession, sponsor_ids, existing_tables, cache, gap):
+    """Resolve sponsor ids against known Users (objectId or userPrincipalName).
+
+    Returns (resolved, unresolved): resolved is a list of (userObjectId, name); unresolved is the
+    list of raw ids that match no known user (placeholders such as 'none' land here and never
+    count as ownership).
+    """
+    ids = [i for i in sponsor_ids if isinstance(i, str) and i]
+    unresolved_raw = [i for i in sponsor_ids if not (isinstance(i, str) and i)]
+    # objectId matches exactly; userPrincipalName matches case-insensitively (UPNs are case-insensitive).
+    def lookup(i):
+        return cache.get(("oid", i)) or cache.get(("upn", i.lower()))
+
+    missing = [i for i in ids if lookup(i) is None]
+    if missing and "Users" in existing_tables:
+        try:
+            for u in dbsession.query(User).filter(
+                    or_(User.objectId.in_(missing),
+                        func.lower(User.userPrincipalName).in_([m.lower() for m in missing]))).all():
+                entry = (u.objectId, u.userPrincipalName or u.displayName or u.objectId)
+                cache[("oid", u.objectId)] = entry
+                if u.userPrincipalName:
+                    cache[("upn", u.userPrincipalName.lower())] = entry
+        except SQLAlchemyError as exc:
+            dbsession.rollback()
+            gap(f"sponsors unavailable ({type(exc).__name__}); sponsors treated as unresolved")
+    resolved, unresolved = [], [str(i) for i in unresolved_raw]
+    for i in ids:
+        entry = lookup(i)
+        if entry is None:
+            unresolved.append(i)
+        elif entry not in resolved:
+            resolved.append(entry)
+    return resolved, unresolved
+
+
+def _source_state(dbsession, markers, source, table_present, model):
+    marker = markers.get(source)
+    if marker is not None and marker.status in COLLECTION_STATUSES:
+        if marker.status == "collected" and not table_present:
+            return "uncollected", marker.detail  # a 'collected' claim without its table is not trustworthy
+        return marker.status, marker.detail
+    detail = marker.detail if marker is not None else None
+    if table_present and dbsession.query(model).first() is not None:
+        return "collected", detail
+    return "uncollected", detail
+
+
+def federated_credentials_collected(dbsession) -> bool:
+    """True only if FIC rows are trustworthy (same rule analyze_nhi_posture applies)."""
+    tables = set(sa_inspect(dbsession.get_bind()).get_table_names())
+    if "FederatedIdentityCredentials" not in tables:
+        return False
+    markers = {}
+    if "NhiCollectionStates" in tables:
+        try:
+            markers = {m.source: m for m in dbsession.query(NhiCollectionState).all()}
+        except SQLAlchemyError:
+            dbsession.rollback()
+    state, _ = _source_state(dbsession, markers, "federatedCredentials", True, FederatedIdentityCredential)
+    return state == "collected"
 
 
 def analyze_nhi_posture(dbsession) -> dict:
@@ -349,13 +569,67 @@ def analyze_nhi_posture(dbsession) -> dict:
         and "lnk_pim_roleassignment_subjectserviceprincipal" in existing_tables
     )
 
-    collection_status = "collected" if (fic_table_present and agent_meta_table_present) else "derived_from_legacy_db"
+    data_gaps = []
 
-    all_sps = dbsession.query(ServicePrincipal).all() if "ServicePrincipals" in existing_tables else []
-    all_apps = dbsession.query(Application).all() if "Applications" in existing_tables else []
+    def gap(message):
+        if message not in data_gaps:
+            data_gaps.append(message)
+
+    def safe_read(label, fn, default):
+        try:
+            return fn()
+        except SQLAlchemyError as exc:
+            dbsession.rollback()
+            gap(f"{label} unavailable ({type(exc).__name__})")
+            return default
+
+    markers = {}
+    if "NhiCollectionStates" in existing_tables:
+        markers = safe_read(
+            "collectionStates",
+            lambda: {m.source: m for m in dbsession.query(NhiCollectionState).all()},
+            {})
+
+    def source_state(source, table_present, model):
+        return _source_state(dbsession, markers, source, table_present, model)
+
+    fic_state, fic_detail = source_state("federatedCredentials", fic_table_present, FederatedIdentityCredential)
+    meta_state, meta_detail = source_state("agentMetadata", agent_meta_table_present, AgentIdentityMetadata)
+    fic_collected = fic_state == "collected"
+    meta_collected = meta_state == "collected"
+    collection_status = "collected" if fic_collected else "derived_from_legacy_db"
+    if not fic_collected:
+        gap(f"federatedCredentials not collected ({fic_state}); federated credential counts unknown")
+    if not meta_collected:
+        gap(f"agentMetadata not collected ({meta_state}); agents inferred heuristically")
+        gap("agent sponsor data unavailable: agentMetadata not collected; "
+            "ownerless/orphan counts for agents are an upper bound")
+    if not pim_table_present:
+        gap("pimRoles unavailable (PIM tables not collected)")
+    if not (az_roles_table_present or az_eligible_table_present):
+        gap("azureRoles unavailable (Azure RBAC tables not collected)")
+
+    sp_options = _sp_load_options(existing_tables, pim_table_present, az_roles_table_present, az_eligible_table_present)
+    app_options = [selectinload(getattr(Application, a)) for a in ("ownerUsers", "ownerServicePrincipals")
+                   if _rel_available(Application, a, existing_tables)]
+
+    def load_all(model, table, options):
+        if table not in existing_tables:
+            return []
+        if options:
+            try:
+                return dbsession.query(model).options(*options).all()
+            except SQLAlchemyError as exc:
+                dbsession.rollback()
+                gap(f"eagerLoading unavailable ({type(exc).__name__})")
+        return dbsession.query(model).all()
+
+    all_sps = load_all(ServicePrincipal, "ServicePrincipals", sp_options)
+    all_apps = load_all(Application, "Applications", app_options)
     all_approles = dbsession.query(AppRoleAssignment).all() if "AppRoleAssignments" in existing_tables else []
     all_oauth2 = dbsession.query(OAuth2PermissionGrant).all() if "OAuth2PermissionGrants" in existing_tables else []
-    all_fics = dbsession.query(FederatedIdentityCredential).all() if fic_table_present else []
+    # Never report FIC rows from a source that was not fully collected (no false zero / partial data).
+    all_fics = dbsession.query(FederatedIdentityCredential).all() if (fic_table_present and fic_collected) else []
     all_agent_metas = dbsession.query(AgentIdentityMetadata).all() if agent_meta_table_present else []
 
     sp_by_id = {sp.objectId: sp for sp in all_sps if sp.objectId}
@@ -408,7 +682,7 @@ def analyze_nhi_posture(dbsession) -> dict:
         if fic.appId:
             fics_by_appid.setdefault(fic.appId, []).append(fic_eval)
 
-        if fic_eval["severityWeight"] >= SEVERITY_WEIGHTS["High"]:
+        if fic_eval["severityWeight"] >= SEVERITY_WEIGHTS["Medium"]:
             findings.append({
                 "id": f"NHI-FIC-{fic.id}",
                 "severity": fic_eval["riskLevel"],
@@ -418,9 +692,9 @@ def analyze_nhi_posture(dbsession) -> dict:
                 "principalType": "Application",
                 "principalName": app_name,
                 "appId": fic.appId,
-                "title": f"High-Risk Federated Identity Credential '{fic.name}' on {app_name}",
+                "title": f"{fic_eval['riskLevel']}-risk Federated Identity Credential '{fic.name}' on {app_name}",
                 "detail": "; ".join(fic_eval["riskReasons"]),
-                "recommendation": "Restrict the OIDC subject claim to an explicit branch, tag, or production environment and enforce HTTPS on a verified issuer.",
+                "recommendation": "Restrict the OIDC subject claim to an explicit branch, tag, or production environment and enforce HTTPS on a verified, recognised issuer.",
                 "evidence": {
                     "credentialId": fic.id,
                     "credentialName": fic.name,
@@ -430,6 +704,7 @@ def analyze_nhi_posture(dbsession) -> dict:
             })
 
     now_utc = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    sponsor_cache = {}
     agents_out = []
     workloads_out = []
     tier0_nhi_ids = set()
@@ -439,7 +714,9 @@ def analyze_nhi_posture(dbsession) -> dict:
         # Skip Microsoft 1st party resource SPs unless they have explicit agent metadata or custom credentials/FICs
         app_match = app_by_appid.get(sp.appId) if sp.appId else None
         sp_fics = []
-        if app_match and app_match.objectId in fics_by_app_obj_id:
+        if not fic_collected:
+            pass
+        elif app_match and app_match.objectId in fics_by_app_obj_id:
             sp_fics = fics_by_app_obj_id[app_match.objectId]
         elif sp.appId and sp.appId in fics_by_appid:
             sp_fics = fics_by_appid[sp.appId]
@@ -463,76 +740,92 @@ def analyze_nhi_posture(dbsession) -> dict:
         # Also check if any permissions match AI/Copilot scopes to promote to agent
         all_perms = sorted(set(assigned_approles + delegated_scopes))
         m365_perms = [p for p in all_perms if is_m365_data_scope(p)]
-        tier0_app_perms = [p for p in all_perms if is_tier0_permission(p)]
+        # Tier-0 is derived from application permissions (app roles) only: delegated scopes are
+        # bounded by the signed-in user's own rights and stay informational / blast-radius only.
+        tier0_app_perms = [p for p in assigned_approles if is_tier0_permission(p)]
+
+        # Assigned (app-role) M365 data / Tier-0 permissions drive findings; delegated scopes are
+        # bounded by the signed-in user and stay informational in m365Scopes.
+        m365_assigned = [p for p in assigned_approles if is_m365_data_scope(p)]
 
         if not agent_meta and not heuristic_meta:
-            if any(p.startswith(("AiEnterpriseInteraction.", "Copilot.")) for p in all_perms):
+            # Heuristic promotion only on APP-ROLE Copilot/AiEnterpriseInteraction permissions; a
+            # delegated grant (or an unrelated app role) is not evidence of an autonomous agent.
+            ai_app_roles = [p for p in assigned_approles
+                            if p.startswith(("AiEnterpriseInteraction.", "Copilot."))]
+            if ai_app_roles:
                 heuristic_meta = {
                     "objectId": sp.objectId,
                     "appId": sp.appId,
                     "agentCategory": "M365DeclarativeAgent",
-                    "executionMode": "Autonomous" if any(p in assigned_approles for p in all_perms) else "Interactive",
+                    "executionMode": "Autonomous",
                     "blueprintId": sp.applicationTemplateId,
                     "sponsorUserIds": [],
-                    "m365Scopes": m365_perms,
+                    # app-role scopes only: delegated scopes must not feed the write finding
+                    "m365Scopes": m365_assigned,
                     "mcpTools": [],
                     "collectionSource": "heuristic",
                 }
 
-        # Owners (combine SP owners + backing Application owners)
+        # Owners (combine SP owners + backing Application owners); lazy loads can fail if the
+        # owner link tables are missing, which is recorded as a data gap rather than crashing.
         owner_names = []
         owner_ids = set()
-        for u in getattr(sp, "ownerUsers", []) or []:
-            if u.objectId not in owner_ids:
-                owner_ids.add(u.objectId)
-                owner_names.append(u.userPrincipalName or u.displayName or u.objectId)
-        for osp in getattr(sp, "ownerServicePrincipals", []) or []:
-            if osp.objectId not in owner_ids:
-                owner_ids.add(osp.objectId)
-                owner_names.append(osp.displayName or osp.objectId)
-        if app_match:
-            for u in getattr(app_match, "ownerUsers", []) or []:
-                if u.objectId not in owner_ids:
-                    owner_ids.add(u.objectId)
-                    owner_names.append(u.userPrincipalName or u.displayName or u.objectId)
-            for osp in getattr(app_match, "ownerServicePrincipals", []) or []:
-                if osp.objectId not in owner_ids:
-                    owner_ids.add(osp.objectId)
-                    owner_names.append(osp.displayName or osp.objectId)
+        owners_known = True
+        for holder in (sp, app_match):
+            if holder is None:
+                continue
+            for attr, name_of in (
+                    ("ownerUsers", lambda o: o.userPrincipalName or o.displayName or o.objectId),
+                    ("ownerServicePrincipals", lambda o: o.displayName or o.objectId)):
+                if not _rel_available(type(holder), attr, existing_tables):
+                    # link table absent: skip the load (no failing query, no rollback expiring every
+                    # ORM instance) and treat ownership as unknown rather than 'ownerless'
+                    owners_known = False
+                    gap("owners unavailable (owner link tables not collected)")
+                    continue
+                rows = safe_read("owners", lambda h=holder, a=attr: list(getattr(h, a, None) or []), [])
+                for o in rows:
+                    if o.objectId not in owner_ids:
+                        owner_ids.add(o.objectId)
+                        owner_names.append(name_of(o))
 
-        # Directory roles
-        dir_roles = []
-        for dr in getattr(sp, "memberOfRole", []) or []:
-            if dr.displayName:
-                dir_roles.append(dr.displayName)
+        # Directory roles (active membership, PIM, Azure RBAC kept separate)
+        direct_roles = []
+        for dr in safe_read("directoryRoles", lambda sp=sp: list(getattr(sp, "memberOfRole", []) or []), []):
+            if dr.displayName and dr.displayName not in direct_roles:
+                direct_roles.append(dr.displayName)
+
+        def collect_names(rows, name_of):
+            names = []
+            for row in rows:
+                name = name_of(row)
+                if name and name not in names:
+                    names.append(name)
+            return names
+
+        pim_roles = []
         if pim_table_present:
-            try:
-                for pim_ra in getattr(sp, "pimRoleAssignments", []) or []:
-                    if pim_ra.roleDefinition and pim_ra.roleDefinition.displayName:
-                        rname = pim_ra.roleDefinition.displayName
-                        if rname not in dir_roles:
-                            dir_roles.append(rname)
-            except Exception:
-                pass
-
-        # Azure RBAC roles
+            pim_roles = safe_read(
+                "pimRoles",
+                lambda sp=sp: collect_names(sp.pimRoleAssignments or [],
+                                            lambda r: r.roleDefinition.displayName if r.roleDefinition else None),
+                [])
         azure_roles = []
         if az_roles_table_present:
-            try:
-                for az_ra in getattr(sp, "azRoleAssignments", []) or []:
-                    if az_ra.role and az_ra.role.role_name:
-                        if az_ra.role.role_name not in azure_roles:
-                            azure_roles.append(az_ra.role.role_name)
-            except Exception:
-                pass
+            azure_roles = safe_read(
+                "azureRoles",
+                lambda sp=sp: collect_names(sp.azRoleAssignments or [], lambda r: r.role.role_name if r.role else None),
+                [])
         if az_eligible_table_present:
-            try:
-                for az_el in getattr(sp, "azEligibleRoleAssignments", []) or []:
-                    if az_el.role and az_el.role.role_name:
-                        if az_el.role.role_name not in azure_roles:
-                            azure_roles.append(az_el.role.role_name)
-            except Exception:
-                pass
+            for name in safe_read(
+                    "azureRoles",
+                    lambda sp=sp: collect_names(sp.azEligibleRoleAssignments or [],
+                                                lambda r: r.role.role_name if r.role else None),
+                    []):
+                if name not in azure_roles:
+                    azure_roles.append(name)
+        dir_roles = direct_roles + [r for r in pim_roles if r not in direct_roles]
 
         tier0_dir = [r for r in dir_roles if r in TIER0_DIRECTORY_ROLES]
         tier0_az = [r for r in azure_roles if r in TIER0_AZURE_ROLES]
@@ -549,9 +842,7 @@ def analyze_nhi_posture(dbsession) -> dict:
             # Skip unprivileged built-in Microsoft first-party resource SPs
             continue
 
-        owners_count = len(owner_ids)
-        if owners_count == 0:
-            ownerless_nhi_ids.add(sp.objectId)
+        owners_count = len(owner_ids) if (owners_known or owner_ids) else None
         if tier0_combined:
             tier0_nhi_ids.add(sp.objectId)
 
@@ -562,18 +853,31 @@ def analyze_nhi_posture(dbsession) -> dict:
             meta_src = agent_meta.as_dict() if agent_meta else heuristic_meta
             agent_category = meta_src.get("agentCategory") or "CustomAIAgent"
             execution_mode = meta_src.get("executionMode") or "Unknown"
-            if execution_mode == "Unknown" and assigned_approles:
+            if execution_mode == "Unknown" and any(
+                    is_m365_data_scope(r) or is_tier0_permission(r) for r in assigned_approles):
+                # app-only access to M365 data / Tier-0 means it acts without a signed-in user
                 execution_mode = "Autonomous"
             blueprint_id = meta_src.get("blueprintId") or sp.applicationTemplateId
             sponsor_ids = meta_src.get("sponsorUserIds") or []
             explicit_m365 = meta_src.get("m365Scopes") or []
-            merged_m365 = sorted(set(m365_perms + explicit_m365))
+            merged_m365 = sorted(set(m365_perms + explicit_m365))  # informational (incl. delegated)
+            write_basis_m365 = sorted(set(m365_assigned + explicit_m365))  # delegated scopes excluded
             mcp_tools = meta_src.get("mcpTools") or []
 
-            if owners_count == 0 and not sponsor_ids:
-                owner_count_effective = 0
-            else:
-                owner_count_effective = max(owners_count, len(sponsor_ids))
+            # Only sponsors that resolve to a known user count toward ownership (placeholders such
+            # as 'none' must not hide an orphaned agent); owners and sponsors are de-duplicated.
+            resolved_sponsors, unresolved_sponsors = _resolve_sponsors(
+                dbsession, sponsor_ids, existing_tables, sponsor_cache, gap)
+            sponsor_names = [name for _, name in resolved_sponsors]
+            owner_count_effective = len(owner_ids | {oid for oid, _ in resolved_sponsors})
+            if owner_count_effective == 0 and not owners_known:
+                owner_count_effective = None  # unknown: owner data unavailable and no sponsor resolved
+            if owner_count_effective == 0:
+                ownerless_nhi_ids.add(sp.objectId)
+            if not agent_meta or meta_src.get("collectionSource") == "heuristic":
+                risk_reasons.append(
+                    "Classified as an AI agent heuristically (no Agent ID metadata collected); "
+                    "execution mode and ownership are inferred")
 
             if tier0_combined:
                 max_weight = max(max_weight, SEVERITY_WEIGHTS["Critical"])
@@ -598,7 +902,7 @@ def analyze_nhi_posture(dbsession) -> dict:
                     },
                 })
 
-            high_write_m365 = [s for s in merged_m365 if "ReadWrite" in s or "Send" in s or "FullControl" in s or "Manage" in s]
+            high_write_m365 = [s for s in write_basis_m365 if "ReadWrite" in s or "Send" in s or "FullControl" in s or "Manage" in s]
             if execution_mode == "Autonomous" and high_write_m365:
                 weight = SEVERITY_WEIGHTS["Critical"] if owner_count_effective == 0 else SEVERITY_WEIGHTS["High"]
                 sev_label = WEIGHT_TO_SEVERITY[weight]
@@ -630,6 +934,9 @@ def analyze_nhi_posture(dbsession) -> dict:
             if owner_count_effective == 0:
                 max_weight = max(max_weight, SEVERITY_WEIGHTS["High"] if execution_mode == "Autonomous" else SEVERITY_WEIGHTS["Medium"])
                 reason = "Orphaned AI agent without human owner or sponsor accountability"
+                detail = reason + (
+                    "" if meta_collected else
+                    ". Agent sponsor data unavailable (agentMetadata not collected); this is an upper bound")
                 risk_reasons.append(reason)
                 findings.append({
                     "id": f"NHI-AGENT-ORPHAN-{sp.objectId}",
@@ -641,7 +948,7 @@ def analyze_nhi_posture(dbsession) -> dict:
                     "principalName": sp.displayName or sp.objectId,
                     "appId": sp.appId,
                     "title": f"Ownerless {agent_category} '{sp.displayName}'",
-                    "detail": reason,
+                    "detail": detail,
                     "recommendation": "Assign an accountable human sponsor or owner in Microsoft Entra Agent ID governance.",
                     "evidence": {"agentCategory": agent_category, "executionMode": execution_mode},
                 })
@@ -670,7 +977,7 @@ def analyze_nhi_posture(dbsession) -> dict:
                 risk_reasons.append(f"{cred_info['longLivedCredentialsCount']} long-lived secret/certificate credential(s) (>365 days)")
 
             for f_eval in sp_fics:
-                if f_eval["severityWeight"] >= SEVERITY_WEIGHTS["High"]:
+                if f_eval["severityWeight"] >= SEVERITY_WEIGHTS["Medium"]:
                     max_weight = max(max_weight, f_eval["severityWeight"])
                     risk_reasons.extend(f_eval["riskReasons"])
 
@@ -691,13 +998,17 @@ def analyze_nhi_posture(dbsession) -> dict:
                 "graphAppRoles": assigned_approles,
                 "oauth2Scopes": delegated_scopes,
                 "tier0Roles": tier0_combined,
-                "directoryRoles": dir_roles,
+                "directoryRoles": direct_roles,
+                "pimRoles": pim_roles,
                 "azureRoles": azure_roles,
                 "ownersCount": owner_count_effective,
-                "ownerNames": owner_names or sponsor_ids,
+                "ownerNames": owner_names,
+                "sponsorNames": sponsor_names,
+                "sponsorsCount": len(resolved_sponsors),
+                "unresolvedSponsors": unresolved_sponsors,
                 "hasSecrets": cred_info["secretsCount"] > 0,
                 "hasCerts": cred_info["certsCount"] > 0,
-                "federatedCredentialsCount": len(sp_fics),
+                "federatedCredentialsCount": len(sp_fics) if fic_collected else None,
                 "accountEnabled": bool(sp.accountEnabled) if sp.accountEnabled is not None else True,
                 "riskLevel": WEIGHT_TO_SEVERITY[max_weight],
                 "severityWeight": max_weight,
@@ -713,6 +1024,8 @@ def analyze_nhi_posture(dbsession) -> dict:
                     nhi_type = "UserAssignedManagedIdentity"
                 else:
                     nhi_type = "SystemManagedIdentity"
+            elif is_first_party:
+                nhi_type = "FirstPartyMicrosoft"
             elif app_match and app_match.availableToOtherTenants:
                 nhi_type = "MultiTenantWorkloadApp"
             else:
@@ -740,7 +1053,7 @@ def analyze_nhi_posture(dbsession) -> dict:
                     },
                 })
 
-            if cred_info["secretsCount"] > 0 and (tier0_combined or m365_perms):
+            if cred_info["secretsCount"] > 0 and (tier0_combined or m365_assigned):
                 max_weight = max(max_weight, SEVERITY_WEIGHTS["High"])
                 reason = f"Privileged workload uses static password secrets ({cred_info['secretsCount']}) instead of workload federation or certificates"
                 risk_reasons.append(reason)
@@ -781,12 +1094,14 @@ def analyze_nhi_posture(dbsession) -> dict:
                     "evidence": cred_info,
                 })
 
-            if owners_count == 0 and nhi_type not in ("SystemManagedIdentity", "UserAssignedManagedIdentity"):
-                max_weight = max(max_weight, SEVERITY_WEIGHTS["Medium"] if (tier0_combined or m365_perms) else SEVERITY_WEIGHTS["Low"])
+            is_managed_identity = nhi_type in ("SystemManagedIdentity", "UserAssignedManagedIdentity")
+            if owners_count == 0 and not is_managed_identity:  # None (unknown) is never 'ownerless'
+                ownerless_nhi_ids.add(sp.objectId)
+                max_weight = max(max_weight, SEVERITY_WEIGHTS["Medium"] if (tier0_combined or m365_assigned) else SEVERITY_WEIGHTS["Low"])
                 risk_reasons.append("No assigned application or service principal owner")
 
             for f_eval in sp_fics:
-                if f_eval["severityWeight"] >= SEVERITY_WEIGHTS["High"]:
+                if f_eval["severityWeight"] >= SEVERITY_WEIGHTS["Medium"]:
                     max_weight = max(max_weight, f_eval["severityWeight"])
                     risk_reasons.extend(f_eval["riskReasons"])
 
@@ -799,17 +1114,23 @@ def analyze_nhi_posture(dbsession) -> dict:
                 "applicationObjectId": app_match.objectId if app_match else None,
                 "displayName": sp.displayName or sp.appDisplayName or sp.objectId,
                 "nhiType": nhi_type,
+                "nhiCategory": "ManagedIdentity" if is_managed_identity else "WorkloadApp",
                 "servicePrincipalType": sp_type,
                 "managedIdentityResourceId": sp.managedIdentityResourceId,
                 "accountEnabled": bool(sp.accountEnabled) if sp.accountEnabled is not None else True,
                 "secretsCount": cred_info["secretsCount"],
                 "certsCount": cred_info["certsCount"],
-                "federatedCredentialsCount": len(sp_fics),
+                "federatedCredentialsCount": len(sp_fics) if fic_collected else None,
                 "expiredCredentialsCount": cred_info["expiredCredentialsCount"],
                 "longLivedCredentialsCount": cred_info["longLivedCredentialsCount"],
                 "maxExpiryDays": cred_info["maxExpiryDays"],
                 "credentialSummary": cred_info["credentialSummary"],
                 "privilegedRoles": sorted(set(tier0_combined + dir_roles + azure_roles + assigned_approles)),
+                "directoryRoles": direct_roles,
+                "pimRoles": pim_roles,
+                "azureRoles": azure_roles,
+                "graphAppRoles": assigned_approles,
+                "tier0Roles": tier0_combined,
                 "m365Scopes": m365_perms,
                 "ownersCount": owners_count,
                 "ownerNames": owner_names,
@@ -843,7 +1164,8 @@ def analyze_nhi_posture(dbsession) -> dict:
         "totalSystemManagedIdentities": total_sys_mi,
         "totalUserAssignedManagedIdentities": total_user_mi,
         "totalWorkloadApps": total_workload_apps,
-        "totalFederatedCredentials": len(evaluated_fics),
+        "totalFederatedCredentials": len(evaluated_fics) if fic_collected else None,
+        "totalFirstPartyMicrosoftNhIs": sum(1 for w in workloads_out if w["nhiType"] == "FirstPartyMicrosoft"),
         "tier0PrivilegedNhIs": len(tier0_nhi_ids),
         "ownerlessNhIs": len(ownerless_nhi_ids),
         "criticalFindingsCount": sev_counts["Critical"],
@@ -854,6 +1176,15 @@ def analyze_nhi_posture(dbsession) -> dict:
         "collectionStatus": collection_status,
         "federatedCredentialsTablePresent": fic_table_present,
         "agentMetadataTablePresent": agent_meta_table_present,
+        "federatedCredentialsCollected": fic_collected,
+        "agentMetadataCollected": meta_collected,
+        "federatedCredentialsCollectionStatus": fic_state,
+        "agentMetadataCollectionStatus": meta_state,
+        "federatedCredentialsCollectionDetail": fic_detail,
+        "agentMetadataCollectionDetail": meta_detail,
+        "severityBreakdown": dict(sev_counts),
+        "topFindings": findings[:5],
+        "dataGaps": data_gaps,
     }
 
     return {

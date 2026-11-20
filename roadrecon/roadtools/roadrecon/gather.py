@@ -9,7 +9,9 @@ import re
 from multidict import CIMultiDict
 
 import aiohttp
-from sqlalchemy import bindparam, func, text
+from datetime import datetime, timezone
+from urllib.parse import urlparse
+from sqlalchemy import bindparam, func, inspect as sa_inspect, text
 from sqlalchemy.dialects.postgresql import insert as pginsert
 from sqlalchemy.orm import sessionmaker
 
@@ -20,7 +22,7 @@ from roadtools.roadlib.metadef.database import (
     AdministrativeUnit, AgentIdentityMetadata, Application, ApplicationRef,
     AppRoleAssignment, AuthorizationPolicy, Contact, Device, DirectoryRole,
     DirectorySetting, EligibleRoleAssignment, ExtensionProperty,
-    FederatedIdentityCredential, Group, OAuth2PermissionGrant, Policy,
+    FederatedIdentityCredential, Group, NhiCollectionState, OAuth2PermissionGrant, Policy,
     RoleAssignment, RoleDefinition, ServicePrincipal, TenantDetail, User,
     lnk_au_member_device, lnk_au_member_group, lnk_au_member_user,
     lnk_device_owner, lnk_group_member_contact, lnk_group_member_device,
@@ -54,6 +56,10 @@ class BatchResponse(aiohttp.ClientResponse):
     async def read(self):
         """Unpack the multipart batch on the first read and cache it."""
         if self._unpacked_body is None:
+            if not self.content_type.startswith('multipart/'):
+                # Not a $batch reply (e.g. MS Graph via --evade): pass through untouched
+                self._unpacked_body = await super().read()
+                return self._unpacked_body
             # Use MultipartReader to parse the response
             reader = aiohttp.MultipartReader.from_response(self)
             part = await reader.next()
@@ -102,8 +108,13 @@ class BatchSession(aiohttp.ClientSession):
 
     def get(self, url, **kwargs):
         # Customize headers or URL
+        # Copy so the shared headers dict is never mutated
+        kwargs['headers'] = dict(kwargs.get('headers') or {})
+        if urlparse(url).hostname == 'graph.microsoft.com':
+            # MS Graph has no $batch-in-AAD-Graph-format; send as a plain GET
+            return super().get(url, **kwargs)
         urlparts = url.split('/')
-        reqheaders = kwargs.get('headers', {})
+        reqheaders = kwargs['headers']
         reqheaders['Content-Type'] = 'multipart/mixed; boundary=batch_request_boundary'
         body = f'''--batch_request_boundary
 Content-Type: application/http
@@ -368,53 +379,62 @@ def extract_agent_metadata_from_sp(sp_raw: dict, collection_source: str = "msgra
             for k, v in app_metadata.items():
                 meta_entries[str(k).lower()] = v
 
-    combined_tags_lower = ' '.join(str(t).lower() for t in tags)
-    combined_spn_lower = ' '.join(str(s).lower() for s in sp_names)
-    dn_lower = display_name.lower()
-    sp_type_lower = sp_type.lower()
-    notes_lower = str(notes).lower()
-    meta_keys_str = ' '.join(f"{k}:{v}" for k, v in meta_entries.items()).lower()
-    haystack = ' '.join([dn_lower, sp_type_lower, combined_tags_lower, combined_spn_lower, notes_lower, meta_keys_str])
+    def _norm(val):
+        return re.sub(r'[^a-z0-9]', '', str(val).lower())
+
+    # Only structured fields are trusted: tags, servicePrincipalType, appMetadata keys.
+    # Display name / notes / SPNs are free text and never classify an SP as an agent.
+    tag_set = {_norm(t) for t in tags}
+    signals = tag_set | {_norm(sp_type)} | {_norm(k) for k in meta_entries}
+
+    # Real MS Graph beta shape (observed live): agent identities carry @odata.type
+    # '#microsoft.graph.agentIdentity' and servicePrincipalType 'ServiceIdentity' plus
+    # agentIdentityBlueprintId/agentAppId; blueprint principals carry
+    # '#microsoft.graph.agentIdentityBlueprintPrincipal'. servicePrincipalType alone is not enough.
+    odata_type = str(sp_raw.get('@odata.type') or '').lower()
+    is_blueprint_principal = odata_type == '#microsoft.graph.agentidentityblueprintprincipal'
+    is_agent_identity = odata_type == '#microsoft.graph.agentidentity' or (
+        _norm(sp_type) == 'serviceidentity' and bool(sp_raw.get('agentIdentityBlueprintId') or sp_raw.get('agentAppId')))
 
     agent_category = None
-    if 'agent365' in haystack or 'agent 365' in haystack:
+    if 'agent365' in signals:
         agent_category = 'Agent365'
-    elif sp_type_lower in ('agentidentity', 'agentid', 'entraagentid', 'aiagent') or 'entraagent' in haystack or 'agentidentity' in haystack:
+    elif is_agent_identity or is_blueprint_principal or _norm(sp_type) in ('agentidentity', 'agentid', 'entraagentid', 'aiagent') or 'entraagentid' in tag_set:
         agent_category = 'EntraAgentId'
-    elif 'copilotstudio' in haystack or 'copilot studio' in haystack or 'pva_' in haystack or 'power virtual agents' in haystack:
+    elif signals & {'copilotstudio', 'powervirtualagents', 'pva'}:
         agent_category = 'CopilotStudio'
-    elif 'declarativeagent' in haystack or 'declarative agent' in haystack or 'm365copilot' in haystack or 'm365 copilot' in haystack or 'microsoft 365 copilot' in haystack:
+    elif signals & {'declarativeagent', 'm365declarativeagent', 'm365copilot', 'microsoft365copilot'}:
         agent_category = 'M365DeclarativeAgent'
-    elif 'azureai' in haystack or 'azure ai' in haystack or 'foundry' in haystack or 'aifoundry' in haystack:
+    elif signals & {'azureaiagent', 'azureaifoundry', 'aifoundry', 'aifoundryagent'}:
         agent_category = 'AzureAIAgent'
-    elif any(kw in haystack for kw in ('autonomous agent', 'ai agent', 'mcp', 'agentblueprintid', 'agentid', 'copilot agent')):
+    elif signals & {'autonomousagent', 'aiagent', 'copilotagent', 'agentblueprintid', 'agentid', 'mcptools', 'mcpservers'}:
         agent_category = 'CustomAIAgent'
 
     if not agent_category:
         return None
 
-    exec_mode_raw = (
+    # Execution mode: explicit field, or a tag exactly equal to a mode name. Never free text.
+    exec_lower = str(
         meta_entries.get('executionmode')
         or meta_entries.get('agentexecutionmode')
-        or meta_entries.get('mode')
         or sp_raw.get('executionMode')
         or ''
-    )
-    exec_lower = str(exec_mode_raw).lower()
-    if 'autonomous' in exec_lower or 'autonomous' in haystack or 'background' in exec_lower or 'daemon' in exec_lower:
-        if 'interactive' in exec_lower or 'hybrid' in exec_lower or 'delegated' in exec_lower:
-            execution_mode = 'Hybrid'
-        else:
-            execution_mode = 'Autonomous'
-    elif 'hybrid' in exec_lower or 'hybrid' in combined_tags_lower:
+    ).lower()
+    if not exec_lower:
+        exec_lower = next((str(t).strip().lower() for t in tags
+                           if str(t).strip().lower() in ('autonomous', 'interactive', 'hybrid')), '')
+    if 'hybrid' in exec_lower or ('autonomous' in exec_lower and 'interactive' in exec_lower):
         execution_mode = 'Hybrid'
-    elif 'interactive' in exec_lower or 'interactive' in haystack or 'declarative' in haystack or agent_category == 'M365DeclarativeAgent':
+    elif 'autonomous' in exec_lower or 'background' in exec_lower or 'daemon' in exec_lower:
+        execution_mode = 'Autonomous'
+    elif 'interactive' in exec_lower or 'delegated' in exec_lower:
         execution_mode = 'Interactive'
     else:
         execution_mode = 'Unknown'
 
     blueprint_id = (
-        meta_entries.get('agentblueprintid')
+        sp_raw.get('agentIdentityBlueprintId')
+        or meta_entries.get('agentblueprintid')
         or meta_entries.get('blueprintid')
         or sp_raw.get('blueprintId')
         or sp_raw.get('applicationTemplateId')
@@ -450,6 +470,9 @@ def extract_agent_metadata_from_sp(sp_raw: dict, collection_source: str = "msgra
         'appMetadata': app_metadata,
         'verifiedPublisher': verified_pub,
         'publisherName': pub_name,
+        '@odata.type': sp_raw.get('@odata.type'),
+        'agentAppId': sp_raw.get('agentAppId'),
+        'isBlueprint': is_blueprint_principal,
     }
 
     return {
@@ -509,6 +532,65 @@ def store_agent_metadata(dbsession, meta_dict: dict):
     merged = dbsession.merge(record)
     dbsession.flush()
     return merged
+
+NHI_SOURCES = ('federatedCredentials', 'agentMetadata')
+NHI_MAX_ATTEMPTS = 3
+NHI_MAX_RETRY_DELAY = 60
+NHI_RETRY_STATUSES = (429, 500, 502, 503, 504)
+NHI_MAX_PAGES = 10000
+MSGRAPH_HOST = 'graph.microsoft.com'
+MSGRAPH_AUDIENCES = ('https://graph.microsoft.com', 'https://graph.microsoft.com/', '00000003-0000-0000-c000-000000000000')
+
+
+class NhiFetchError(Exception):
+    """MS Graph NHI fetch failed (HTTP error, exception or partial pagination)."""
+
+
+def record_nhi_state(dbsession, source, status, detail=None, count=None):
+    """Upsert one NhiCollectionStates row. No-op if the table does not exist (legacy DB)."""
+    if not sa_inspect(dbsession.get_bind()).has_table(NhiCollectionState.__tablename__):
+        return
+    dbsession.merge(NhiCollectionState(
+        source=source, status=status, detail=detail, itemCount=count,
+        collectedAt=datetime.now(timezone.utc).isoformat()))
+    dbsession.commit()
+
+
+def mark_nhi_skipped(dbsession, detail):
+    for source in NHI_SOURCES:
+        record_nhi_state(dbsession, source, 'skipped', detail, 0)
+
+
+def acquire_msgraph_headers(tok, args, tenantid, user_agent=None):
+    """Auth headers for MS Graph, or None. --skip-nhi wins over --nhi/--autotoken.
+    user_agent (the one used for AAD Graph, incl. --evade/--user-agent) is added if given."""
+    hdrs = _acquire_msgraph_auth(tok, args, tenantid)
+    if hdrs and user_agent:
+        hdrs['User-Agent'] = user_agent
+    return hdrs
+
+
+def _acquire_msgraph_auth(tok, args, tenantid):
+    if getattr(args, 'skip_nhi', False) or not isinstance(tok, dict):
+        return None
+    try:
+        _, tokendata = Authentication.parse_accesstoken(tok.get('accessToken', ''))
+    except Exception:
+        tokendata = None
+    if (tokendata or {}).get('aud') in MSGRAPH_AUDIENCES:
+        return {'Authorization': f"{tok.get('tokenType', 'Bearer')} {tok['accessToken']}"}
+    if 'refreshToken' in tok and (getattr(args, 'autotoken', False) or getattr(args, 'nhi', False)):
+        try:
+            ms_auth = Authentication()
+            ms_auth.client_id = tok.get('_clientId', '1b730954-1685-4b74-9bfd-dac224a7b894')
+            ms_auth.tenant = tenantid
+            ms_token = ms_auth.handle_autotoken(dict(tok), args=args, resource='https://graph.microsoft.com')
+            if ms_token and 'accessToken' in ms_token:
+                return {'Authorization': f"{ms_token.get('tokenType', 'Bearer')} {ms_token['accessToken']}"}
+        except Exception as exc:
+            print(f"MS Graph token exchange for NHI collection failed: {exc}")
+    return None
+
 
 async def queue_processor(queue):
     while True:
@@ -795,46 +877,169 @@ class DataDumper(object):
         self.session.commit()
 
     async def _fetch_msgraph_paged(self, url, msgraph_headers):
+        """Yield items across all pages. Raises NhiFetchError on any failure so
+        callers can never mistake partial data for a complete collection."""
         next_url = url
+        visited = set()
         while next_url:
-            try:
-                async with self.ahsession.get(next_url, headers=msgraph_headers) as resp:
-                    await resp.read()
-                    if resp.status > 299:
-                        return
-                    payload = await resp.json()
-            except Exception:
-                return
+            if next_url in visited:
+                raise NhiFetchError(f"repeating nextLink {next_url.split('?')[0]}")
+            if len(visited) >= NHI_MAX_PAGES:
+                raise NhiFetchError(f"page cap {NHI_MAX_PAGES} exceeded")
+            visited.add(next_url)
+            status = None
+            for attempt in range(1, NHI_MAX_ATTEMPTS + 1):
+                try:
+                    async with self.ahsession.get(next_url, headers=dict(msgraph_headers)) as resp:
+                        await resp.read()
+                        status = resp.status
+                        if status <= 299:
+                            payload = await resp.json()
+                            break
+                        retry_after = (getattr(resp, 'headers', None) or {}).get('Retry-After')
+                except Exception as exc:
+                    raise NhiFetchError(f"{type(exc).__name__}: {exc}") from exc
+                if status not in NHI_RETRY_STATUSES or attempt == NHI_MAX_ATTEMPTS:
+                    raise NhiFetchError(f"HTTP {status} for {next_url.split('?')[0]}")
+                try:
+                    delay = min(float(retry_after), NHI_MAX_RETRY_DELAY)
+                except (TypeError, ValueError):
+                    delay = min(2 ** attempt, NHI_MAX_RETRY_DELAY)
+                await asyncio.sleep(delay)
             for item in payload.get('value', []):
                 yield item
             next_url = payload.get('@odata.nextLink') or payload.get('odata.nextLink')
+            if next_url:
+                parts = urlparse(next_url)
+                if parts.scheme != 'https' or parts.hostname != MSGRAPH_HOST:
+                    raise NhiFetchError(f"refusing nextLink outside https://{MSGRAPH_HOST}: {next_url.split('?')[0]}")
+
+    def _safe_record(self, source, status, detail, count):
+        """record_nhi_state that survives a poisoned session; never raises."""
+        for _ in range(2):
+            try:
+                record_nhi_state(self.session, source, status, detail, count)
+                return
+            except Exception as exc:
+                self.session.rollback()
+                last = exc
+        print(f"NHI: could not record state for {source}: {last}")
+
+    async def _collect_source(self, source, url, msgraph_headers, handle_item, prune):
+        """Fetch one MS Graph source, record its NhiCollectionState. Never raises
+        (fetch or DB errors), so one source cannot hide the other. handle_item
+        returns the keys stored, or None when the item was skipped."""
+        seen = set()
+        skipped = 0
+        try:
+            async for item in self._fetch_msgraph_paged(url, msgraph_headers):
+                keys = handle_item(item)
+                if keys is None:
+                    skipped += 1
+                else:
+                    seen.update(keys)
+            prune(seen)
+        except Exception as exc:
+            try:
+                self.session.commit()  # keep what was collected; never prune on partial data
+            except Exception:
+                self.session.rollback()  # DB error poisoned the session
+            self._safe_record(source, 'failed', f"{type(exc).__name__}: {exc}"[:500], len(seen))
+            return len(seen)
+        detail = f"{skipped} skipped: parent object not in local DB" if skipped else None
+        self._safe_record(source, 'collected', detail, len(seen))
+        return len(seen)
 
     async def dump_federated_credentials(self, msgraph_headers):
         if not msgraph_headers or not self.ahsession or not self.session:
             return 0
         url = 'https://graph.microsoft.com/beta/applications?$select=id,appId,displayName&$expand=federatedIdentityCredentials'
-        total = 0
-        async for app_obj in self._fetch_msgraph_paged(url, msgraph_headers):
+        seen_ids = set()
+        known_apps = {r[0] for r in self.session.query(Application.objectId).all()}
+
+        def handle(app_obj):
+            keys = []
             app_object_id = app_obj.get('id') or app_obj.get('objectId')
-            app_id = app_obj.get('appId')
             fics = app_obj.get('federatedIdentityCredentials') or []
+            if app_object_id and fics and app_object_id not in known_apps:
+                return None  # FK parent missing locally (stale/partial gather)
             if app_object_id and fics:
-                total += store_federated_credentials_batch(self.session, app_object_id, app_id, fics)
-        self.session.commit()
-        return total
+                store_federated_credentials_batch(self.session, app_object_id, app_obj.get('appId'), fics)
+                for n, fic in enumerate(f for f in fics if isinstance(f, dict)):
+                    keys.append(fic.get('id') or f"{app_object_id}:{fic.get('name', n)}")
+            seen_ids.update(keys)
+            return keys
+
+        def prune(_seen):
+            stale = [r[0] for r in self.session.query(FederatedIdentityCredential.id).all() if r[0] not in seen_ids]
+            for i in range(0, len(stale), 500):
+                self.session.query(FederatedIdentityCredential).filter(
+                    FederatedIdentityCredential.id.in_(stale[i:i + 500])).delete(synchronize_session=False)
+            self.session.commit()
+
+        return await self._collect_source('federatedCredentials', url, msgraph_headers, handle, prune)
 
     async def dump_agent_metadata(self, msgraph_headers):
         if not msgraph_headers or not self.ahsession or not self.session:
             return 0
-        url = 'https://graph.microsoft.com/beta/servicePrincipals?$select=id,appId,displayName,servicePrincipalType,tags,appMetadata,verifiedPublisher'
-        total = 0
-        async for sp_obj in self._fetch_msgraph_paged(url, msgraph_headers):
+        # No $select: it is not verified that beta supports selecting appMetadata, and an
+        # unknown property would 400 the whole source. Default properties are returned.
+        url = 'https://graph.microsoft.com/beta/servicePrincipals'
+
+        known_sps = {r[0] for r in self.session.query(ServicePrincipal.objectId).all()}
+
+        sponsor_targets = []
+
+        def handle(sp_obj):
             meta = extract_agent_metadata_from_sp(sp_obj, collection_source="msgraph_beta")
+            if meta and meta['objectId'] not in known_sps:
+                return None  # FK parent missing locally
             if meta:
                 store_agent_metadata(self.session, meta)
-                total += 1
-        self.session.commit()
-        return total
+                if str((meta.get('rawMetadata') or {}).get('@odata.type') or '').lower() == '#microsoft.graph.agentidentity':
+                    sponsor_targets.append(meta['objectId'])
+                return [meta['objectId']]
+            return []
+
+        def prune(seen):
+            stale = [r[0] for r in self.session.query(AgentIdentityMetadata.objectId).filter(
+                AgentIdentityMetadata.collectionSource == 'msgraph_beta').all() if r[0] not in seen]
+            for i in range(0, len(stale), 500):
+                self.session.query(AgentIdentityMetadata).filter(
+                    AgentIdentityMetadata.objectId.in_(stale[i:i + 500])).delete(synchronize_session=False)
+            self.session.commit()
+
+        count = await self._collect_source('agentMetadata', url, msgraph_headers, handle, prune)
+        await self._collect_sponsors(sponsor_targets, msgraph_headers)
+        return count
+
+    async def _collect_sponsors(self, agent_ids, msgraph_headers):
+        """Sponsors are the /sponsors relationship of an agent identity, not a property.
+        A failure for one agent is recorded on its row and in the source detail; it never fails the source."""
+        # ponytail: sequential, one GET per agent identity; parallelise if tenants have thousands of agents
+        failed = 0
+        for agent_id in agent_ids:
+            url = f'https://graph.microsoft.com/beta/servicePrincipals/{agent_id}/sponsors?$select=id'
+            row = self.session.get(AgentIdentityMetadata, agent_id)
+            if row is None:
+                continue
+            try:
+                ids = [u['id'] async for u in self._fetch_msgraph_paged(url, msgraph_headers) if isinstance(u, dict) and u.get('id')]
+                row.sponsorUserIds = ids
+            except Exception as exc:
+                failed += 1
+                row.sponsorUserIds = []
+                row.rawMetadata = dict(row.rawMetadata or {}, sponsorsError=f"{type(exc).__name__}: {exc}"[:300])
+        try:
+            self.session.commit()
+        except Exception:
+            self.session.rollback()
+            failed = failed or len(agent_ids)
+        if failed:
+            marker = self.session.get(NhiCollectionState, 'agentMetadata')
+            if marker is not None and marker.status == 'collected':
+                detail = f"sponsors unavailable for {failed} of {len(agent_ids)} agent identities"
+                self._safe_record('agentMetadata', 'collected', (marker.detail + '; ' + detail) if marker.detail else detail, marker.itemCount)
 
     async def dump_nhi_msgraph(self, msgraph_headers=None):
         if not self.session:
@@ -849,15 +1054,21 @@ class DataDumper(object):
             meta = extract_agent_metadata_from_sp(sp_dict, collection_source="heuristic")
             if meta:
                 store_agent_metadata(self.session, meta)
+            elif existing_meta is not None:
+                # Stale heuristic row from an older/looser classifier
+                self.session.delete(existing_meta)
         self.session.commit()
 
-        # Phase 2: MS Graph beta enrichment if msgraph_headers available
-        if msgraph_headers and self.ahsession:
-            try:
-                await self.dump_federated_credentials(msgraph_headers)
-                await self.dump_agent_metadata(msgraph_headers)
-            except Exception as exc:
-                print(f"Warning: MS Graph NHI beta collection encountered an error: {exc}")
+        # Phase 2: MS Graph beta collection
+        if not msgraph_headers or not self.ahsession:
+            print('NHI: no MS Graph token available - federated credentials and Agent 365 metadata '
+                  'collection skipped (heuristic agent detection only). Use --nhi/--autotoken with a '
+                  'refresh token, or supply a graph.microsoft.com token.')
+            mark_nhi_skipped(self.session, 'no MS Graph token available')
+            return
+        # Each source records its own state and swallows its own failures
+        await self.dump_federated_credentials(msgraph_headers)
+        await self.dump_agent_metadata(msgraph_headers)
 
 async def run(args):
     global token, expiretime, headers, totalgroups, totaldevices, dburl
@@ -1050,25 +1261,11 @@ async def run(args):
 
     dbsession.commit()
 
-    if not getattr(args, 'skip_nhi', False):
-        msgraph_headers = None
-        if isinstance(token, dict):
-            try:
-                _, tokendata = Authentication.parse_accesstoken(token.get('accessToken', ''))
-            except Exception:
-                tokendata = {}
-            if tokendata.get('aud') in ('https://graph.microsoft.com', 'https://graph.microsoft.com/', '00000003-0000-0000-c000-000000000000'):
-                msgraph_headers = {'Authorization': f"{token.get('tokenType', 'Bearer')} {token['accessToken']}"}
-            elif 'refreshToken' in token and getattr(args, 'autotoken', False):
-                try:
-                    ms_auth = Authentication()
-                    ms_auth.client_id = token.get('_clientId', '1b730954-1685-4b74-9bfd-dac224a7b894')
-                    ms_auth.tenant = tenantid
-                    ms_token = ms_auth.handle_autotoken(dict(token), args=args, resource='https://graph.microsoft.com')
-                    if ms_token and 'accessToken' in ms_token:
-                        msgraph_headers = {'Authorization': f"{ms_token.get('tokenType', 'Bearer')} {ms_token['accessToken']}"}
-                except Exception as exc:
-                    print(f"Skipping MS Graph beta token exchange for NHI collection: {exc}")
+    if getattr(args, 'skip_nhi', False):
+        print('NHI: collection skipped (--skip-nhi)')
+        mark_nhi_skipped(dbsession, 'skipped via --skip-nhi')
+    else:
+        msgraph_headers = acquire_msgraph_headers(token, args, tenantid, user_agent=headers.get('User-Agent'))
         async with aiostrategy(proxy=proxyurl, connector=aiohttp.TCPConnector(ssl=verify_cert)) as ahsession:
             dumper.ahsession = ahsession
             await dumper.dump_nhi_msgraph(msgraph_headers=msgraph_headers)
@@ -1116,6 +1313,9 @@ def getargs(gather_parser):
     gather_parser.add_argument('--skip-nhi',
                                action='store_true',
                                help='Skip Non-Human Identity (NHI), Federated Credentials, and Agent 365 metadata collection')
+    gather_parser.add_argument('--nhi',
+                               action='store_true',
+                               help='Force the MS Graph token exchange for NHI collection when a refresh token is available, even without --autotoken. --skip-nhi takes precedence if both are given')
     gather_parser.add_argument('--evade',
                                action='store_true',
                                help='Evade common AAD Graph enumeration detections')
