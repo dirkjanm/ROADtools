@@ -635,6 +635,10 @@ class ServicePrincipal(Base, SerializeMixin):
     appRolesAssignedTo = relationship("AppRoleAssignment",
         primaryjoin=objectId == foreign(AppRoleAssignment.principalId))
 
+    agentMetadata = relationship("AgentIdentityMetadata",
+        back_populates="servicePrincipal",
+        uselist=False)
+
 
 class Group(Base, SerializeMixin):
     __tablename__ = "Groups"
@@ -809,6 +813,9 @@ class Application(Base, SerializeMixin):
     ownerServicePrincipals = relationship("ServicePrincipal",
         secondary=lnk_application_owner_serviceprincipal,
         back_populates="ownedApplications")
+
+    federatedIdentityCredentials = relationship("FederatedIdentityCredential",
+        back_populates="application")
 
 
 class Device(Base, SerializeMixin):
@@ -1776,6 +1783,38 @@ class AZresource(Base, SerializeMixin):
     subscription_id = Column(Text, ForeignKey("AZsubscriptions.id"))
     tags = Column(JSON)
     extended_location = Column(JSON)
+
+
+class FederatedIdentityCredential(Base, SerializeMixin):
+    __tablename__ = "FederatedIdentityCredentials"
+    id = Column(Text, primary_key=True)
+    applicationObjectId = Column(Text, ForeignKey("Applications.objectId"), index=True)
+    appId = Column(Text)
+    name = Column(Text)
+    issuer = Column(Text)
+    subject = Column(Text)
+    description = Column(Text)
+    audiences = Column(JSON)
+    claimsMatchingExpression = Column(JSON)
+    application = relationship("Application",
+        back_populates="federatedIdentityCredentials")
+
+
+class AgentIdentityMetadata(Base, SerializeMixin):
+    __tablename__ = "AgentIdentityMetadatas"
+    objectId = Column(Text, ForeignKey("ServicePrincipals.objectId"), primary_key=True)
+    appId = Column(Text)
+    agentCategory = Column(Text)
+    executionMode = Column(Text)
+    blueprintId = Column(Text)
+    sponsorUserIds = Column(JSON)
+    m365Scopes = Column(JSON)
+    mcpTools = Column(JSON)
+    collectionSource = Column(Text)
+    rawMetadata = Column(JSON)
+    servicePrincipal = relationship("ServicePrincipal",
+        back_populates="agentMetadata",
+        uselist=False)
 
 
 def parse_db_argument(dbarg):
