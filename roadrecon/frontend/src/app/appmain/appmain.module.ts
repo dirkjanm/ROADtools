@@ -42,6 +42,7 @@ import { ConfigComponent } from './config/config.component';
 import { FormsModule }   from '@angular/forms';
 import { MfaComponent } from './mfa/mfa.component';
 import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permissions.component';
+import { NhiComponent } from './nhi/nhi.component';
 
 @NgModule({
   declarations: [
@@ -65,7 +66,8 @@ import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permission
     JsonFormatDirective,
     ConfigComponent,
     MfaComponent,
-    Oauth2permissionsComponent
+    Oauth2permissionsComponent,
+    NhiComponent
   ],
   imports: [
     CommonModule,

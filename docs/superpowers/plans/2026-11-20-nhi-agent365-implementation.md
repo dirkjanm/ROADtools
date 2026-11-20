@@ -30,7 +30,7 @@
   - `FederatedIdentityCredential` model in `roadtools.roadlib.metadef.database` (`id`, `applicationObjectId`, `appId`, `name`, `issuer`, `subject`, `description`, `audiences`, `claimsMatchingExpression`, `application` relationship; `Application.federatedIdentityCredentials` back_populates)
   - `AgentIdentityMetadata` model in `roadtools.roadlib.metadef.database` (`objectId`, `appId`, `agentCategory`, `executionMode`, `blueprintId`, `sponsorUserIds`, `m365Scopes`, `mcpTools`, `collectionSource`, `rawMetadata`, `servicePrincipal` relationship; `ServicePrincipal.agentMetadata` back_populates)
 
-- [ ] **Step 1: Write the failing database model test in `tests/test_nhi_backend.py`**
+- [x] **Step 1: Write the failing database model test in `tests/test_nhi_backend.py`**
 
 ```python
 import pytest
@@ -97,16 +97,16 @@ def test_nhi_models_persist_and_relate(tmp_path):
     session.close()
 ```
 
-- [ ] **Step 2: Run pytest to verify the test fails**
+- [x] **Step 2: Run pytest to verify the test fails**
 
 Run: `pytest tests/test_nhi_backend.py -v`
 Expected: FAIL with `ImportError: cannot import name 'FederatedIdentityCredential'`
 
-- [ ] **Step 3: Add `FederatedIdentityCredential` and `AgentIdentityMetadata` models and relationships to `roadlib/roadtools/roadlib/metadef/database.py`**
+- [x] **Step 3: Add `FederatedIdentityCredential` and `AgentIdentityMetadata` models and relationships to `roadlib/roadtools/roadlib/metadef/database.py`**
 
 Add the relationships on `ServicePrincipal` (`agentMetadata = relationship("AgentIdentityMetadata", back_populates="servicePrincipal", uselist=False)`) and `Application` (`federatedIdentityCredentials = relationship("FederatedIdentityCredential", back_populates="application")`), and define `FederatedIdentityCredential` and `AgentIdentityMetadata` classes in `roadlib/roadtools/roadlib/metadef/database.py`.
 
-- [ ] **Step 4: Run pytest to verify the test passes**
+- [x] **Step 4: Run pytest to verify the test passes**
 
 Run: `pytest tests/test_nhi_backend.py -v`
 Expected: PASS
@@ -127,7 +127,7 @@ Expected: PASS
   - `DataDumper.dump_agent_metadata(msgraph_headers: dict)` in `roadtools.roadrecon.gather`
   - `--skip-nhi` CLI argument in `getargs(gather_parser)`
 
-- [ ] **Step 1: Add unit tests in `tests/test_nhi_backend.py` for MS Graph FIC & Agent 365 ingestion**
+- [x] **Step 1: Add unit tests in `tests/test_nhi_backend.py` for MS Graph FIC & Agent 365 ingestion**
 
 ```python
 import asyncio
@@ -182,16 +182,16 @@ def test_store_federated_credentials_batch_persists_records(tmp_path):
     session.close()
 ```
 
-- [ ] **Step 2: Run pytest to verify the new collector tests fail**
+- [x] **Step 2: Run pytest to verify the new collector tests fail**
 
 Run: `pytest tests/test_nhi_backend.py -v`
 Expected: FAIL with `ImportError: cannot import name 'extract_agent_metadata_from_sp'`
 
-- [ ] **Step 3: Implement `extract_agent_metadata_from_sp`, `store_federated_credentials_batch`, and async MS Graph beta collection in `roadrecon/roadtools/roadrecon/gather.py`**
+- [x] **Step 3: Implement `extract_agent_metadata_from_sp`, `store_federated_credentials_batch`, and async MS Graph beta collection in `roadrecon/roadtools/roadrecon/gather.py`**
 
 Add helper functions and `DataDumper.dump_nhi_msgraph` in `roadrecon/roadtools/roadrecon/gather.py`, plus `--skip-nhi` in `getargs`. When `token` has a `refreshToken` and `--autotoken` is set (or token audience is MS Graph), automatically exchange for `https://graph.microsoft.com` to query `/beta/applications?$select=id,appId,displayName&$expand=federatedIdentityCredentials` and `/beta/servicePrincipals` agent metadata; otherwise run heuristic extraction from collected service principals without failing the gather run.
 
-- [ ] **Step 4: Run pytest to verify the collector tests pass**
+- [x] **Step 4: Run pytest to verify the collector tests pass**
 
 Run: `pytest tests/test_nhi_backend.py -v`
 Expected: PASS
@@ -216,7 +216,7 @@ Expected: PASS
     - `GET /api/nhi/federatedcredentials`
     - `GET /api/nhi/findings`
 
-- [ ] **Step 1: Add unit and Flask API endpoint tests in `tests/test_nhi_backend.py`**
+- [x] **Step 1: Add unit and Flask API endpoint tests in `tests/test_nhi_backend.py`**
 
 ```python
 from roadtools.roadrecon.nhi_analyzer import analyze_nhi_posture
@@ -303,12 +303,12 @@ def test_analyze_nhi_posture_scores_agents_fics_and_workloads(tmp_path):
     session.close()
 ```
 
-- [ ] **Step 2: Run pytest to verify the analyzer test fails**
+- [x] **Step 2: Run pytest to verify the analyzer test fails**
 
 Run: `pytest tests/test_nhi_backend.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'roadtools.roadrecon.nhi_analyzer'`
 
-- [ ] **Step 3: Implement `roadrecon/roadtools/roadrecon/nhi_analyzer.py` and wire `/api/nhi/*` endpoints in `roadrecon/roadtools/roadrecon/server.py`**
+- [x] **Step 3: Implement `roadrecon/roadtools/roadrecon/nhi_analyzer.py` and wire `/api/nhi/*` endpoints in `roadrecon/roadtools/roadrecon/server.py`**
 
 Implement `analyze_nhi_posture(dbsession)` in `nhi_analyzer.py`:
 - Inspect table existence via `sqlalchemy.inspect(dbsession.bind)` so legacy SQLite DBs without `FederatedIdentityCredentials` or `AgentIdentityMetadatas` tables do not throw `OperationalError`, and set `collectionStatus` accurately.
@@ -318,7 +318,7 @@ Implement `analyze_nhi_posture(dbsession)` in `nhi_analyzer.py`:
 - Score findings with `severityWeight` (`Critical`: 4, `High`: 3, `Medium`: 2, `Low`: 1, `Informational`: 0).
 - Add routes `/api/nhi/summary`, `/api/nhi/agents`, `/api/nhi/workloads`, `/api/nhi/federatedcredentials`, and `/api/nhi/findings` in `server.py` (ensuring `Base.metadata.create_all(db.engine)` is called safely or table inspection handles missing tables).
 
-- [ ] **Step 4: Run pytest across `tests/test_nhi_backend.py`**
+- [x] **Step 4: Run pytest across `tests/test_nhi_backend.py`**
 
 Run: `pytest tests/test_nhi_backend.py -v`
 Expected: PASS
@@ -352,19 +352,19 @@ Expected: PASS
   - `DatabaseService` methods: `getNhiSummary()`, `getNhiAgents()`, `getNhiWorkloads()`, `getNhiFederatedCredentials()`, `getNhiFindings()`
   - `NhiComponent` (`selector: 'app-nhi'`, `standalone: false`) routed at `/nhi` and linked in `appnav.component.html`
 
-- [ ] **Step 1: Add NHI & Agent 365 TypeScript interfaces and `DatabaseService` methods in `aadobjects.service.ts`**
+- [x] **Step 1: Add NHI & Agent 365 TypeScript interfaces and `DatabaseService` methods in `aadobjects.service.ts`**
 
 Add strongly typed interfaces (`NhiSummary`, `NhiAgentItem`, `NhiWorkloadItem`, `FederatedCredentialItem`, `NhiFindingItem`) and HTTP methods to `DatabaseService` in `roadrecon/frontend/src/app/appmain/aadobjects.service.ts`.
 
-- [ ] **Step 2: Create `NhiComponent` (`nhi.component.ts`, `nhi.component.html`, `nhi.component.less`) and register in `AppmainModule`, `AppRoutingModule`, and `appnav.component.html`**
+- [x] **Step 2: Create `NhiComponent` (`nhi.component.ts`, `nhi.component.html`, `nhi.component.less`) and register in `AppmainModule`, `AppRoutingModule`, and `appnav.component.html`**
 
 Build the 4-tab Material interface (`Overview & Risk Findings`, `Agent 365 & AI Agents`, `Managed Identities & Workloads`, `Federated Credentials`) with search filtering, sorting, pagination, severity chips (`<mat-chip-set>`), collection-status banner, and router links to `/serviceprincipals/:id` and `/applications/:id`.
 
-- [ ] **Step 3: Add Federated Credentials & Agent 365 posture tabs to `ApplicationsdialogComponent` and `ServicePrincipalsdialogComponent`**
+- [x] **Step 3: Add Federated Credentials & Agent 365 posture tabs to `ApplicationsdialogComponent` and `ServicePrincipalsdialogComponent`**
 
 Display associated Federated Identity Credentials in `applicationsdialog.component.html` and Agent 365 / M365 scopes + NHI risk findings in `serviceprincipalsdialog.component.html`.
 
-- [ ] **Step 4: Build Angular frontend and verify zero compilation errors**
+- [x] **Step 4: Build Angular frontend and verify zero compilation errors**
 
 Run: `cd C:\Dev\roadtools\roadrecon\frontend && npm run build`
 Expected: Exit code 0 with zero TypeScript or Angular template errors; restore `dist_gui/.gitkeep` files if needed.

@@ -19,12 +19,14 @@ import { UsersResolveService, GroupsResolveService, AdministrativeUnitsResolveSe
 import { ConfigComponent } from './config/config.component';
 import { MfaComponent } from './mfa/mfa.component';
 import { Oauth2permissionsComponent } from './oauth2permissions/oauth2permissions.component';
+import { NhiComponent } from './nhi/nhi.component';
 
 const routes: Routes = [
       { path: '', component: IndexComponent },
       { path: 'config', component: ConfigComponent },
       { path: 'oauth2permissions', component: Oauth2permissionsComponent },
       { path: 'mfa', component: MfaComponent },
+      { path: 'nhi', component: NhiComponent },
       { path: 'users',
         component: UsersComponent,
         children: [

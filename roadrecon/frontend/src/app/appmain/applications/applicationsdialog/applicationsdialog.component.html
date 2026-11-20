@@ -100,6 +100,37 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumnsOAuth2;"></tr>
     </table>
   </mat-tab>
+  <mat-tab label="Federated Credentials ({{federatedCredentials.length}})" *ngIf="federatedCredentials && federatedCredentials.length > 0">
+    <h2>OIDC Federated Identity Credentials</h2>
+    <table mat-table [dataSource]="federatedCredentials" class="full-width-table">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let row">{{row.name}}</td>
+      </ng-container>
+      <ng-container matColumnDef="issuer">
+        <th mat-header-cell *matHeaderCellDef>Issuer</th>
+        <td mat-cell *matCellDef="let row"><code>{{row.issuer}}</code></td>
+      </ng-container>
+      <ng-container matColumnDef="subject">
+        <th mat-header-cell *matHeaderCellDef>Subject</th>
+        <td mat-cell *matCellDef="let row"><code>{{row.subject}}</code></td>
+      </ng-container>
+      <ng-container matColumnDef="audiences">
+        <th mat-header-cell *matHeaderCellDef>Audiences</th>
+        <td mat-cell *matCellDef="let row"><span *ngFor="let aud of row.audiences">{{aud}} </span></td>
+      </ng-container>
+      <ng-container matColumnDef="riskLevel">
+        <th mat-header-cell *matHeaderCellDef>Risk Level</th>
+        <td mat-cell *matCellDef="let row">{{row.riskLevel}}</td>
+      </ng-container>
+      <ng-container matColumnDef="riskReasons">
+        <th mat-header-cell *matHeaderCellDef>Risk Analysis</th>
+        <td mat-cell *matCellDef="let row"><span *ngFor="let r of row.riskReasons">{{r}}; </span></td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumnsFics"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumnsFics;"></tr>
+    </table>
+  </mat-tab>
   <mat-tab label="Metadata" *ngIf="metadata.length > 0">
     <table class="userTable">
         <tr *ngFor="let data of metadata">

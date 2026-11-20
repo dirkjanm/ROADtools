@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ServicePrincipalsItem, AppRolesItem, DatabaseService, TenantDetail, AzureRoleAssignment, AzureScopeInfo } from '../../aadobjects.service'
+import { ServicePrincipalsItem, AppRolesItem, DatabaseService, TenantDetail, AzureRoleAssignment, AzureScopeInfo, ServicePrincipalNhiDetail } from '../../aadobjects.service'
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { UtilitiesService } from '../../utils.service';
 import { MatSort } from '@angular/material/sort';
@@ -53,11 +53,13 @@ export class ServicePrincipalsdialogComponent {
   public displayedColumnsAppRolesAssignedTo: string[] =  ['pname', 'ptype', 'value', 'app', 'desc'];
   public displayedColumnsAccessPackage: string[] = ['packageName', 'resources', 'approval', 'duration'];
   public displayedColumnsAzureRole: string[] = ['role', 'scopeType', 'scopeDetails'];
+  public displayedColumnsNhiFindings: string[] = ['severity', 'category', 'title', 'detail', 'recommendation'];
   public metadata: any[] = [];
   public approlesgiven: AppRolesItem[] = [];
   public approlesgivento: AppRolesItem[] = [];
   public tenantdetails!: TenantDetail;
   public azureRoleAssignments: AzureRoleAssignment[] = [];
+  public nhiDetail: ServicePrincipalNhiDetail | null = null;
   @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     public dialogRef: MatDialogRef<ServicePrincipalsdialogComponent>,
@@ -99,6 +101,14 @@ export class ServicePrincipalsdialogComponent {
     }
     this.service.getTenantDetail().subscribe((data: TenantDetail) => this.tenantdetails = data);
     this.service.getServicePrincipalAzureRoleAssignments(this.sp.objectId).subscribe((data: AzureRoleAssignment[]) => this.azureRoleAssignments = data);
+    this.service.getServicePrincipalNhi(this.sp.objectId).subscribe(
+      (data: ServicePrincipalNhiDetail) => {
+        this.nhiDetail = data;
+      },
+      () => {
+        this.nhiDetail = null;
+      }
+    );
 
   }
 }

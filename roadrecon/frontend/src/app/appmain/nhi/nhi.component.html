@@ -1,0 +1,256 @@
+<div class="nhi-container">
+  <div class="nhi-header">
+    <h2>Non-Human Identities (NHI), Agentic AI &amp; Agent 365</h2>
+    <p class="subtitle">
+      Unified security posture across Entra Agent IDs, Microsoft 365 Copilot / Agent 365 agents, Managed Identities, Workload Service Principals, and OIDC Federated Credentials.
+    </p>
+  </div>
+
+  <mat-card class="collection-banner" *ngIf="summary && summary.collectionStatus === 'derived_from_legacy_db'">
+    <mat-card-content>
+      <mat-icon>info</mat-icon>
+      <span>
+        Results are derived from the existing database. Run <code>roadrecon gather --autotoken</code> with a Microsoft Graph refresh token to enrich Federated Identity Credentials and Agent 365 beta metadata.
+      </span>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="kpi-grid" *ngIf="summary">
+    <mat-card class="kpi-card">
+      <div class="kpi-label">Total NHIs</div>
+      <div class="kpi-value">{{ summary.totalNhIs }}</div>
+    </mat-card>
+    <mat-card class="kpi-card">
+      <div class="kpi-label">Agent 365 &amp; AI Agents</div>
+      <div class="kpi-value">{{ summary.totalAgents }}</div>
+    </mat-card>
+    <mat-card class="kpi-card">
+      <div class="kpi-label">Autonomous Agents</div>
+      <div class="kpi-value">{{ summary.totalAutonomousAgents }}</div>
+    </mat-card>
+    <mat-card class="kpi-card">
+      <div class="kpi-label">Managed Identities</div>
+      <div class="kpi-value">{{ summary.totalManagedIdentities }}</div>
+    </mat-card>
+    <mat-card class="kpi-card">
+      <div class="kpi-label">Federated Credentials</div>
+      <div class="kpi-value">{{ summary.totalFederatedCredentials }}</div>
+    </mat-card>
+    <mat-card class="kpi-card">
+      <div class="kpi-label">Tier-0 Privileged NHIs</div>
+      <div class="kpi-value">{{ summary.tier0PrivilegedNhIs }}</div>
+    </mat-card>
+    <mat-card class="kpi-card">
+      <div class="kpi-label">Ownerless NHIs</div>
+      <div class="kpi-value">{{ summary.ownerlessNhIs }}</div>
+    </mat-card>
+    <mat-card class="kpi-card critical-kpi">
+      <div class="kpi-label">Critical Findings</div>
+      <div class="kpi-value">{{ summary.criticalFindingsCount }}</div>
+    </mat-card>
+  </div>
+
+  <div class="mat-elevation-z8 nhi-table-wrapper">
+    <mat-form-field class="filter-field">
+      <input matInput (keyup)="applyFilter($any($event.target).value)" placeholder="Filter NHI, Agent 365, scopes, issuers, findings..." />
+    </mat-form-field>
+
+    <mat-tab-group>
+      <mat-tab label="Overview &amp; Risk Findings ({{ findingsDataSource.data.length }})">
+        <table mat-table class="full-width-table" [dataSource]="findingsDataSource">
+          <ng-container matColumnDef="severity">
+            <th mat-header-cell *matHeaderCellDef>Severity</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="risk-badge" [ngClass]="'risk-' + (row.severity | lowercase)">{{ row.severity }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let row">{{ row.category }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="principalName">
+            <th mat-header-cell *matHeaderCellDef>Principal</th>
+            <td mat-cell *matCellDef="let row">
+              <a [routerLink]="getPrincipalRoute(row)">{{ row.principalName }}</a>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Finding</th>
+            <td mat-cell *matCellDef="let row"><strong>{{ row.title }}</strong></td>
+          </ng-container>
+
+          <ng-container matColumnDef="detail">
+            <th mat-header-cell *matHeaderCellDef>Detail</th>
+            <td mat-cell *matCellDef="let row">{{ row.detail }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="recommendation">
+            <th mat-header-cell *matHeaderCellDef>Recommendation</th>
+            <td mat-cell *matCellDef="let row">{{ row.recommendation }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="findingsColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: findingsColumns;"></tr>
+        </table>
+      </mat-tab>
+
+      <mat-tab label="Agent 365 &amp; AI Agents ({{ agentsDataSource.data.length }})">
+        <table mat-table class="full-width-table" [dataSource]="agentsDataSource">
+          <ng-container matColumnDef="displayName">
+            <th mat-header-cell *matHeaderCellDef>Agent Name</th>
+            <td mat-cell *matCellDef="let row">
+              <a [routerLink]="['/serviceprincipals', row.objectId]">{{ row.displayName }}</a>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="agentCategory">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let row">{{ row.agentCategory }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="executionMode">
+            <th mat-header-cell *matHeaderCellDef>Execution Mode</th>
+            <td mat-cell *matCellDef="let row">{{ row.executionMode }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="m365Scopes">
+            <th mat-header-cell *matHeaderCellDef>M365 &amp; Copilot Scopes</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-chip-set *ngIf="row.m365Scopes && row.m365Scopes.length > 0">
+                <mat-chip *ngFor="let scope of row.m365Scopes" disableRipple>{{ scope }}</mat-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="tier0Roles">
+            <th mat-header-cell *matHeaderCellDef>Tier-0 Privileges</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-chip-set *ngIf="row.tier0Roles && row.tier0Roles.length > 0">
+                <mat-chip *ngFor="let role of row.tier0Roles" disableRipple>{{ role }}</mat-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="ownersCount">
+            <th mat-header-cell *matHeaderCellDef>Owners</th>
+            <td mat-cell *matCellDef="let row">{{ row.ownersCount }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="riskLevel">
+            <th mat-header-cell *matHeaderCellDef>Risk Level</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="risk-badge" [ngClass]="'risk-' + (row.riskLevel | lowercase)">{{ row.riskLevel }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="agentsColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: agentsColumns;"></tr>
+        </table>
+      </mat-tab>
+
+      <mat-tab label="Managed Identities &amp; Workloads ({{ workloadsDataSource.data.length }})">
+        <table mat-table class="full-width-table" [dataSource]="workloadsDataSource">
+          <ng-container matColumnDef="displayName">
+            <th mat-header-cell *matHeaderCellDef>Principal Name</th>
+            <td mat-cell *matCellDef="let row">
+              <a [routerLink]="['/serviceprincipals', row.objectId]">{{ row.displayName }}</a>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="nhiType">
+            <th mat-header-cell *matHeaderCellDef>NHI Type</th>
+            <td mat-cell *matCellDef="let row">{{ row.nhiType }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="managedIdentityResourceId">
+            <th mat-header-cell *matHeaderCellDef>Resource ID</th>
+            <td mat-cell *matCellDef="let row">{{ row.managedIdentityResourceId || '-' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="credentialSummary">
+            <th mat-header-cell *matHeaderCellDef>Credentials</th>
+            <td mat-cell *matCellDef="let row">{{ row.credentialSummary }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="privilegedRoles">
+            <th mat-header-cell *matHeaderCellDef>Privileged Roles</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-chip-set *ngIf="row.privilegedRoles && row.privilegedRoles.length > 0">
+                <mat-chip *ngFor="let role of row.privilegedRoles" disableRipple>{{ role }}</mat-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="ownersCount">
+            <th mat-header-cell *matHeaderCellDef>Owners</th>
+            <td mat-cell *matCellDef="let row">{{ row.ownersCount }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="riskLevel">
+            <th mat-header-cell *matHeaderCellDef>Risk Level</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="risk-badge" [ngClass]="'risk-' + (row.riskLevel | lowercase)">{{ row.riskLevel }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="workloadsColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: workloadsColumns;"></tr>
+        </table>
+      </mat-tab>
+
+      <mat-tab label="Federated Credentials (OIDC) ({{ ficsDataSource.data.length }})">
+        <table mat-table class="full-width-table" [dataSource]="ficsDataSource">
+          <ng-container matColumnDef="applicationDisplayName">
+            <th mat-header-cell *matHeaderCellDef>Application</th>
+            <td mat-cell *matCellDef="let row">
+              <a [routerLink]="['/applications', row.applicationObjectId]">{{ row.applicationDisplayName }}</a>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Credential Name</th>
+            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="issuer">
+            <th mat-header-cell *matHeaderCellDef>Issuer</th>
+            <td mat-cell *matCellDef="let row"><code>{{ row.issuer }}</code></td>
+          </ng-container>
+
+          <ng-container matColumnDef="subject">
+            <th mat-header-cell *matHeaderCellDef>Subject</th>
+            <td mat-cell *matCellDef="let row"><code>{{ row.subject }}</code></td>
+          </ng-container>
+
+          <ng-container matColumnDef="audiences">
+            <th mat-header-cell *matHeaderCellDef>Audiences</th>
+            <td mat-cell *matCellDef="let row">
+              <span *ngFor="let aud of row.audiences">{{ aud }} </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="riskLevel">
+            <th mat-header-cell *matHeaderCellDef>Risk Level</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="risk-badge" [ngClass]="'risk-' + (row.riskLevel | lowercase)">{{ row.riskLevel }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="riskReasons">
+            <th mat-header-cell *matHeaderCellDef>Risk Analysis</th>
+            <td mat-cell *matCellDef="let row">
+              <span *ngFor="let r of row.riskReasons">{{ r }}; </span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="ficsColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: ficsColumns;"></tr>
+        </table>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>
+<router-outlet></router-outlet>

@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ApplicationsItem, appMetadata } from '../../aadobjects.service'
+import { ApplicationsItem, appMetadata, DatabaseService, FederatedCredentialItem } from '../../aadobjects.service'
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
@@ -42,22 +42,34 @@ export class ApplicationsdialogInitComponent implements OnInit {
   standalone: false,
   selector: 'app-applicationsdialog',
   templateUrl: './applicationsdialog.component.html',
-  styleUrls: ['./applicationsdialog.component.less']
+  styleUrls: ['./applicationsdialog.component.less'],
+  providers: [DatabaseService]
 })
 export class ApplicationsdialogComponent {
   public displayedColumns: string[] = ['displayName', 'description']
   public displayedColumnsOwners: string[] = ['displayName', 'userPrincipalName']
   public displayedColumnsAppRoles: string[] = ['value','displayName', 'description', 'id', 'allowedMemberTypes']
   public displayedColumnsOAuth2: string[] = ['value', 'userConsentDisplayName','userConsentDescription', 'adminConsentDisplayName', 'adminConsentDescription', 'id', 'type']
+  public displayedColumnsFics: string[] = ['name', 'issuer', 'subject', 'audiences', 'riskLevel', 'riskReasons']
   public metadata: any[] = [];
+  public federatedCredentials: FederatedCredentialItem[] = [];
   public showPortalLink: boolean;
   @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     public dialogRef: MatDialogRef<ApplicationsdialogComponent>,
     @Inject(MAT_DIALOG_DATA) public application: ApplicationsItem,
-    private localSt: LocalStorageService
+    private localSt: LocalStorageService,
+    private service: DatabaseService
   ) {
     this.showPortalLink = this.localSt.retrieve('portallinks');
+    this.service.getApplicationFederatedCredentials(this.application.objectId).subscribe(
+      (fics: FederatedCredentialItem[]) => {
+        this.federatedCredentials = fics || [];
+      },
+      () => {
+        this.federatedCredentials = [];
+      }
+    );
     if (application.appMetadata && application.appMetadata.data.length > 0){
       for( let metadata of (application.appMetadata.data as any[])){
         let out: any = {}

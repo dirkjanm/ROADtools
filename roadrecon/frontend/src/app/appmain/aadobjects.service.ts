@@ -511,6 +511,119 @@ export interface AzureScopeInfo {
   resourceName?: string;
 }
 
+/*
+  NHI & Agent 365 interfaces
+*/
+export interface NhiSummary {
+  totalNhIs: number;
+  totalAgents: number;
+  totalAutonomousAgents: number;
+  totalManagedIdentities: number;
+  totalSystemManagedIdentities: number;
+  totalUserAssignedManagedIdentities: number;
+  totalWorkloadApps: number;
+  totalFederatedCredentials: number;
+  tier0PrivilegedNhIs: number;
+  ownerlessNhIs: number;
+  criticalFindingsCount: number;
+  highFindingsCount: number;
+  mediumFindingsCount: number;
+  lowFindingsCount: number;
+  informationalFindingsCount: number;
+  collectionStatus: 'collected' | 'derived_from_legacy_db' | string;
+  federatedCredentialsTablePresent: boolean;
+  agentMetadataTablePresent: boolean;
+}
+
+export interface NhiAgentItem {
+  objectId: string;
+  appId: string;
+  applicationObjectId?: string | null;
+  displayName: string;
+  agentCategory: string;
+  executionMode: string;
+  blueprintId?: string | null;
+  m365Scopes: string[];
+  graphAppRoles: string[];
+  oauth2Scopes: string[];
+  tier0Roles: string[];
+  directoryRoles: string[];
+  azureRoles: string[];
+  ownersCount: number;
+  ownerNames: string[];
+  hasSecrets: boolean;
+  hasCerts: boolean;
+  federatedCredentialsCount: number;
+  accountEnabled: boolean;
+  riskLevel: string;
+  severityWeight: number;
+  riskReasons: string[];
+}
+
+export interface NhiWorkloadItem {
+  objectId: string;
+  appId: string;
+  applicationObjectId?: string | null;
+  displayName: string;
+  nhiType: string;
+  servicePrincipalType: string;
+  managedIdentityResourceId?: string | null;
+  accountEnabled: boolean;
+  secretsCount: number;
+  certsCount: number;
+  federatedCredentialsCount: number;
+  expiredCredentialsCount: number;
+  longLivedCredentialsCount: number;
+  credentialSummary: string;
+  privilegedRoles: string[];
+  m365Scopes: string[];
+  ownersCount: number;
+  ownerNames: string[];
+  riskLevel: string;
+  severityWeight: number;
+  riskReasons: string[];
+}
+
+export interface FederatedCredentialItem {
+  id: string;
+  applicationObjectId: string;
+  applicationDisplayName: string;
+  appId: string;
+  name: string;
+  issuer: string;
+  subject: string;
+  description?: string | null;
+  audiences: string[];
+  claimsMatchingExpression?: any;
+  riskLevel: string;
+  severityWeight: number;
+  riskReasons: string[];
+}
+
+export interface NhiFindingItem {
+  id: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational' | string;
+  severityWeight: number;
+  category: string;
+  principalObjectId: string;
+  principalType: 'ServicePrincipal' | 'Application' | string;
+  principalName: string;
+  appId?: string | null;
+  title: string;
+  detail: string;
+  recommendation: string;
+  evidence?: any;
+}
+
+export interface ServicePrincipalNhiDetail {
+  objectId: string;
+  isAgent: boolean;
+  agent?: NhiAgentItem | null;
+  workload?: NhiWorkloadItem | null;
+  federatedCredentials: FederatedCredentialItem[];
+  findings: NhiFindingItem[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -672,6 +785,34 @@ export class DatabaseService {
 
   public getOAuth2Permissions():  Observable<OAuth2PermissionsItem[]> {
       return this.http.get<OAuth2PermissionsItem[]>(environment.apibase + 'oauth2permissions');
+  }
+
+  public getNhiSummary(): Observable<NhiSummary> {
+      return this.http.get<NhiSummary>(environment.apibase + 'nhi/summary');
+  }
+
+  public getNhiAgents(): Observable<NhiAgentItem[]> {
+      return this.http.get<NhiAgentItem[]>(environment.apibase + 'nhi/agents');
+  }
+
+  public getNhiWorkloads(): Observable<NhiWorkloadItem[]> {
+      return this.http.get<NhiWorkloadItem[]>(environment.apibase + 'nhi/workloads');
+  }
+
+  public getNhiFederatedCredentials(): Observable<FederatedCredentialItem[]> {
+      return this.http.get<FederatedCredentialItem[]>(environment.apibase + 'nhi/federatedcredentials');
+  }
+
+  public getNhiFindings(): Observable<NhiFindingItem[]> {
+      return this.http.get<NhiFindingItem[]>(environment.apibase + 'nhi/findings');
+  }
+
+  public getApplicationFederatedCredentials(id: string | null): Observable<FederatedCredentialItem[]> {
+      return this.http.get<FederatedCredentialItem[]>(environment.apibase + 'applications/' + id + '/federatedcredentials');
+  }
+
+  public getServicePrincipalNhi(id: string | null): Observable<ServicePrincipalNhiDetail> {
+      return this.http.get<ServicePrincipalNhiDetail>(environment.apibase + 'serviceprincipals/' + id + '/nhi');
   }
 
   // Pagination parsing as contributed by Richard Gomez (rgmz)

@@ -292,6 +292,73 @@
     </mat-expansion-panel>
   </mat-tab>
 
+  <mat-tab label="NHI &amp; Agent 365" *ngIf="nhiDetail">
+    <mat-card *ngIf="nhiDetail.agent">
+      <h3>Agent 365 &amp; AI Agent Classification</h3>
+      <table class="userTable">
+        <tr><th>Agent Category</th><td>{{ nhiDetail.agent.agentCategory }}</td></tr>
+        <tr><th>Execution Mode</th><td>{{ nhiDetail.agent.executionMode }}</td></tr>
+        <tr *ngIf="nhiDetail.agent.blueprintId"><th>Blueprint ID</th><td>{{ nhiDetail.agent.blueprintId }}</td></tr>
+        <tr><th>Risk Level</th><td>{{ nhiDetail.agent.riskLevel }}</td></tr>
+        <tr *ngIf="nhiDetail.agent.m365Scopes && nhiDetail.agent.m365Scopes.length > 0">
+          <th>M365 &amp; Copilot Scopes</th>
+          <td>
+            <mat-chip-set>
+              <mat-chip *ngFor="let scope of nhiDetail.agent.m365Scopes" disableRipple>{{ scope }}</mat-chip>
+            </mat-chip-set>
+          </td>
+        </tr>
+        <tr *ngIf="nhiDetail.agent.tier0Roles && nhiDetail.agent.tier0Roles.length > 0">
+          <th>Tier-0 Privileges</th>
+          <td>
+            <mat-chip-set>
+              <mat-chip *ngFor="let role of nhiDetail.agent.tier0Roles" disableRipple>{{ role }}</mat-chip>
+            </mat-chip-set>
+          </td>
+        </tr>
+      </table>
+    </mat-card>
+
+    <mat-card *ngIf="nhiDetail.workload">
+      <h3>Workload &amp; Managed Identity Posture</h3>
+      <table class="userTable">
+        <tr><th>NHI Type</th><td>{{ nhiDetail.workload.nhiType }}</td></tr>
+        <tr *ngIf="nhiDetail.workload.managedIdentityResourceId"><th>Resource ID</th><td>{{ nhiDetail.workload.managedIdentityResourceId }}</td></tr>
+        <tr><th>Credential Hygiene</th><td>{{ nhiDetail.workload.credentialSummary }}</td></tr>
+        <tr><th>Owners Count</th><td>{{ nhiDetail.workload.ownersCount }}</td></tr>
+        <tr><th>Risk Level</th><td>{{ nhiDetail.workload.riskLevel }}</td></tr>
+      </table>
+    </mat-card>
+
+    <div *ngIf="nhiDetail.findings && nhiDetail.findings.length > 0">
+      <h3>NHI Security Findings ({{ nhiDetail.findings.length }})</h3>
+      <table mat-table [dataSource]="nhiDetail.findings" class="full-width-table">
+        <ng-container matColumnDef="severity">
+          <th mat-header-cell *matHeaderCellDef>Severity</th>
+          <td mat-cell *matCellDef="let row">{{ row.severity }}</td>
+        </ng-container>
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef>Category</th>
+          <td mat-cell *matCellDef="let row">{{ row.category }}</td>
+        </ng-container>
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Finding</th>
+          <td mat-cell *matCellDef="let row"><strong>{{ row.title }}</strong></td>
+        </ng-container>
+        <ng-container matColumnDef="detail">
+          <th mat-header-cell *matHeaderCellDef>Detail</th>
+          <td mat-cell *matCellDef="let row">{{ row.detail }}</td>
+        </ng-container>
+        <ng-container matColumnDef="recommendation">
+          <th mat-header-cell *matHeaderCellDef>Recommendation</th>
+          <td mat-cell *matCellDef="let row">{{ row.recommendation }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumnsNhiFindings"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumnsNhiFindings;"></tr>
+      </table>
+    </div>
+  </mat-tab>
+
   <mat-tab label="Metadata" *ngIf="metadata.length > 0">
     <table class="userTable">
         <tr *ngFor="let data of metadata">
