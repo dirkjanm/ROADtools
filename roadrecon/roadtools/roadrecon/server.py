@@ -11,13 +11,15 @@ RoleDefinition, Policy, lnk_policy_user_include_allusers, PIMgovernanceResource,
 PIMgovernanceRoleAssignment, PIMgovernanceRoleDefinition, PIMgovernanceRoleSetting, \
 PIMgovernanceRoleSettingV2, IGaccessPackageAssignmentPolicy, IGaccessPackage, \
 IGaccessPackageResourceRoleScope, IGaccessPackageResourceRole, IGaccessPackageResourceScope, \
-AZroleDefinition, AZroleAssignment, AZsubscription, AZroleEligibilityScheduleInstance
+AZroleDefinition, AZroleAssignment, AZsubscription, AZroleEligibilityScheduleInstance, \
+FederatedIdentityCredential, AgentIdentityMetadata
+from roadtools.roadrecon.nhi_analyzer import analyze_nhi_posture, evaluate_fic_risk
 import os
 import base64
 import zlib
 import argparse
 import json
-from sqlalchemy import func, and_, or_, select, desc, asc, cast, collate
+from sqlalchemy import func, and_, or_, select, desc, asc, cast, collate, inspect as sa_inspect
 import mimetypes
 
 app = Flask(__name__)
@@ -240,6 +242,14 @@ class AdministrativeUnitSchema(RTModelSchema):
     memberUsers = fields.Nested(UsersSchema, many=True)
     memberDevices = fields.Nested(DevicesSchema, many=True)
 
+class FederatedIdentityCredentialsSchema(RTModelSchema):
+    class Meta(RTModelSchema.Meta):
+        model = FederatedIdentityCredential
+
+class AgentIdentityMetadataSchema(RTModelSchema):
+    class Meta(RTModelSchema.Meta):
+        model = AgentIdentityMetadata
+
 class ServicePrincipalSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = ServicePrincipal
@@ -250,12 +260,33 @@ class ServicePrincipalSchema(RTModelSchema):
     oauth2PermissionGrants = fields.Nested(OAuth2PermissionGrantsSchema, many=True)
     appRolesAssigned = fields.Nested(AppRoleAssignmentsSchema, many=True)
     appRolesAssignedTo = fields.Nested(AppRoleAssignmentsSchema, many=True)
+    agentMetadata = fields.Method("get_agent_metadata")
+
+    def get_agent_metadata(self, obj):
+        try:
+            inspector = sa_inspect(db.session.get_bind())
+            if "AgentIdentityMetadatas" not in inspector.get_table_names():
+                return None
+            meta = obj.agentMetadata
+            return AgentIdentityMetadataSchema().dump(meta) if meta else None
+        except Exception:
+            return None
 
 class ApplicationSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
         model = Application
     ownerUsers = fields.Nested(UsersSchema, many=True)
     ownerServicePrincipals = fields.Nested(ServicePrincipalsSchema, many=True)
+    federatedIdentityCredentials = fields.Method("get_federated_credentials")
+
+    def get_federated_credentials(self, obj):
+        try:
+            inspector = sa_inspect(db.session.get_bind())
+            if "FederatedIdentityCredentials" not in inspector.get_table_names():
+                return []
+            return FederatedIdentityCredentialsSchema(many=True).dump(obj.federatedIdentityCredentials or [])
+        except Exception:
+            return []
 
 class TenantDetailSchema(RTModelSchema):
     class Meta(RTModelSchema.Meta):
@@ -980,6 +1011,87 @@ def get_stats():
         'countAdministrativeUnits': db.session.query(func.count(AdministrativeUnit.objectId)).scalar(),
     }
     return jsonify(stats)
+
+
+@app.route("/api/nhi/summary", methods=["GET"])
+def get_nhi_summary():
+    report = analyze_nhi_posture(db.session)
+    return jsonify(report["summary"])
+
+
+@app.route("/api/nhi/agents", methods=["GET"])
+def get_nhi_agents():
+    report = analyze_nhi_posture(db.session)
+    return jsonify(report["agents"])
+
+
+@app.route("/api/nhi/workloads", methods=["GET"])
+def get_nhi_workloads():
+    report = analyze_nhi_posture(db.session)
+    return jsonify(report["workloads"])
+
+
+@app.route("/api/nhi/federatedcredentials", methods=["GET"])
+def get_nhi_federated_credentials():
+    report = analyze_nhi_posture(db.session)
+    return jsonify(report["federatedCredentials"])
+
+
+@app.route("/api/nhi/findings", methods=["GET"])
+def get_nhi_findings():
+    report = analyze_nhi_posture(db.session)
+    return jsonify(report["findings"])
+
+
+@app.route("/api/applications/<string:id>/federatedcredentials", methods=["GET"])
+def get_application_federated_credentials(id):
+    application = db.session.get(Application, id)
+    if not application:
+        abort(404)
+    inspector = sa_inspect(db.session.get_bind())
+    if "FederatedIdentityCredentials" not in inspector.get_table_names():
+        return jsonify([])
+    fics = db.session.query(FederatedIdentityCredential).filter(
+        or_(
+            FederatedIdentityCredential.applicationObjectId == application.objectId,
+            and_(
+                FederatedIdentityCredential.appId.isnot(None),
+                FederatedIdentityCredential.appId == application.appId,
+            ),
+        )
+    ).all()
+    evaluated = [evaluate_fic_risk(f, application.displayName or "") for f in fics]
+    evaluated.sort(key=lambda x: (-x["severityWeight"], x["name"] or ""))
+    return jsonify(evaluated)
+
+
+@app.route("/api/serviceprincipals/<string:id>/nhi", methods=["GET"])
+def get_serviceprincipal_nhi(id):
+    sp = db.session.get(ServicePrincipal, id)
+    if not sp:
+        abort(404)
+    report = analyze_nhi_posture(db.session)
+    agent_item = next((a for a in report["agents"] if a["objectId"] == id), None)
+    workload_item = next((w for w in report["workloads"] if w["objectId"] == id), None)
+    sp_findings = [
+        f for f in report["findings"]
+        if f["principalObjectId"] == id or (sp.appId and f.get("appId") == sp.appId)
+    ]
+    sp_fics = [
+        fc for fc in report["federatedCredentials"]
+        if sp.appId and fc.get("appId") == sp.appId
+    ]
+    return jsonify({
+        "objectId": sp.objectId,
+        "appId": sp.appId,
+        "displayName": sp.displayName,
+        "isAgent": agent_item is not None,
+        "agent": agent_item,
+        "workload": workload_item,
+        "federatedCredentials": sp_fics,
+        "findings": sp_findings,
+        "collectionStatus": report["summary"]["collectionStatus"],
+    })
 
 # Wrapper that supports paging based on the work of Kevin Tellier (@flashlam)
 def query_all_items(request, schema, model, searchfields):

@@ -226,3 +226,253 @@ def test_store_federated_credentials_and_agent_metadata_and_dumper(tmp_path):
     assert session.get(FederatedIdentityCredential, "fic-guid-2") is not None
     session.close()
 
+
+def test_evaluate_fic_risk_checks_wildcards_github_k8s_and_pinned():
+    from roadtools.roadrecon.nhi_analyzer import evaluate_fic_risk
+
+    # 1. Critical wildcard subject
+    crit_fic = {
+        "id": "fic-crit",
+        "applicationObjectId": "app-1",
+        "appId": "guid-1",
+        "name": "wildcard-subj",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "subject": "repo:contoso/app:*",
+        "audiences": ["api://AzureADTokenExchange"],
+    }
+    res_crit = evaluate_fic_risk(crit_fic, "AppOne")
+    assert res_crit["riskLevel"] == "Critical"
+    assert res_crit["severityWeight"] == 4
+
+    # 2. Critical HTTP issuer
+    http_fic = {
+        "id": "fic-http",
+        "applicationObjectId": "app-1",
+        "appId": "guid-1",
+        "name": "http-issuer",
+        "issuer": "http://insecure.issuer.local",
+        "subject": "system:serviceaccount:prod:runner",
+    }
+    res_http = evaluate_fic_risk(http_fic, "AppOne")
+    assert res_http["riskLevel"] == "Critical"
+    assert res_http["severityWeight"] == 4
+
+    # 3. High GitHub Actions pull_request trigger
+    gh_pr_fic = {
+        "id": "fic-gh-pr",
+        "applicationObjectId": "app-1",
+        "appId": "guid-1",
+        "name": "gh-pr",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "subject": "repo:contoso/app:pull_request",
+    }
+    res_gh_pr = evaluate_fic_risk(gh_pr_fic, "AppOne")
+    assert res_gh_pr["riskLevel"] == "High"
+    assert res_gh_pr["severityWeight"] == 3
+
+    # 4. High Kubernetes default namespace
+    k8s_def_fic = {
+        "id": "fic-k8s-def",
+        "applicationObjectId": "app-1",
+        "appId": "guid-1",
+        "name": "k8s-default",
+        "issuer": "https://oidc.eks.us-east-1.amazonaws.com/id/123",
+        "subject": "system:serviceaccount:default:my-sa",
+    }
+    res_k8s = evaluate_fic_risk(k8s_def_fic, "AppOne")
+    assert res_k8s["riskLevel"] == "High"
+    assert res_k8s["severityWeight"] == 3
+
+    # 5. Low pinned OIDC subject
+    low_fic = {
+        "id": "fic-low",
+        "applicationObjectId": "app-1",
+        "appId": "guid-1",
+        "name": "gh-prod",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "subject": "repo:contoso/app:ref:refs/heads/main",
+    }
+    res_low = evaluate_fic_risk(low_fic, "AppOne")
+    assert res_low["riskLevel"] == "Low"
+    assert res_low["severityWeight"] == 1
+
+
+def test_analyze_nhi_posture_and_flask_endpoints_and_legacy_db(tmp_path):
+    from sqlalchemy import text
+    from flask_sqlalchemy import SQLAlchemy
+    import roadtools.roadrecon.server as server_mod
+    from roadtools.roadrecon.nhi_analyzer import analyze_nhi_posture
+    from roadtools.roadlib.metadef.database import (
+        AppRoleAssignment,
+        DirectoryRole,
+        OAuth2PermissionGrant,
+    )
+
+    db_file = tmp_path / "test_analyzer.db"
+    db_url = f"sqlite:///{db_file}"
+    engine = database.init(create=True, dburl=db_url)
+    session = database.get_session(engine)
+
+    msgraph_sp = ServicePrincipal(
+        objectId="sp-msgraph",
+        appId="00000003-0000-0000-c000-000000000000",
+        displayName="Microsoft Graph",
+        servicePrincipalType="Application",
+        microsoftFirstParty=True,
+        appRoles=[
+            {"id": "role-mail-rw", "value": "Mail.ReadWrite", "displayName": "Read and write mail in all mailboxes"},
+            {"id": "role-rolemgmt", "value": "RoleManagement.ReadWrite.Directory", "displayName": "Read and write all directory RBAC settings"},
+        ],
+    )
+    agent_sp = ServicePrincipal(
+        objectId="sp-agent365-1",
+        appId="22222222-3333-4444-5555-666666666666",
+        displayName="M365 Finance Copilot Agent 365",
+        servicePrincipalType="Application",
+        accountEnabled=True,
+        tags=["Agent365", "M365Copilot", "Autonomous"],
+        passwordCredentials=[{"keyId": "k1", "startDate": "2024-01-01T00:00:00Z", "endDate": "2029-01-01T00:00:00Z"}],
+    )
+    agent_app = Application(
+        objectId="app-agent365-1",
+        appId="22222222-3333-4444-5555-666666666666",
+        displayName="M365 Finance Copilot Agent 365",
+        availableToOtherTenants=True,
+    )
+    bad_fic = FederatedIdentityCredential(
+        id="fic-wildcard-1",
+        applicationObjectId="app-agent365-1",
+        appId="22222222-3333-4444-5555-666666666666",
+        name="unrestricted-github",
+        issuer="https://token.actions.githubusercontent.com",
+        subject="repo:contoso/finance:*",
+        audiences=["api://AzureADTokenExchange"],
+    )
+    ar1 = AppRoleAssignment(
+        objectId="ar-1",
+        principalId="sp-agent365-1",
+        resourceId="sp-msgraph",
+        id="role-mail-rw",
+    )
+    ar2 = AppRoleAssignment(
+        objectId="ar-2",
+        principalId="sp-agent365-1",
+        resourceId="sp-msgraph",
+        id="role-rolemgmt",
+    )
+    oauth_grant = OAuth2PermissionGrant(
+        objectId="grant-1",
+        clientId="sp-agent365-1",
+        resourceId="sp-msgraph",
+        consentType="AllPrincipals",
+        scope="Files.ReadWrite.All Chat.ReadWrite",
+    )
+    mi_sp = ServicePrincipal(
+        objectId="sp-mi-1",
+        appId="77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+        displayName="prod-aks-agentpool-mi",
+        servicePrincipalType="ManagedIdentity",
+        accountEnabled=True,
+        managedIdentityResourceId="/subscriptions/sub-1/resourcegroups/rg-prod/providers/Microsoft.Compute/virtualMachineScaleSets/aks-pool",
+    )
+    uami_sp = ServicePrincipal(
+        objectId="sp-uami-1",
+        appId="88888888-8888-9999-aaaa-bbbbbbbbbbbb",
+        displayName="prod-uami-identity",
+        servicePrincipalType="ManagedIdentity",
+        accountEnabled=True,
+        alternativeNames=["isExplicit=True"],
+        managedIdentityResourceId="/subscriptions/sub-1/resourcegroups/rg-prod/providers/Microsoft.ManagedIdentity/userAssignedIdentities/prod-uami",
+    )
+    dir_role = DirectoryRole(
+        objectId="dr-ga",
+        displayName="Global Administrator",
+        description="Full access",
+    )
+    mi_sp.memberOfRole.append(dir_role)
+
+    session.add_all([msgraph_sp, agent_sp, agent_app, bad_fic, ar1, ar2, oauth_grant, mi_sp, uami_sp, dir_role])
+    session.commit()
+
+    report = analyze_nhi_posture(session)
+    assert report["summary"]["collectionStatus"] == "collected"
+    assert report["summary"]["federatedCredentialsTablePresent"] is True
+    assert report["summary"]["agentMetadataTablePresent"] is True
+    assert report["summary"]["totalAgents"] == 1
+    assert report["summary"]["totalAutonomousAgents"] == 1
+    assert report["summary"]["totalManagedIdentities"] == 2
+    assert report["summary"]["totalSystemManagedIdentities"] == 1
+    assert report["summary"]["totalUserAssignedManagedIdentities"] == 1
+    assert report["summary"]["totalFederatedCredentials"] == 1
+    assert report["summary"]["tier0PrivilegedNhIs"] == 2
+    assert report["summary"]["criticalFindingsCount"] >= 3
+
+    agent_entry = report["agents"][0]
+    assert agent_entry["agentCategory"] == "Agent365"
+    assert agent_entry["executionMode"] == "Autonomous"
+    assert "Mail.ReadWrite" in agent_entry["m365Scopes"]
+    assert "Files.ReadWrite.All" in agent_entry["m365Scopes"]
+    assert "RoleManagement.ReadWrite.Directory" in agent_entry["tier0Roles"]
+
+    weights = [f["severityWeight"] for f in report["findings"]]
+    assert weights == sorted(weights, reverse=True)
+    assert weights[0] == 4
+
+    # Test Flask endpoints
+    server_mod.app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    server_mod.app.config["TESTING"] = True
+    server_mod.db = SQLAlchemy(server_mod.app)
+
+    with server_mod.app.test_client() as client:
+        r_sum = client.get("/api/nhi/summary")
+        assert r_sum.status_code == 200
+        assert r_sum.get_json()["totalAgents"] == 1
+
+        r_agents = client.get("/api/nhi/agents")
+        assert r_agents.status_code == 200
+        assert len(r_agents.get_json()) == 1
+
+        r_workloads = client.get("/api/nhi/workloads")
+        assert r_workloads.status_code == 200
+        assert len(r_workloads.get_json()) == 2
+
+        r_fics = client.get("/api/nhi/federatedcredentials")
+        assert r_fics.status_code == 200
+        assert len(r_fics.get_json()) == 1
+
+        r_findings = client.get("/api/nhi/findings")
+        assert r_findings.status_code == 200
+        assert len(r_findings.get_json()) >= 3
+
+        r_app_fics = client.get("/api/applications/app-agent365-1/federatedcredentials")
+        assert r_app_fics.status_code == 200
+        app_fics_data = r_app_fics.get_json()
+        assert len(app_fics_data) == 1
+        assert app_fics_data[0]["riskLevel"] == "Critical"
+
+        r_sp_nhi = client.get("/api/serviceprincipals/sp-agent365-1/nhi")
+        assert r_sp_nhi.status_code == 200
+        sp_nhi_data = r_sp_nhi.get_json()
+        assert sp_nhi_data["isAgent"] is True
+        assert sp_nhi_data["agent"]["agentCategory"] == "Agent365"
+        assert len(sp_nhi_data["federatedCredentials"]) == 1
+
+        # Verify Application detail and ServicePrincipal detail include new schema fields
+        r_app_detail = client.get("/api/applications/app-agent365-1")
+        assert r_app_detail.status_code == 200
+        assert len(r_app_detail.get_json()["federatedIdentityCredentials"]) == 1
+
+    # Simulate legacy DB by dropping FederatedIdentityCredentials and AgentIdentityMetadatas tables
+    session.execute(text("DROP TABLE FederatedIdentityCredentials"))
+    session.execute(text("DROP TABLE AgentIdentityMetadatas"))
+    session.commit()
+
+    legacy_report = analyze_nhi_posture(session)
+    assert legacy_report["summary"]["collectionStatus"] == "derived_from_legacy_db"
+    assert legacy_report["summary"]["federatedCredentialsTablePresent"] is False
+    assert legacy_report["summary"]["agentMetadataTablePresent"] is False
+    assert legacy_report["summary"]["totalAgents"] == 1
+    assert legacy_report["summary"]["totalManagedIdentities"] == 2
+    session.close()
+
+
