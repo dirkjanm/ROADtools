@@ -522,7 +522,17 @@ export interface NhiSummary {
   totalSystemManagedIdentities: number;
   totalUserAssignedManagedIdentities: number;
   totalWorkloadApps: number;
-  totalFederatedCredentials: number;
+  totalFirstPartyMicrosoftNhIs?: number;
+  totalFederatedCredentials: number | null;
+  federatedCredentialsCollected?: boolean;
+  agentMetadataCollected?: boolean;
+  federatedCredentialsCollectionStatus?: 'collected' | 'skipped' | 'failed' | 'uncollected' | string;
+  agentMetadataCollectionStatus?: 'collected' | 'skipped' | 'failed' | 'uncollected' | string;
+  federatedCredentialsCollectionDetail?: string | null;
+  agentMetadataCollectionDetail?: string | null;
+  severityBreakdown?: NhiSeverityBreakdown;
+  topFindings?: NhiFindingItem[];
+  dataGaps?: string[];
   tier0PrivilegedNhIs: number;
   ownerlessNhIs: number;
   criticalFindingsCount: number;
@@ -531,8 +541,16 @@ export interface NhiSummary {
   lowFindingsCount: number;
   informationalFindingsCount: number;
   collectionStatus: 'collected' | 'derived_from_legacy_db' | string;
-  federatedCredentialsTablePresent: boolean;
-  agentMetadataTablePresent: boolean;
+  federatedCredentialsTablePresent?: boolean;
+  agentMetadataTablePresent?: boolean;
+}
+
+export interface NhiSeverityBreakdown {
+  Critical: number;
+  High: number;
+  Medium: number;
+  Low: number;
+  Informational: number;
 }
 
 export interface NhiAgentItem {
@@ -549,11 +567,17 @@ export interface NhiAgentItem {
   tier0Roles: string[];
   directoryRoles: string[];
   azureRoles: string[];
-  ownersCount: number;
+  pimRoles?: string[];
+  ownersCount: number | null;
   ownerNames: string[];
   hasSecrets: boolean;
   hasCerts: boolean;
-  federatedCredentialsCount: number;
+  federatedCredentialsCount: number | null;
+  sponsorUserIds?: string[];
+  sponsorNames?: string[];
+  sponsorsCount?: number;
+  unresolvedSponsors?: string[];
+  mcpTools?: string[];
   accountEnabled: boolean;
   riskLevel: string;
   severityWeight: number;
@@ -565,19 +589,26 @@ export interface NhiWorkloadItem {
   appId: string;
   applicationObjectId?: string | null;
   displayName: string;
-  nhiType: string;
+  nhiType: 'FirstPartyMicrosoft' | string;
+  nhiCategory?: string;
   servicePrincipalType: string;
   managedIdentityResourceId?: string | null;
   accountEnabled: boolean;
   secretsCount: number;
   certsCount: number;
-  federatedCredentialsCount: number;
+  federatedCredentialsCount: number | null;
+  maxExpiryDays?: number | null;
+  directoryRoles?: string[];
+  pimRoles?: string[];
+  azureRoles?: string[];
+  graphAppRoles?: string[];
+  tier0Roles?: string[];
   expiredCredentialsCount: number;
   longLivedCredentialsCount: number;
   credentialSummary: string;
   privilegedRoles: string[];
   m365Scopes: string[];
-  ownersCount: number;
+  ownersCount: number | null;
   ownerNames: string[];
   riskLevel: string;
   severityWeight: number;
@@ -617,11 +648,16 @@ export interface NhiFindingItem {
 
 export interface ServicePrincipalNhiDetail {
   objectId: string;
+  appId?: string;
+  displayName?: string;
   isAgent: boolean;
   agent?: NhiAgentItem | null;
   workload?: NhiWorkloadItem | null;
   federatedCredentials: FederatedCredentialItem[];
   findings: NhiFindingItem[];
+  collectionStatus?: 'collected' | 'derived_from_legacy_db' | string;
+  agentMetadataCollected?: boolean;
+  agentMetadataCollectionDetail?: string | null;
 }
 
 @Injectable({

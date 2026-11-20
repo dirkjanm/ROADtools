@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ApplicationsItem, appMetadata, DatabaseService, FederatedCredentialItem } from '../../aadobjects.service'
+import { ApplicationsItem, appMetadata, DatabaseService, FederatedCredentialItem, NhiSummary } from '../../aadobjects.service'
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { Location } from '@angular/common';
@@ -53,6 +53,8 @@ export class ApplicationsdialogComponent {
   public displayedColumnsFics: string[] = ['name', 'issuer', 'subject', 'audiences', 'riskLevel', 'riskReasons']
   public metadata: any[] = [];
   public federatedCredentials: FederatedCredentialItem[] = [];
+  public ficLoadError = false;
+  public nhiSummary: NhiSummary | null = null;
   public showPortalLink: boolean;
   @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
@@ -62,14 +64,19 @@ export class ApplicationsdialogComponent {
     private service: DatabaseService
   ) {
     this.showPortalLink = this.localSt.retrieve('portallinks');
-    this.service.getApplicationFederatedCredentials(this.application.objectId).subscribe(
-      (fics: FederatedCredentialItem[]) => {
+    this.service.getApplicationFederatedCredentials(this.application.objectId).subscribe({
+      next: (fics: FederatedCredentialItem[]) => {
         this.federatedCredentials = fics || [];
       },
-      () => {
+      error: () => {
         this.federatedCredentials = [];
+        this.ficLoadError = true;
       }
-    );
+    });
+    this.service.getNhiSummary().subscribe({
+      next: (summary: NhiSummary) => { this.nhiSummary = summary; },
+      error: () => { this.nhiSummary = null; }
+    });
     if (application.appMetadata && application.appMetadata.data.length > 0){
       for( let metadata of (application.appMetadata.data as any[])){
         let out: any = {}
@@ -97,5 +104,14 @@ export class ApplicationsdialogComponent {
         this.metadata.push(out);
       }
     }
+  }
+
+  public sevClass(level: string | null | undefined): string {
+    return 'risk-' + (level || 'informational').toLowerCase();
+  }
+
+  /** True when federated credentials were actually collected (so an empty list means zero). */
+  public get ficCollected(): boolean {
+    return !!this.nhiSummary && !!this.nhiSummary.federatedCredentialsCollected;
   }
 }

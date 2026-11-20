@@ -1,3 +1,11 @@
 .full-width-table {
   width: 100%;
 }
+
+.sev-chip { font-weight: 600; }
+.sev-chip.risk-critical { --mdc-chip-elevated-container-color: #ffebee; --mat-chip-elevated-container-color: #ffebee; --mdc-chip-label-text-color: #c62828; --mat-chip-label-text-color: #c62828; }
+.sev-chip.risk-high { --mdc-chip-elevated-container-color: #fff3e0; --mat-chip-elevated-container-color: #fff3e0; --mdc-chip-label-text-color: #ef6c00; --mat-chip-label-text-color: #ef6c00; }
+.sev-chip.risk-medium { --mdc-chip-elevated-container-color: #fffde7; --mat-chip-elevated-container-color: #fffde7; --mdc-chip-label-text-color: #8d6e00; --mat-chip-label-text-color: #8d6e00; }
+.sev-chip.risk-low, .sev-chip.risk-informational { --mdc-chip-elevated-container-color: #e8f5e9; --mat-chip-elevated-container-color: #e8f5e9; --mdc-chip-label-text-color: #2e7d32; --mat-chip-label-text-color: #2e7d32; }
+.status-note { padding: 8px 12px; margin: 8px 0; background-color: #fff8e1; border-left: 4px solid #ffa000; }
+.status-note.ok { background-color: #e8f5e9; border-left-color: #2e7d32; }

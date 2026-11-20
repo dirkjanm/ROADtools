@@ -6,12 +6,52 @@
     </p>
   </div>
 
-  <mat-card class="collection-banner" *ngIf="summary && summary.collectionStatus === 'derived_from_legacy_db'">
+  <mat-card class="error-banner" *ngFor="let err of errors" role="alert">
+    <mat-card-content>
+      <mat-icon>error</mat-icon>
+      <span>{{ err }} Check that the roadrecon server is running and the database is readable, then reload.</span>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="loading-row" *ngIf="loading">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span>Loading NHI data...</span>
+  </div>
+
+  <mat-card class="collection-banner" *ngIf="showStatusBanner" role="status">
     <mat-card-content>
       <mat-icon>info</mat-icon>
-      <span>
-        Results are derived from the existing database. Run <code>roadrecon gather --autotoken</code> with a Microsoft Graph refresh token to enrich Federated Identity Credentials and Agent 365 beta metadata.
-      </span>
+      <div>
+        <div>
+          Collection status: <strong>{{ summary?.collectionStatus }}</strong>.
+          <ng-container *ngIf="summary?.collectionStatus !== 'collected'">
+            Results are derived from the existing database. Run <code>roadrecon gather --autotoken</code> with a Microsoft Graph refresh token to enrich Federated Identity Credentials and Agent 365 beta metadata.
+          </ng-container>
+        </div>
+        <div *ngIf="!summary?.federatedCredentialsCollected">
+          Federated credentials: <strong>not collected<ng-container *ngIf="summary?.federatedCredentialsCollectionStatus"> ({{ summary?.federatedCredentialsCollectionStatus }})</ng-container></strong> (counts show n/a, not 0).
+          <span *ngIf="summary?.federatedCredentialsCollectionDetail">{{ summary?.federatedCredentialsCollectionDetail }}</span>
+        </div>
+        <div *ngIf="!summary?.agentMetadataCollected">
+          Agent 365 metadata: <strong>not collected<ng-container *ngIf="summary?.agentMetadataCollectionStatus"> ({{ summary?.agentMetadataCollectionStatus }})</ng-container></strong>.
+          <span *ngIf="summary?.agentMetadataCollectionDetail">{{ summary?.agentMetadataCollectionDetail }}</span>
+        </div>
+        <div *ngIf="summary?.agentMetadataCollected && summary?.agentMetadataCollectionDetail">
+          Agent 365 metadata: {{ summary?.agentMetadataCollectionDetail }}
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="gaps-banner" *ngIf="summary?.dataGaps && summary!.dataGaps!.length > 0" role="alert">
+    <mat-card-content>
+      <mat-icon>warning</mat-icon>
+      <div>
+        <strong>Data gaps (findings may be incomplete):</strong>
+        <ul>
+          <li *ngFor="let gap of summary!.dataGaps">{{ gap }}</li>
+        </ul>
+      </div>
     </mat-card-content>
   </mat-card>
 
@@ -34,7 +74,7 @@
     </mat-card>
     <mat-card class="kpi-card">
       <div class="kpi-label">Federated Credentials</div>
-      <div class="kpi-value">{{ summary.totalFederatedCredentials }}</div>
+      <div class="kpi-value" [class.kpi-na]="ficKpi() === 'n/a'">{{ ficKpi() }}</div>
     </mat-card>
     <mat-card class="kpi-card">
       <div class="kpi-label">Tier-0 Privileged NHIs</div>
@@ -57,67 +97,93 @@
 
     <mat-tab-group>
       <mat-tab label="Overview &amp; Risk Findings ({{ findingsDataSource.data.length }})">
-        <table mat-table class="full-width-table" [dataSource]="findingsDataSource">
+        <div class="overview-block" *ngIf="summary">
+          <h3>Severity breakdown</h3>
+          <mat-chip-set aria-label="Findings by severity">
+            <mat-chip *ngFor="let sev of severityOrder" class="sev-chip" [ngClass]="sevClass(sev)" disableRipple>
+              {{ sev }}: {{ severityCount(sev) }}
+            </mat-chip>
+          </mat-chip-set>
+
+          <ng-container *ngIf="summary.topFindings && summary.topFindings.length > 0">
+            <h3>Top findings</h3>
+            <ul class="top-findings">
+              <li *ngFor="let f of summary.topFindings">
+                <mat-chip-set>
+                  <mat-chip class="sev-chip" [ngClass]="sevClass(f.severity)" disableRipple>{{ f.severity }}</mat-chip>
+                </mat-chip-set>
+                <strong>{{ f.title }}</strong>
+                <span class="muted"> - <a [routerLink]="getPrincipalRoute(f)">{{ f.principalName }}</a></span>
+                <div class="muted">{{ f.detail }}</div>
+              </li>
+            </ul>
+          </ng-container>
+        </div>
+
+        <table mat-table matSort #findingsSort="matSort" class="full-width-table" [dataSource]="findingsDataSource">
           <ng-container matColumnDef="severity">
-            <th mat-header-cell *matHeaderCellDef>Severity</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Severity</th>
             <td mat-cell *matCellDef="let row">
-              <span class="risk-badge" [ngClass]="'risk-' + (row.severity | lowercase)">{{ row.severity }}</span>
+              <mat-chip-set><mat-chip class="sev-chip" [ngClass]="sevClass(row.severity)" disableRipple>{{ row.severity }}</mat-chip></mat-chip-set>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="category">
-            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Category</th>
             <td mat-cell *matCellDef="let row">{{ row.category }}</td>
           </ng-container>
 
           <ng-container matColumnDef="principalName">
-            <th mat-header-cell *matHeaderCellDef>Principal</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Principal</th>
             <td mat-cell *matCellDef="let row">
               <a [routerLink]="getPrincipalRoute(row)">{{ row.principalName }}</a>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="title">
-            <th mat-header-cell *matHeaderCellDef>Finding</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Finding</th>
             <td mat-cell *matCellDef="let row"><strong>{{ row.title }}</strong></td>
           </ng-container>
 
           <ng-container matColumnDef="detail">
-            <th mat-header-cell *matHeaderCellDef>Detail</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Detail</th>
             <td mat-cell *matCellDef="let row">{{ row.detail }}</td>
           </ng-container>
 
           <ng-container matColumnDef="recommendation">
-            <th mat-header-cell *matHeaderCellDef>Recommendation</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Recommendation</th>
             <td mat-cell *matCellDef="let row">{{ row.recommendation }}</td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="findingsColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: findingsColumns;"></tr>
         </table>
+        <p class="empty-state" *ngIf="!loading && findingsDataSource.data.length === 0">No findings to display.</p>
+        <p class="empty-state" *ngIf="noMatches(findingsDataSource)">{{ noMatchMessage }}</p>
+        <mat-paginator #findingsPaginator [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
       </mat-tab>
 
       <mat-tab label="Agent 365 &amp; AI Agents ({{ agentsDataSource.data.length }})">
-        <table mat-table class="full-width-table" [dataSource]="agentsDataSource">
+        <table mat-table matSort #agentsSort="matSort" class="full-width-table" [dataSource]="agentsDataSource">
           <ng-container matColumnDef="displayName">
-            <th mat-header-cell *matHeaderCellDef>Agent Name</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Agent Name</th>
             <td mat-cell *matCellDef="let row">
               <a [routerLink]="['/serviceprincipals', row.objectId]">{{ row.displayName }}</a>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="agentCategory">
-            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Category</th>
             <td mat-cell *matCellDef="let row">{{ row.agentCategory }}</td>
           </ng-container>
 
           <ng-container matColumnDef="executionMode">
-            <th mat-header-cell *matHeaderCellDef>Execution Mode</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Execution Mode</th>
             <td mat-cell *matCellDef="let row">{{ row.executionMode }}</td>
           </ng-container>
 
           <ng-container matColumnDef="m365Scopes">
-            <th mat-header-cell *matHeaderCellDef>M365 &amp; Copilot Scopes</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>M365 &amp; Copilot Scopes</th>
             <td mat-cell *matCellDef="let row">
               <mat-chip-set *ngIf="row.m365Scopes && row.m365Scopes.length > 0">
                 <mat-chip *ngFor="let scope of row.m365Scopes" disableRipple>{{ scope }}</mat-chip>
@@ -126,7 +192,7 @@
           </ng-container>
 
           <ng-container matColumnDef="tier0Roles">
-            <th mat-header-cell *matHeaderCellDef>Tier-0 Privileges</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Tier-0 Privileges</th>
             <td mat-cell *matCellDef="let row">
               <mat-chip-set *ngIf="row.tier0Roles && row.tier0Roles.length > 0">
                 <mat-chip *ngFor="let role of row.tier0Roles" disableRipple>{{ role }}</mat-chip>
@@ -134,113 +200,161 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="ownersCount">
-            <th mat-header-cell *matHeaderCellDef>Owners</th>
-            <td mat-cell *matCellDef="let row">{{ row.ownersCount }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="riskLevel">
-            <th mat-header-cell *matHeaderCellDef>Risk Level</th>
+          <ng-container matColumnDef="ownerNames">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Owners</th>
             <td mat-cell *matCellDef="let row">
-              <span class="risk-badge" [ngClass]="'risk-' + (row.riskLevel | lowercase)">{{ row.riskLevel }}</span>
+              <mat-chip-set *ngIf="row.ownerNames && row.ownerNames.length > 0">
+                <mat-chip *ngFor="let n of row.ownerNames" disableRipple>{{ n }}</mat-chip>
+              </mat-chip-set>
+              <span class="muted" *ngIf="!row.ownerNames || row.ownerNames.length === 0">none</span>
             </td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="agentsColumns"></tr>
+          <ng-container matColumnDef="sponsorNames">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Sponsors</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-chip-set *ngIf="(row.sponsorNames && row.sponsorNames.length > 0) || (row.unresolvedSponsors && row.unresolvedSponsors.length > 0)">
+                <mat-chip *ngFor="let n of row.sponsorNames" disableRipple>{{ n }}</mat-chip>
+                <mat-chip *ngIf="row.unresolvedSponsors && row.unresolvedSponsors.length > 0" disableRipple
+                  title="Sponsor IDs that could not be resolved to a user in the collected data">{{ row.unresolvedSponsors.length }} unresolved</mat-chip>
+              </mat-chip-set>
+              <span class="muted" *ngIf="(!row.sponsorNames || row.sponsorNames.length === 0) && (!row.unresolvedSponsors || row.unresolvedSponsors.length === 0)">none</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="ownersCount">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef title="Resolved owners plus sponsors">Owners + Sponsors</th>
+            <td mat-cell *matCellDef="let row">{{ fmt(row.ownersCount) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="federatedCredentialsCount">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Federated Creds</th>
+            <td mat-cell *matCellDef="let row">{{ fmt(row.federatedCredentialsCount) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="riskLevel">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Risk Level</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-chip-set><mat-chip class="sev-chip" [ngClass]="sevClass(row.riskLevel)" disableRipple>{{ row.riskLevel }}</mat-chip></mat-chip-set>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="agentsColumns">
           <tr mat-row *matRowDef="let row; columns: agentsColumns;"></tr>
         </table>
+        <p class="empty-state" *ngIf="!loading && agentsDataSource.data.length === 0">
+          No agents to display<span *ngIf="summary && !summary.agentMetadataCollected"> (Agent 365 metadata was not collected)</span>.
+        </p>
+        <p class="empty-state" *ngIf="noMatches(agentsDataSource)">{{ noMatchMessage }}</p>
+        <mat-paginator #agentsPaginator [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
       </mat-tab>
 
       <mat-tab label="Managed Identities &amp; Workloads ({{ workloadsDataSource.data.length }})">
-        <table mat-table class="full-width-table" [dataSource]="workloadsDataSource">
+        <table mat-table matSort #workloadsSort="matSort" class="full-width-table" [dataSource]="workloadsDataSource">
           <ng-container matColumnDef="displayName">
-            <th mat-header-cell *matHeaderCellDef>Principal Name</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Principal Name</th>
             <td mat-cell *matCellDef="let row">
               <a [routerLink]="['/serviceprincipals', row.objectId]">{{ row.displayName }}</a>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="nhiType">
-            <th mat-header-cell *matHeaderCellDef>NHI Type</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>NHI Type</th>
             <td mat-cell *matCellDef="let row">{{ row.nhiType }}</td>
           </ng-container>
 
           <ng-container matColumnDef="managedIdentityResourceId">
-            <th mat-header-cell *matHeaderCellDef>Resource ID</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Resource ID</th>
             <td mat-cell *matCellDef="let row">{{ row.managedIdentityResourceId || '-' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="credentialSummary">
-            <th mat-header-cell *matHeaderCellDef>Credentials</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Credentials</th>
             <td mat-cell *matCellDef="let row">{{ row.credentialSummary }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="privilegedRoles">
-            <th mat-header-cell *matHeaderCellDef>Privileged Roles</th>
+          <ng-container matColumnDef="federatedCredentialsCount">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Federated Creds</th>
+            <td mat-cell *matCellDef="let row">{{ fmt(row.federatedCredentialsCount) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="maxExpiryDays">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Max Expiry (days)</th>
+            <td mat-cell *matCellDef="let row">{{ fmt(row.maxExpiryDays) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="roleSplit">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Privileged Roles</th>
             <td mat-cell *matCellDef="let row">
-              <mat-chip-set *ngIf="row.privilegedRoles && row.privilegedRoles.length > 0">
-                <mat-chip *ngFor="let role of row.privilegedRoles" disableRipple>{{ role }}</mat-chip>
-              </mat-chip-set>
+              <div class="role-group" *ngFor="let g of roleGroups(row)">
+                <span class="role-label muted">{{ g.label }}:</span>
+                <mat-chip-set [attr.aria-label]="g.label + ' roles'">
+                  <mat-chip *ngFor="let role of g.roles" disableRipple>{{ role }}</mat-chip>
+                </mat-chip-set>
+              </div>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="ownersCount">
-            <th mat-header-cell *matHeaderCellDef>Owners</th>
-            <td mat-cell *matCellDef="let row">{{ row.ownersCount }}</td>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Owners</th>
+            <td mat-cell *matCellDef="let row">{{ fmt(row.ownersCount) }}</td>
           </ng-container>
 
           <ng-container matColumnDef="riskLevel">
-            <th mat-header-cell *matHeaderCellDef>Risk Level</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Risk Level</th>
             <td mat-cell *matCellDef="let row">
-              <span class="risk-badge" [ngClass]="'risk-' + (row.riskLevel | lowercase)">{{ row.riskLevel }}</span>
+              <mat-chip-set><mat-chip class="sev-chip" [ngClass]="sevClass(row.riskLevel)" disableRipple>{{ row.riskLevel }}</mat-chip></mat-chip-set>
             </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="workloadsColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: workloadsColumns;"></tr>
         </table>
+        <p class="empty-state" *ngIf="!loading && workloadsDataSource.data.length === 0">No workload identities to display.</p>
+        <p class="empty-state" *ngIf="noMatches(workloadsDataSource)">{{ noMatchMessage }}</p>
+        <mat-paginator #workloadsPaginator [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
       </mat-tab>
 
-      <mat-tab label="Federated Credentials (OIDC) ({{ ficsDataSource.data.length }})">
-        <table mat-table class="full-width-table" [dataSource]="ficsDataSource">
+      <mat-tab label="Federated Credentials (OIDC) ({{ summary && !summary.federatedCredentialsCollected ? 'n/a' : ficsDataSource.data.length }})">
+        <table mat-table matSort #ficsSort="matSort" class="full-width-table" [dataSource]="ficsDataSource">
           <ng-container matColumnDef="applicationDisplayName">
-            <th mat-header-cell *matHeaderCellDef>Application</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Application</th>
             <td mat-cell *matCellDef="let row">
               <a [routerLink]="['/applications', row.applicationObjectId]">{{ row.applicationDisplayName }}</a>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Credential Name</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Credential Name</th>
             <td mat-cell *matCellDef="let row">{{ row.name }}</td>
           </ng-container>
 
           <ng-container matColumnDef="issuer">
-            <th mat-header-cell *matHeaderCellDef>Issuer</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Issuer</th>
             <td mat-cell *matCellDef="let row"><code>{{ row.issuer }}</code></td>
           </ng-container>
 
           <ng-container matColumnDef="subject">
-            <th mat-header-cell *matHeaderCellDef>Subject</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Subject</th>
             <td mat-cell *matCellDef="let row"><code>{{ row.subject }}</code></td>
           </ng-container>
 
           <ng-container matColumnDef="audiences">
-            <th mat-header-cell *matHeaderCellDef>Audiences</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Audiences</th>
             <td mat-cell *matCellDef="let row">
               <span *ngFor="let aud of row.audiences">{{ aud }} </span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="riskLevel">
-            <th mat-header-cell *matHeaderCellDef>Risk Level</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Risk Level</th>
             <td mat-cell *matCellDef="let row">
-              <span class="risk-badge" [ngClass]="'risk-' + (row.riskLevel | lowercase)">{{ row.riskLevel }}</span>
+              <mat-chip-set><mat-chip class="sev-chip" [ngClass]="sevClass(row.riskLevel)" disableRipple>{{ row.riskLevel }}</mat-chip></mat-chip-set>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="riskReasons">
-            <th mat-header-cell *matHeaderCellDef>Risk Analysis</th>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Risk Analysis</th>
             <td mat-cell *matCellDef="let row">
               <span *ngFor="let r of row.riskReasons">{{ r }}; </span>
             </td>
@@ -249,6 +363,9 @@
           <tr mat-header-row *matHeaderRowDef="ficsColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: ficsColumns;"></tr>
         </table>
+        <p class="empty-state" *ngIf="!loading && ficsDataSource.data.length === 0">{{ ficEmptyMessage }}</p>
+        <p class="empty-state" *ngIf="noMatches(ficsDataSource)">{{ noMatchMessage }}</p>
+        <mat-paginator #ficsPaginator [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
       </mat-tab>
     </mat-tab-group>
   </div>

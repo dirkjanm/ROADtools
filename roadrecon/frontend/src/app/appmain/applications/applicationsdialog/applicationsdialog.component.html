@@ -100,8 +100,19 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumnsOAuth2;"></tr>
     </table>
   </mat-tab>
-  <mat-tab label="Federated Credentials ({{federatedCredentials.length}})" *ngIf="federatedCredentials && federatedCredentials.length > 0">
+  <mat-tab label="Federated Credentials &amp; NHI Risk ({{ ficCollected || federatedCredentials.length > 0 ? federatedCredentials.length : 'n/a' }})">
     <h2>OIDC Federated Identity Credentials</h2>
+    <div class="status-note" *ngIf="ficLoadError" role="alert">Failed to load federated credentials for this application.</div>
+    <div class="status-note" *ngIf="!ficLoadError && nhiSummary && !ficCollected" role="status">
+      Collection status: <strong>{{ nhiSummary.collectionStatus }}</strong>. Federated credentials were <strong>not collected</strong>, so an empty list means unknown, not zero.
+      <span *ngIf="nhiSummary.federatedCredentialsCollectionDetail">{{ nhiSummary.federatedCredentialsCollectionDetail }}</span>
+    </div>
+    <div class="status-note ok" *ngIf="!ficLoadError && ficCollected && federatedCredentials.length === 0">
+      Federated credentials were collected: <strong>0 collected</strong> for this application.
+    </div>
+    <div class="status-note" *ngIf="!ficLoadError && !nhiSummary && federatedCredentials.length === 0">
+      Collection status unavailable; no federated credentials to show.
+    </div>
     <table mat-table [dataSource]="federatedCredentials" class="full-width-table">
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef>Name</th>
@@ -121,7 +132,7 @@
       </ng-container>
       <ng-container matColumnDef="riskLevel">
         <th mat-header-cell *matHeaderCellDef>Risk Level</th>
-        <td mat-cell *matCellDef="let row">{{row.riskLevel}}</td>
+        <td mat-cell *matCellDef="let row"><mat-chip-set><mat-chip class="sev-chip" [ngClass]="sevClass(row.riskLevel)" disableRipple>{{row.riskLevel}}</mat-chip></mat-chip-set></td>
       </ng-container>
       <ng-container matColumnDef="riskReasons">
         <th mat-header-cell *matHeaderCellDef>Risk Analysis</th>

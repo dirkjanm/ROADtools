@@ -60,6 +60,9 @@ export class ServicePrincipalsdialogComponent {
   public tenantdetails!: TenantDetail;
   public azureRoleAssignments: AzureRoleAssignment[] = [];
   public nhiDetail: ServicePrincipalNhiDetail | null = null;
+  public nhiLoadError = false;
+  public agentMetadataCollected: boolean | undefined;
+  public agentMetadataDetail: string | null | undefined;
   @ViewChild(MatSort, {static: true}) sort!: MatSort;
   constructor(
     public dialogRef: MatDialogRef<ServicePrincipalsdialogComponent>,
@@ -104,11 +107,29 @@ export class ServicePrincipalsdialogComponent {
     this.service.getServicePrincipalNhi(this.sp.objectId).subscribe(
       (data: ServicePrincipalNhiDetail) => {
         this.nhiDetail = data;
+        // Detail endpoint may not carry agent-metadata status; fall back to the summary.
+        if (data.agentMetadataCollected === undefined) {
+          this.service.getNhiSummary().subscribe(
+            (s) => {
+              this.agentMetadataCollected = s.agentMetadataCollected;
+              this.agentMetadataDetail = s.agentMetadataCollectionDetail;
+            },
+            () => {}
+          );
+        } else {
+          this.agentMetadataCollected = data.agentMetadataCollected;
+          this.agentMetadataDetail = data.agentMetadataCollectionDetail;
+        }
       },
       () => {
         this.nhiDetail = null;
+        this.nhiLoadError = true;
       }
     );
 
+  }
+
+  public sevClass(level: string | null | undefined): string {
+    return 'risk-' + (level || 'informational').toLowerCase();
   }
 }

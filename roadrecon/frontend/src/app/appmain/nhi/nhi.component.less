@@ -63,31 +63,97 @@
   width: 100%;
 }
 
-.risk-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 600;
+.error-banner {
+  margin-bottom: 12px;
+  background-color: #ffebee;
+  border-left: 4px solid #c62828;
+}
+
+.error-banner mat-card-content,
+.gaps-banner mat-card-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gaps-banner {
+  margin-bottom: 16px;
+  background-color: #fff3e0;
+  border-left: 4px solid #ef6c00;
+}
+
+.gaps-banner ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.kpi-na {
+  color: #757575;
+}
+
+.overview-block {
+  padding: 8px 0 16px;
+}
+
+.top-findings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.top-findings li {
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: #666;
   font-size: 12px;
 }
 
-.risk-critical {
-  background-color: #ffebee;
-  color: #c62828;
+.empty-state {
+  padding: 16px;
+  color: #666;
 }
 
-.risk-high {
-  background-color: #fff3e0;
-  color: #ef6c00;
+.sev-chip {
+  font-weight: 600;
 }
 
-.risk-medium {
-  background-color: #fffde7;
-  color: #f9a825;
+.sev-chip.risk-critical {
+  --mdc-chip-elevated-container-color: #ffebee;
+  --mat-chip-elevated-container-color: #ffebee;
+  --mdc-chip-label-text-color: #c62828;
+  --mat-chip-label-text-color: #c62828;
 }
 
-.risk-low,
-.risk-informational {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+.sev-chip.risk-high {
+  --mdc-chip-elevated-container-color: #fff3e0;
+  --mat-chip-elevated-container-color: #fff3e0;
+  --mdc-chip-label-text-color: #ef6c00;
+  --mat-chip-label-text-color: #ef6c00;
 }
+
+.sev-chip.risk-medium {
+  --mdc-chip-elevated-container-color: #fffde7;
+  --mat-chip-elevated-container-color: #fffde7;
+  --mdc-chip-label-text-color: #8d6e00;
+  --mat-chip-label-text-color: #8d6e00;
+}
+
+.sev-chip.risk-low,
+.sev-chip.risk-informational {
+  --mdc-chip-elevated-container-color: #e8f5e9;
+  --mat-chip-elevated-container-color: #e8f5e9;
+  --mdc-chip-label-text-color: #2e7d32;
+  --mat-chip-label-text-color: #2e7d32;
+}
+
+.role-group { display: flex; align-items: center; gap: 4px; margin: 2px 0; }
+.role-label { font-size: 12px; white-space: nowrap; }
