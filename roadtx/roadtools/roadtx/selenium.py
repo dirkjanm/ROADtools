@@ -649,7 +649,16 @@ class SeleniumAuthentication():
                 # No MFA?
                 pass
 
-        el = WebDriverWait(driver, 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='form[name="hiddenform"] input[name="code"]'))
+        # In case only confirmation page is shown, click continue      
+        try:
+            els = WebDriverWait(driver, 1).until(lambda d: d.find_element(By.ID, "idSIButton9"))
+            # Prevents attempting to click on disabled button, e.g. if account selection page is shown
+            if els.get_attribute("style") != "display: none;":
+                els.click()
+        except TimeoutException:
+            pass
+
+        el = WebDriverWait(driver, 30 if self.headless else 6000).until(lambda d: d.find_element(by=By.CSS_SELECTOR, value='form[name="hiddenform"] input[name="code"]'))
         code = el.get_property("value")
         driver.close()
         return self.auth.authenticate_with_code_encrypted(code, self.deviceauth.session_key, self.redirurl)

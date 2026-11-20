@@ -1088,6 +1088,9 @@ def main():
     enrauth_parser.add_argument('--otpseed',
                                 action='store',
                                 help='TOTP seed to calculate MFA code when prompted')
+    enrauth_parser.add_argument('--headless',
+                                action='store_true',
+                                help='Run Selenium in headless mode')
 
     # CLI authentication with device code flow
     cliauth_parser = subparsers.add_parser('clicodeauth', help='Manual interactive authentication with external browser')
@@ -2267,7 +2270,7 @@ def main():
             replyurl = "ms-appx-web://Microsoft.AAD.BrokerPlugin/dd762716-544d-4aeb-a526-687b73838a22"
             url = f'https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=dd762716-544d-4aeb-a526-687b73838a22&redirect_uri=ms-appx-web%3a%2f%2fMicrosoft.AAD.BrokerPlugin%2fdd762716-544d-4aeb-a526-687b73838a22&resource=urn%3ams-drs%3aenterpriseregistration.windows.net&add_account=noheadsup&scope=openid{hint}&response_mode=form_post&windows_api_version=2.0&amr_values=ngcmfa'
 
-        selauth = SeleniumAuthentication(auth, deviceauth, replyurl, proxy=args.proxy, proxy_type=args.proxy_type)
+        selauth = SeleniumAuthentication(auth, deviceauth, replyurl, proxy=args.proxy, proxy_type=args.proxy_type, headless=args.headless)
         if args.username and args.keepass and (args.keepass_password or 'KPPASS' in os.environ or args.keepass.endswith('.xml')):
             _, otpseed = selauth.get_keepass_cred(args.username, args.keepass, args.keepass_password)
         else:
