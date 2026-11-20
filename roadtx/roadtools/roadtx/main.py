@@ -1250,11 +1250,11 @@ def main():
             }
         else:
             try:
-                with codecs.open('.roadtools_auth', 'r', 'utf-8') as infile:
+                with codecs.open(args.tokenfile, 'r', 'utf-8') as infile:
                     tokenobject = json.load(infile)
                 _, tokendata = auth.parse_accesstoken(tokenobject['accessToken'])
             except FileNotFoundError:
-                print('This command requires the .roadtools_auth file, which was not found. Use the gettokens command to supply a refresh token manually.')
+                print(f'This command requires the {args.tokenfile} file, which was not found. Use the gettokens command to supply a refresh token manually.')
                 return
         auth.set_resource_uri(args.resource)
         auth.set_user_agent(args.user_agent)
