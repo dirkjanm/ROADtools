@@ -17,11 +17,12 @@ import roadtools.roadlib.metadef.database as database
 from roadtools.roadlib.auth import Authentication
 from roadtools.roadrecon.plugins import policyanalysis
 from roadtools.roadlib.metadef.database import (
-    AdministrativeUnit, Application, ApplicationRef, AppRoleAssignment,
-    AuthorizationPolicy, Contact, Device, DirectoryRole, DirectorySetting,
-    EligibleRoleAssignment, ExtensionProperty, Group, OAuth2PermissionGrant,
-    Policy, RoleAssignment, RoleDefinition, ServicePrincipal, TenantDetail,
-    User, lnk_au_member_device, lnk_au_member_group, lnk_au_member_user,
+    AdministrativeUnit, AgentIdentityMetadata, Application, ApplicationRef,
+    AppRoleAssignment, AuthorizationPolicy, Contact, Device, DirectoryRole,
+    DirectorySetting, EligibleRoleAssignment, ExtensionProperty,
+    FederatedIdentityCredential, Group, OAuth2PermissionGrant, Policy,
+    RoleAssignment, RoleDefinition, ServicePrincipal, TenantDetail, User,
+    lnk_au_member_device, lnk_au_member_group, lnk_au_member_user,
     lnk_device_owner, lnk_group_member_contact, lnk_group_member_device,
     lnk_group_member_group, lnk_group_member_serviceprincipal,
     lnk_group_member_user, lnk_group_owner_serviceprincipal,
@@ -317,6 +318,198 @@ def commitmfa(session, dbtype, cache):
         cache
     )
 
+
+def _parse_metadata_value(val):
+    if val is None:
+        return None
+    if isinstance(val, (list, dict)):
+        return val
+    if isinstance(val, str):
+        stripped = val.strip()
+        if (stripped.startswith('[') and stripped.endswith(']')) or (stripped.startswith('{') and stripped.endswith('}')):
+            try:
+                return json.loads(stripped)
+            except Exception:
+                pass
+        if ',' in stripped:
+            return [s.strip() for s in stripped.split(',') if s.strip()]
+        return [stripped] if stripped else []
+    return [str(val)]
+
+
+def extract_agent_metadata_from_sp(sp_raw: dict, collection_source: str = "msgraph_beta") -> dict | None:
+    if not isinstance(sp_raw, dict):
+        return None
+    object_id = sp_raw.get('objectId') or sp_raw.get('id')
+    if not object_id:
+        return None
+    app_id = sp_raw.get('appId')
+    display_name = sp_raw.get('displayName') or sp_raw.get('appDisplayName') or ''
+    sp_type = sp_raw.get('servicePrincipalType') or ''
+    tags = sp_raw.get('tags') or []
+    if not isinstance(tags, list):
+        tags = [str(tags)]
+    notes = sp_raw.get('notes') or sp_raw.get('appData') or ''
+    sp_names = sp_raw.get('servicePrincipalNames') or []
+    if not isinstance(sp_names, list):
+        sp_names = []
+    verified_pub = sp_raw.get('verifiedPublisher') or {}
+    pub_name = sp_raw.get('publisherName') or (verified_pub.get('displayName') if isinstance(verified_pub, dict) else '') or ''
+
+    app_metadata = sp_raw.get('appMetadata') or {}
+    meta_entries = {}
+    if isinstance(app_metadata, dict):
+        data_list = app_metadata.get('data')
+        if isinstance(data_list, list):
+            for entry in data_list:
+                if isinstance(entry, dict) and entry.get('key'):
+                    meta_entries[str(entry['key']).lower()] = entry.get('value')
+        else:
+            for k, v in app_metadata.items():
+                meta_entries[str(k).lower()] = v
+
+    combined_tags_lower = ' '.join(str(t).lower() for t in tags)
+    combined_spn_lower = ' '.join(str(s).lower() for s in sp_names)
+    dn_lower = display_name.lower()
+    sp_type_lower = sp_type.lower()
+    notes_lower = str(notes).lower()
+    meta_keys_str = ' '.join(f"{k}:{v}" for k, v in meta_entries.items()).lower()
+    haystack = ' '.join([dn_lower, sp_type_lower, combined_tags_lower, combined_spn_lower, notes_lower, meta_keys_str])
+
+    agent_category = None
+    if 'agent365' in haystack or 'agent 365' in haystack:
+        agent_category = 'Agent365'
+    elif sp_type_lower in ('agentidentity', 'agentid', 'entraagentid', 'aiagent') or 'entraagent' in haystack or 'agentidentity' in haystack:
+        agent_category = 'EntraAgentId'
+    elif 'copilotstudio' in haystack or 'copilot studio' in haystack or 'pva_' in haystack or 'power virtual agents' in haystack:
+        agent_category = 'CopilotStudio'
+    elif 'declarativeagent' in haystack or 'declarative agent' in haystack or 'm365copilot' in haystack or 'm365 copilot' in haystack or 'microsoft 365 copilot' in haystack:
+        agent_category = 'M365DeclarativeAgent'
+    elif 'azureai' in haystack or 'azure ai' in haystack or 'foundry' in haystack or 'aifoundry' in haystack:
+        agent_category = 'AzureAIAgent'
+    elif any(kw in haystack for kw in ('autonomous agent', 'ai agent', 'mcp', 'agentblueprintid', 'agentid', 'copilot agent')):
+        agent_category = 'CustomAIAgent'
+
+    if not agent_category:
+        return None
+
+    exec_mode_raw = (
+        meta_entries.get('executionmode')
+        or meta_entries.get('agentexecutionmode')
+        or meta_entries.get('mode')
+        or sp_raw.get('executionMode')
+        or ''
+    )
+    exec_lower = str(exec_mode_raw).lower()
+    if 'autonomous' in exec_lower or 'autonomous' in haystack or 'background' in exec_lower or 'daemon' in exec_lower:
+        if 'interactive' in exec_lower or 'hybrid' in exec_lower or 'delegated' in exec_lower:
+            execution_mode = 'Hybrid'
+        else:
+            execution_mode = 'Autonomous'
+    elif 'hybrid' in exec_lower or 'hybrid' in combined_tags_lower:
+        execution_mode = 'Hybrid'
+    elif 'interactive' in exec_lower or 'interactive' in haystack or 'declarative' in haystack or agent_category == 'M365DeclarativeAgent':
+        execution_mode = 'Interactive'
+    else:
+        execution_mode = 'Unknown'
+
+    blueprint_id = (
+        meta_entries.get('agentblueprintid')
+        or meta_entries.get('blueprintid')
+        or sp_raw.get('blueprintId')
+        or sp_raw.get('applicationTemplateId')
+    )
+
+    sponsors_raw = (
+        meta_entries.get('sponsoruserids')
+        or meta_entries.get('sponsors')
+        or meta_entries.get('sponsoruserid')
+        or sp_raw.get('sponsorUserIds')
+    )
+    sponsor_user_ids = _parse_metadata_value(sponsors_raw) or []
+
+    scopes_raw = (
+        meta_entries.get('m365scopes')
+        or meta_entries.get('scopes')
+        or meta_entries.get('copilotscopes')
+        or sp_raw.get('m365Scopes')
+    )
+    m365_scopes = _parse_metadata_value(scopes_raw) or []
+
+    mcp_raw = (
+        meta_entries.get('mcptools')
+        or meta_entries.get('mcpservers')
+        or meta_entries.get('tools')
+        or sp_raw.get('mcpTools')
+    )
+    mcp_tools = _parse_metadata_value(mcp_raw) or []
+
+    raw_metadata = {
+        'servicePrincipalType': sp_type,
+        'tags': tags,
+        'appMetadata': app_metadata,
+        'verifiedPublisher': verified_pub,
+        'publisherName': pub_name,
+    }
+
+    return {
+        'objectId': object_id,
+        'appId': app_id,
+        'agentCategory': agent_category,
+        'executionMode': execution_mode,
+        'blueprintId': str(blueprint_id) if blueprint_id else None,
+        'sponsorUserIds': sponsor_user_ids,
+        'm365Scopes': m365_scopes,
+        'mcpTools': mcp_tools,
+        'collectionSource': sp_raw.get('collectionSource') or collection_source,
+        'rawMetadata': raw_metadata,
+    }
+
+
+def store_federated_credentials_batch(dbsession, app_object_id: str, app_id: str, fics_list: list):
+    if not fics_list:
+        return 0
+    count = 0
+    for fic in fics_list:
+        if not isinstance(fic, dict):
+            continue
+        fic_id = fic.get('id') or f"{app_object_id}:{fic.get('name', count)}"
+        record = FederatedIdentityCredential(
+            id=fic_id,
+            applicationObjectId=app_object_id,
+            appId=app_id,
+            name=fic.get('name'),
+            issuer=fic.get('issuer'),
+            subject=fic.get('subject'),
+            description=fic.get('description'),
+            audiences=fic.get('audiences') if isinstance(fic.get('audiences'), list) else ([fic['audiences']] if fic.get('audiences') else []),
+            claimsMatchingExpression=fic.get('claimsMatchingExpression'),
+        )
+        dbsession.merge(record)
+        count += 1
+    dbsession.flush()
+    return count
+
+
+def store_agent_metadata(dbsession, meta_dict: dict):
+    if not meta_dict or not meta_dict.get('objectId'):
+        return None
+    record = AgentIdentityMetadata(
+        objectId=meta_dict['objectId'],
+        appId=meta_dict.get('appId'),
+        agentCategory=meta_dict.get('agentCategory'),
+        executionMode=meta_dict.get('executionMode', 'Unknown'),
+        blueprintId=meta_dict.get('blueprintId'),
+        sponsorUserIds=meta_dict.get('sponsorUserIds') or [],
+        m365Scopes=meta_dict.get('m365Scopes') or [],
+        mcpTools=meta_dict.get('mcpTools') or [],
+        collectionSource=meta_dict.get('collectionSource', 'heuristic'),
+        rawMetadata=meta_dict.get('rawMetadata') or {},
+    )
+    merged = dbsession.merge(record)
+    dbsession.flush()
+    return merged
+
 async def queue_processor(queue):
     while True:
         task = await queue.get()
@@ -331,6 +524,14 @@ class DataDumper(object):
         self.session = session
         self.engine = engine
         self.ahsession = ahsession
+
+    @property
+    def dbsession(self):
+        return self.session
+
+    @dbsession.setter
+    def dbsession(self, value):
+        self.session = value
 
     async def dump_object(self, objecttype, dbtype, method=None):
         if method is None:
@@ -593,6 +794,71 @@ class DataDumper(object):
             commit(self.session, dbtype, cache)
         self.session.commit()
 
+    async def _fetch_msgraph_paged(self, url, msgraph_headers):
+        next_url = url
+        while next_url:
+            try:
+                async with self.ahsession.get(next_url, headers=msgraph_headers) as resp:
+                    await resp.read()
+                    if resp.status > 299:
+                        return
+                    payload = await resp.json()
+            except Exception:
+                return
+            for item in payload.get('value', []):
+                yield item
+            next_url = payload.get('@odata.nextLink') or payload.get('odata.nextLink')
+
+    async def dump_federated_credentials(self, msgraph_headers):
+        if not msgraph_headers or not self.ahsession or not self.session:
+            return 0
+        url = 'https://graph.microsoft.com/beta/applications?$select=id,appId,displayName&$expand=federatedIdentityCredentials'
+        total = 0
+        async for app_obj in self._fetch_msgraph_paged(url, msgraph_headers):
+            app_object_id = app_obj.get('id') or app_obj.get('objectId')
+            app_id = app_obj.get('appId')
+            fics = app_obj.get('federatedIdentityCredentials') or []
+            if app_object_id and fics:
+                total += store_federated_credentials_batch(self.session, app_object_id, app_id, fics)
+        self.session.commit()
+        return total
+
+    async def dump_agent_metadata(self, msgraph_headers):
+        if not msgraph_headers or not self.ahsession or not self.session:
+            return 0
+        url = 'https://graph.microsoft.com/beta/servicePrincipals?$select=id,appId,displayName,servicePrincipalType,tags,appMetadata,verifiedPublisher'
+        total = 0
+        async for sp_obj in self._fetch_msgraph_paged(url, msgraph_headers):
+            meta = extract_agent_metadata_from_sp(sp_obj, collection_source="msgraph_beta")
+            if meta:
+                store_agent_metadata(self.session, meta)
+                total += 1
+        self.session.commit()
+        return total
+
+    async def dump_nhi_msgraph(self, msgraph_headers=None):
+        if not self.session:
+            return
+        # Phase 1: heuristic extraction over collected ServicePrincipal records
+        existing_sps = self.session.query(ServicePrincipal).all()
+        for sp in existing_sps:
+            existing_meta = self.session.get(AgentIdentityMetadata, sp.objectId)
+            if existing_meta and existing_meta.collectionSource == 'msgraph_beta':
+                continue
+            sp_dict = sp.as_dict()
+            meta = extract_agent_metadata_from_sp(sp_dict, collection_source="heuristic")
+            if meta:
+                store_agent_metadata(self.session, meta)
+        self.session.commit()
+
+        # Phase 2: MS Graph beta enrichment if msgraph_headers available
+        if msgraph_headers and self.ahsession:
+            try:
+                await self.dump_federated_credentials(msgraph_headers)
+                await self.dump_agent_metadata(msgraph_headers)
+            except Exception as exc:
+                print(f"Warning: MS Graph NHI beta collection encountered an error: {exc}")
+
 async def run(args):
     global token, expiretime, headers, totalgroups, totaldevices, dburl
     if 'tenantId' in token:
@@ -784,6 +1050,29 @@ async def run(args):
 
     dbsession.commit()
 
+    if not getattr(args, 'skip_nhi', False):
+        msgraph_headers = None
+        if isinstance(token, dict):
+            try:
+                _, tokendata = Authentication.parse_accesstoken(token.get('accessToken', ''))
+            except Exception:
+                tokendata = {}
+            if tokendata.get('aud') in ('https://graph.microsoft.com', 'https://graph.microsoft.com/', '00000003-0000-0000-c000-000000000000'):
+                msgraph_headers = {'Authorization': f"{token.get('tokenType', 'Bearer')} {token['accessToken']}"}
+            elif 'refreshToken' in token and getattr(args, 'autotoken', False):
+                try:
+                    ms_auth = Authentication()
+                    ms_auth.client_id = token.get('_clientId', '1b730954-1685-4b74-9bfd-dac224a7b894')
+                    ms_auth.tenant = tenantid
+                    ms_token = ms_auth.handle_autotoken(dict(token), args=args, resource='https://graph.microsoft.com')
+                    if ms_token and 'accessToken' in ms_token:
+                        msgraph_headers = {'Authorization': f"{ms_token.get('tokenType', 'Bearer')} {ms_token['accessToken']}"}
+                except Exception as exc:
+                    print(f"Skipping MS Graph beta token exchange for NHI collection: {exc}")
+        async with aiostrategy(proxy=proxyurl, connector=aiohttp.TCPConnector(ssl=verify_cert)) as ahsession:
+            dumper.ahsession = ahsession
+            await dumper.dump_nhi_msgraph(msgraph_headers=msgraph_headers)
+
     # Auto analyze CA policies
     print('Data gathering complete - Performing data pre-analysis: calculating CA policy scopes')
     policyanalysis.dburl = dburl
@@ -824,6 +1113,9 @@ def getargs(gather_parser):
     gather_parser.add_argument('--skip-azure',
                                action='store_true',
                                help='Skip Azure PIM collection since it is slooooow')
+    gather_parser.add_argument('--skip-nhi',
+                               action='store_true',
+                               help='Skip Non-Human Identity (NHI), Federated Credentials, and Agent 365 metadata collection')
     gather_parser.add_argument('--evade',
                                action='store_true',
                                help='Evade common AAD Graph enumeration detections')
