@@ -93,7 +93,7 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
         data = {
             "kngc": pubkeycngblob.decode('utf-8')
         }
-        res = await self.auth.requests_post('https://enterpriseregistration.windows.net/EnrollmentServer/key/?api-version=1.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = await self.auth.requests_post(f'https://{self.auth.get_drs_host()}/EnrollmentServer/key/?api-version=1.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         return await res.json()
 
     async def register_device(self, access_token, jointype=0, certout=None, privout=None, device_type=None, device_name=None, os_version=None, deviceticket=None, device_domain=None):
@@ -256,7 +256,7 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
         }
 
         print('Registering device')
-        res = await self.auth.requests_post(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/?api-version={api_version}', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = await self.auth.requests_post(f'https://{self.auth.get_drs_host()}/EnrollmentServer/device/?api-version={api_version}', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = await res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -366,7 +366,7 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
             deviceid = attr.value
         print(f"Device ID (from certificate): {deviceid}")
         print('Registering device')
-        res = await self.auth.requests_put(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = await self.auth.requests_put(f'https://{self.auth.get_drs_host()}/EnrollmentServer/device/{deviceid}?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = await res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -392,7 +392,7 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
         if not deviceid:
             return
         # For now we use requests here since I'm too lazy to figure out TLS client certs in aiohttp
-        res = requests.delete(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}', cert=(certpath, keypath))
+        res = requests.delete(f'https://{self.auth.get_drs_host()}/EnrollmentServer/device/{deviceid}', cert=(certpath, keypath))
         if res.status_code != 200:
             print('Error deleting device:')
             print(res.content)
@@ -678,7 +678,7 @@ class AsyncDeviceAuthentication(DeviceAuthentication):
             token_request_data['tgt'] = True
         if self.auth.claims:
             token_request_data['claims'] = json.dumps(self.auth.claims)
-        res = await self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/v2.0/token', data=token_request_data)
+        res = await self.auth.requests_post(f"{self.auth.get_authority_url(force_tenant='common')}/oauth2/v2.0/token", data=token_request_data)
         if res.status != 200:
             raise AuthenticationException(await res.text())
         responsedata = await res.text()

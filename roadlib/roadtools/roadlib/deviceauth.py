@@ -289,7 +289,7 @@ class DeviceAuthentication():
         data = {
             "kngc": pubkeycngblob.decode('utf-8')
         }
-        res = self.auth.requests_post('https://enterpriseregistration.windows.net/EnrollmentServer/key/?api-version=1.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post(f'https://{self.auth.get_drs_host()}/EnrollmentServer/key/?api-version=1.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         return res.json()
 
     def create_pubkey_blob_from_key(self, key):
@@ -547,7 +547,7 @@ class DeviceAuthentication():
         }
 
         print('Registering device')
-        res = self.auth.requests_post(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/?api-version={api_version}', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post(f'https://{self.auth.get_drs_host()}/EnrollmentServer/device/?api-version={api_version}', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -657,7 +657,7 @@ class DeviceAuthentication():
             deviceid = attr.value
         print(f"Device ID (from certificate): {deviceid}")
         print('Registering device')
-        res = requests.put(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
+        res = requests.put(f'https://{self.auth.get_drs_host()}/EnrollmentServer/device/{deviceid}?api-version=2.0', json=data, headers=headers, proxies=self.proxies, verify=self.verify)
         returndata = res.json()
         if not 'Certificate' in returndata:
             print('Error registering device! Got response:')
@@ -682,7 +682,7 @@ class DeviceAuthentication():
             deviceid = attribute.value
         if not deviceid:
             return
-        res = requests.delete(f'https://enterpriseregistration.windows.net/EnrollmentServer/device/{deviceid}', cert=(certpath, keypath))
+        res = requests.delete(f'https://{self.auth.get_drs_host()}/EnrollmentServer/device/{deviceid}', cert=(certpath, keypath))
         if res.status_code != 200:
             print('Error deleting device:')
             print(res.content)
@@ -839,7 +839,7 @@ class DeviceAuthentication():
             token_request_data['tgt'] = True
         if self.auth.claims:
             token_request_data['claims'] = json.dumps(self.auth.claims)
-        res = self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/v2.0/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post(f"{self.auth.get_authority_url(force_tenant='common')}/oauth2/v2.0/token", data=token_request_data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         responsedata = res.text
@@ -880,7 +880,7 @@ class DeviceAuthentication():
             'request':reqjwt,
             'client_info':'1'
         }
-        res = self.auth.requests_post('https://login.microsoftonline.com/common/oauth2/v2.0/token', data=token_request_data, proxies=self.proxies, verify=self.verify)
+        res = self.auth.requests_post(f"{self.auth.get_authority_url(force_tenant='common')}/oauth2/v2.0/token", data=token_request_data, proxies=self.proxies, verify=self.verify)
         if res.status_code != 200:
             raise AuthenticationException(res.text)
         responsedata = res.text
@@ -1049,7 +1049,7 @@ class DeviceAuthentication():
             "iss": "aad:brokerplugin",
             "grant_type": "refresh_token",
             "client_id": client,
-            "aud": "login.microsoftonline.com",
+            "aud": "login.microsoftonline.com",  # national cloud TODO: aud tracks the login host; confirm 21Vianet value before swapping
             "iat": str(int(time.time())),
             "exp": str(int(time.time())+(3600)),
         }
@@ -1082,7 +1082,7 @@ class DeviceAuthentication():
             "grant_type": "refresh_token",
             "client_id": f"{client}",
             "redirect_uri": "msauth://Microsoft.AAD.BrokerPlugin",
-            "aud": "https://login.windows.net/common/oauth2/v2.0/token",
+            "aud": "https://login.windows.net/common/oauth2/v2.0/token",  # national cloud TODO: aud tracks the login host; confirm 21Vianet value before swapping
             "iss": "29d9ed98-a469-4536-ade2-f981bc1d605e"
         }
         payload['scope'] = 'urn:aad:tb:update:prt/.default openid profile offline_access'
@@ -1123,7 +1123,7 @@ class DeviceAuthentication():
             "purpose": "prt_usage",
             "iss": "29d9ed98-a469-4536-ade2-f981bc1d605e",
             "redirect_uri": f"ms-appx-web://Microsoft.AAD.BrokerPlugin/{client}",
-            "aud": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            "aud": "https://login.microsoftonline.com/common/oauth2/v2.0/token",  # national cloud TODO: aud tracks the login host; confirm 21Vianet value before swapping
             "client_id": client,
             "request_nonce": self.auth.get_srv_challenge_nonce()
         }

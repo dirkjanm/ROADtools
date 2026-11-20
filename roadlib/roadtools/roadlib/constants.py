@@ -60,6 +60,41 @@ AUTHORITIES = {
     "china": "login.partner.microsoftonline.cn"
 }
 
+AADGRAPH_URLS = {
+    "global": "graph.windows.net",
+    "china": "graph.chinacloudapi.cn"
+}
+
+# Device Registration Service (DRS) hosts per national cloud. The device/key
+# enrollment endpoints live on these hosts (EnrollmentServer/...). National
+# cloud hosts should be verified against the tenant's DRS discovery metadata.
+DRS_URLS = {
+    "global": "enterpriseregistration.windows.net",
+    "us": "enterpriseregistration.microsoftonline.us",
+    "china": "enterpriseregistration.partner.microsoftonline.cn"
+}
+
+# National cloud resource audiences. After the normal alias lookup yields a
+# commercial resource URI, it is swapped for the active cloud's equivalent when
+# an override is listed here (keyed by the commercial URI, so 'global' needs no
+# entry and stays unchanged). US Gov values target GCC High (L4); the DoD (L5)
+# Graph audience is https://dod-graph.microsoft.us/. Resources not listed here
+# are treated as cloud-agnostic. National cloud values should be verified
+# against the target tenant.
+NATIONAL_CLOUD_RESOURCE_OVERRIDES = {
+    "https://graph.microsoft.com/": {
+        "us": "https://graph.microsoft.us/",
+        "china": "https://microsoftgraph.chinacloudapi.cn/",
+    },
+    "https://graph.windows.net/": {
+        "china": "https://graph.chinacloudapi.cn/",
+    },
+    "https://management.core.windows.net/": {
+        "us": "https://management.core.usgovcloudapi.net/",
+        "china": "https://management.core.chinacloudapi.cn/",
+    },
+}
+
 DSSO_BODY_KERBEROS = '''<?xml version='1.0' encoding='UTF-8'?>
 <s:Envelope
     xmlns:s='http://www.w3.org/2003/05/soap-envelope'
