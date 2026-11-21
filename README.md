@@ -56,6 +56,12 @@ You can run the Angular frontend with `npm start` or `ng serve` using the Angula
 ### Using ROADrecon
 See [this Wiki page](https://github.com/dirkjanm/ROADtools/wiki/Getting-started-with-ROADrecon) on how to get started.
 
+### NHI and Agent 365 posture
+
+`roadrecon gather --nhi` collects Microsoft Graph agent metadata and federated identity credentials when the ROADrecon token has a refresh token. `--skip-nhi` skips that phase. Open `roadrecon gui` and select **NHI & Agent 365** at `/nhi` to review agents, workloads, credentials and findings. Read-only JSON results are available under `/api/nhi/*`.
+
+See [NHI usage](docs/nhi-usage.md) for token requirements, the collection-status fields, all endpoints and the dialog tabs.
+
 ## ROADtools Token eXchange (roadtx)
 ![PyPI version](https://img.shields.io/pypi/v/roadtx.svg)
 [![Build Status](https://dev.azure.com/dirkjanm/ROADtools/_apis/build/status/dirkjanm.ROADtools?branchName=master)](https://dev.azure.com/dirkjanm/ROADtools/_build/latest?definitionId=19&branchName=master)
