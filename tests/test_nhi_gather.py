@@ -577,3 +577,23 @@ def test_sponsor_fetch_failure_is_recorded_not_fatal(env):
     assert "403" in agent.rawMetadata["sponsorsError"]
     a = state(env, "agentMetadata")
     assert a.status == "collected" and "sponsors unavailable" in a.detail
+
+
+def test_sponsor_fetch_failure_preserves_previously_known_sponsors(env):
+    """A transient /sponsors failure must not erase last known ownership evidence."""
+    seed(env, sps=("ag-1",))
+    env.session.add(AgentIdentityMetadata(
+        objectId="ag-1", appId="ag-app-1", agentCategory="EntraAgentId",
+        executionMode="Autonomous", sponsorUserIds=["u-1"],
+        collectionSource="msgraph_beta"))
+    env.session.commit()
+    run(env, {
+        "/sponsors": [FakeResponse(403)],
+        "/beta/servicePrincipals": [FakeResponse(200, {"value": [LIVE_AGENT]})],
+    })
+    env.session.expire_all()
+    agent = env.session.get(AgentIdentityMetadata, "ag-1")
+    assert agent.sponsorUserIds == ["u-1"]
+    assert "403" in agent.rawMetadata["sponsorsError"]
+    a = state(env, "agentMetadata")
+    assert a.status == "collected" and "sponsors unavailable" in a.detail

@@ -311,7 +311,7 @@
         <tr *ngIf="nhiDetail.agent.blueprintId"><th>Blueprint ID</th><td>{{ nhiDetail.agent.blueprintId }}</td></tr>
         <tr><th>Federated Credentials</th><td>{{ nhiDetail.agent.federatedCredentialsCount ?? 'n/a' }}</td></tr>
         <tr><th>Risk Level</th><td><mat-chip-set><mat-chip class="sev-chip" [ngClass]="sevClass(nhiDetail.agent.riskLevel)" disableRipple>{{ nhiDetail.agent.riskLevel }}</mat-chip></mat-chip-set></td></tr>
-        <tr><th>Owners ({{ nhiDetail.agent.ownersCount === null ? 'n/a' : (nhiDetail.agent.ownerNames?.length || 0) }})</th><td>{{ nhiDetail.agent.ownerNames?.length ? nhiDetail.agent.ownerNames.join(', ') : 'none' }}</td></tr>
+        <tr><th>Owners ({{ nhiDetail.agent.ownersCount ?? 'n/a' }})</th><td>{{ nhiDetail.agent.ownerNames?.length ? nhiDetail.agent.ownerNames.join(', ') : 'none' }}</td></tr>
         <tr>
           <th>Sponsors ({{ nhiDetail.agent.sponsorsCount ?? nhiDetail.agent.sponsorNames?.length ?? 0 }})</th>
           <td>

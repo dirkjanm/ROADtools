@@ -529,6 +529,13 @@ def store_agent_metadata(dbsession, meta_dict: dict):
         collectionSource=meta_dict.get('collectionSource', 'heuristic'),
         rawMetadata=meta_dict.get('rawMetadata') or {},
     )
+    if meta_dict.get('collectionSource') == 'msgraph_beta':
+        # Sponsors come from a separate /sponsors relationship fetch, not from the
+        # servicePrincipal payload. Keep the last known values across the merge so a
+        # transient lookup failure cannot silently turn a sponsored agent into an orphan.
+        existing = dbsession.get(AgentIdentityMetadata, record.objectId)
+        if existing is not None and existing.collectionSource == 'msgraph_beta':
+            record.sponsorUserIds = existing.sponsorUserIds
     merged = dbsession.merge(record)
     dbsession.flush()
     return merged
@@ -898,7 +905,9 @@ class DataDumper(object):
                             break
                         retry_after = (getattr(resp, 'headers', None) or {}).get('Retry-After')
                 except Exception as exc:
-                    raise NhiFetchError(f"{type(exc).__name__}: {exc}") from exc
+                    # Strip query strings so an error message can never carry a
+                    # signed nextLink (or other URL credential) into the DB/UI.
+                    raise NhiFetchError(f"{type(exc).__name__}: {str(exc).split('?')[0]}") from exc
                 if status not in NHI_RETRY_STATUSES or attempt == NHI_MAX_ATTEMPTS:
                     raise NhiFetchError(f"HTTP {status} for {next_url.split('?')[0]}")
                 try:
@@ -944,7 +953,7 @@ class DataDumper(object):
                 self.session.commit()  # keep what was collected; never prune on partial data
             except Exception:
                 self.session.rollback()  # DB error poisoned the session
-            self._safe_record(source, 'failed', f"{type(exc).__name__}: {exc}"[:500], len(seen))
+            self._safe_record(source, 'failed', f"{type(exc).__name__}: {str(exc).split('?')[0]}"[:500], len(seen))
             return len(seen)
         detail = f"{skipped} skipped: parent object not in local DB" if skipped else None
         self._safe_record(source, 'collected', detail, len(seen))
@@ -1028,8 +1037,10 @@ class DataDumper(object):
                 row.sponsorUserIds = ids
             except Exception as exc:
                 failed += 1
-                row.sponsorUserIds = []
-                row.rawMetadata = dict(row.rawMetadata or {}, sponsorsError=f"{type(exc).__name__}: {exc}"[:300])
+                # A transient lookup failure is not evidence that the agent has no
+                # sponsor. Keep any sponsors already stored: clearing them would
+                # fabricate an orphan finding and escalate write findings to Critical.
+                row.rawMetadata = dict(row.rawMetadata or {}, sponsorsError=f"{type(exc).__name__}: {str(exc).split('?')[0]}"[:300])
         try:
             self.session.commit()
         except Exception:

@@ -630,7 +630,16 @@ def analyze_nhi_posture(dbsession) -> dict:
     all_oauth2 = dbsession.query(OAuth2PermissionGrant).all() if "OAuth2PermissionGrants" in existing_tables else []
     # Never report FIC rows from a source that was not fully collected (no false zero / partial data).
     all_fics = dbsession.query(FederatedIdentityCredential).all() if (fic_table_present and fic_collected) else []
-    all_agent_metas = dbsession.query(AgentIdentityMetadata).all() if agent_meta_table_present else []
+    if agent_meta_table_present:
+        meta_query = dbsession.query(AgentIdentityMetadata)
+        if not meta_collected:
+            # Mirror the FIC gate: a failed/skipped/uncollected source must not lend
+            # confidence to stale msgraph_beta rows left by an earlier gather.
+            # Heuristic rows are always safe: they come from locally collected SPs.
+            meta_query = meta_query.filter(AgentIdentityMetadata.collectionSource == 'heuristic')
+        all_agent_metas = meta_query.all()
+    else:
+        all_agent_metas = []
 
     sp_by_id = {sp.objectId: sp for sp in all_sps if sp.objectId}
     app_by_obj_id = {a.objectId: a for a in all_apps if a.objectId}
@@ -851,6 +860,12 @@ def analyze_nhi_posture(dbsession) -> dict:
 
         if is_agent:
             meta_src = agent_meta.as_dict() if agent_meta else heuristic_meta
+            raw_meta = (meta_src.get("rawMetadata") or {}) if agent_meta else {}
+            # A failed /sponsors lookup leaves a marker on the row: ownership is
+            # unknown, not absent. Never escalate findings as if there were no sponsor.
+            sponsors_unknown = bool(raw_meta.get("sponsorsError"))
+            odata_type = str(raw_meta.get("@odata.type") or "").lower()
+            is_blueprint = bool(raw_meta.get("isBlueprint")) or odata_type.endswith("blueprintprincipal")
             agent_category = meta_src.get("agentCategory") or "CustomAIAgent"
             execution_mode = meta_src.get("executionMode") or "Unknown"
             if execution_mode == "Unknown" and any(
@@ -872,8 +887,14 @@ def analyze_nhi_posture(dbsession) -> dict:
             owner_count_effective = len(owner_ids | {oid for oid, _ in resolved_sponsors})
             if owner_count_effective == 0 and not owners_known:
                 owner_count_effective = None  # unknown: owner data unavailable and no sponsor resolved
-            if owner_count_effective == 0:
+            if sponsors_unknown:
+                gap(f"sponsor lookup failed for agent {sp.objectId}; ownership treated as unknown")
+                if owner_count_effective == 0:
+                    owner_count_effective = None  # failed lookup is not proof of an orphan
+            if owner_count_effective == 0 and not is_blueprint:
                 ownerless_nhi_ids.add(sp.objectId)
+            if is_blueprint:
+                risk_reasons.append("Agent identity blueprint template (not a running agent)")
             if not agent_meta or meta_src.get("collectionSource") == "heuristic":
                 risk_reasons.append(
                     "Classified as an AI agent heuristically (no Agent ID metadata collected); "
@@ -931,7 +952,7 @@ def analyze_nhi_posture(dbsession) -> dict:
                 max_weight = max(max_weight, SEVERITY_WEIGHTS["Medium"])
                 risk_reasons.append(f"Accesses M365 organizational data scopes: {', '.join(merged_m365)}")
 
-            if owner_count_effective == 0:
+            if owner_count_effective == 0 and not is_blueprint:
                 max_weight = max(max_weight, SEVERITY_WEIGHTS["High"] if execution_mode == "Autonomous" else SEVERITY_WEIGHTS["Medium"])
                 reason = "Orphaned AI agent without human owner or sponsor accountability"
                 detail = reason + (
@@ -1095,7 +1116,10 @@ def analyze_nhi_posture(dbsession) -> dict:
                 })
 
             is_managed_identity = nhi_type in ("SystemManagedIdentity", "UserAssignedManagedIdentity")
-            if owners_count == 0 and not is_managed_identity:  # None (unknown) is never 'ownerless'
+            # Agents are handled in the agent branch with sponsor resolution and the
+            # unknown-sponsor guard; counting them again here would double-count and
+            # reintroduce a false orphan when only sponsor data is unavailable.
+            if owners_count == 0 and not is_managed_identity and not is_agent:  # None (unknown) is never 'ownerless'
                 ownerless_nhi_ids.add(sp.objectId)
                 max_weight = max(max_weight, SEVERITY_WEIGHTS["Medium"] if (tier0_combined or m365_assigned) else SEVERITY_WEIGHTS["Low"])
                 risk_reasons.append("No assigned application or service principal owner")

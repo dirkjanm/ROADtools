@@ -837,3 +837,60 @@ def test_sp_nhi_route_emits_agent_metadata_collection_fields(dbenv, monkeypatch)
     assert b["appId"] == "app-guid-1" and b["displayName"] == "App 1"
     assert b["agentMetadataCollected"] is False
     assert b["agentMetadataCollectionDetail"] == "HTTP 403"
+
+
+# -- review-gate regressions -------------------------------------------------
+
+def test_failed_agent_metadata_source_ignores_stale_msgraph_rows(dbenv):
+    """A failed Graph source must not give stale msgraph_beta rows the confidence of collected data."""
+    session, _ = dbenv
+    _app_sp(session, 1)
+    session.add(AgentIdentityMetadata(
+        objectId="sp-1", appId="app-guid-1", agentCategory="CustomAIAgent",
+        executionMode="Autonomous", sponsorUserIds=[], collectionSource="msgraph_beta"))
+    _marker(session, "agentMetadata", "failed", "HTTP 500")
+    session.commit()
+    r = analyze_nhi_posture(session)
+    assert r["summary"]["agentMetadataCollected"] is False
+    assert r["agents"] == []
+    assert not [f for f in r["findings"]
+                if f["category"] in ("AgentM365BlastRadius", "AgentGovernance")]
+
+
+def test_sponsor_lookup_failure_is_unknown_not_orphan_or_critical(dbenv):
+    """A failed /sponsors lookup must not fabricate Critical blast radius or an orphan finding."""
+    session, _ = dbenv
+    session.add(ServicePrincipal(
+        objectId="sp-graph", appId="g", displayName="Graph", microsoftFirstParty=True,
+        appRoles=[{"id": "r-send", "value": "Mail.Send"}]))
+    session.add(ServicePrincipal(objectId="sp-1", appId="app-guid-1", displayName="Ag"))
+    session.add(AgentIdentityMetadata(
+        objectId="sp-1", appId="app-guid-1", agentCategory="CustomAIAgent",
+        executionMode="Autonomous", sponsorUserIds=[], collectionSource="msgraph_beta",
+        rawMetadata={"sponsorsError": "HTTP 500: sponsors unavailable"}))
+    session.add(AppRoleAssignment(objectId="ar", principalId="sp-1", resourceId="sp-graph", id="r-send"))
+    _marker(session, "agentMetadata", "collected")
+    session.commit()
+    r = analyze_nhi_posture(session)
+    write_findings = [f for f in r["findings"] if f["category"] == "AgentM365BlastRadius"]
+    assert len(write_findings) == 1 and write_findings[0]["severity"] == "High"
+    assert not [f for f in r["findings"] if f["category"] == "AgentGovernance"]
+    assert r["summary"]["ownerlessNhIs"] == 0
+    assert any("sponsor lookup failed" in g for g in r["summary"]["dataGaps"])
+
+
+def test_blueprint_principal_is_not_reported_as_orphaned_agent(dbenv):
+    """An agent identity blueprint is a template, not a running agent with an owner gap."""
+    session, _ = dbenv
+    session.add(ServicePrincipal(objectId="sp-bp", appId="app-bp", displayName="Blueprint"))
+    session.add(AgentIdentityMetadata(
+        objectId="sp-bp", appId="app-bp", agentCategory="EntraAgentId",
+        executionMode="Autonomous", sponsorUserIds=[], collectionSource="msgraph_beta",
+        rawMetadata={"isBlueprint": True,
+                     "@odata.type": "#microsoft.graph.agentIdentityBlueprintPrincipal"}))
+    session.commit()
+    r = analyze_nhi_posture(session)
+    assert len(r["agents"]) == 1  # retained for completeness
+    assert not [f for f in r["findings"] if f["category"] == "AgentGovernance"]
+    assert r["summary"]["ownerlessNhIs"] == 0
+    assert any("blueprint template" in x for x in r["agents"][0]["riskReasons"])
