@@ -488,8 +488,12 @@ def main(args=None):
     if args.tokens_stdin:
         token = json.loads(sys.stdin.read())
     else:
-        with open(args.tokenfile, 'r') as infile:
-            token = json.load(infile)
+        try:
+            with open(args.tokenfile, 'r') as infile:
+                token = json.load(infile)
+        except FileNotFoundError:
+            print('Token file %s not found. Please run "roadrecon auth" first' % args.tokenfile)
+            sys.exit(1)
     if not ':/' in args.database:
         if args.database[0] != '/':
             dburl = 'sqlite:///' + os.path.join(os.getcwd(), args.database)
